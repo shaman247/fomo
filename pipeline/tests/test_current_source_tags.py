@@ -2,7 +2,7 @@
 import sys
 import unittest
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import db
@@ -71,7 +71,8 @@ class CurrentSourceTagTests(unittest.TestCase):
         writer.execute.side_effect = lambda sql, args: setattr(
             writer.fetchone, 'return_value', (ids[args[0]],)
         ) if 'SELECT id FROM tags' in sql else None
-        db.upsert_event_tags(writer, 1, tags, replace=True)
+        with patch.object(db, 'sync_event_format_tags'):
+            db.upsert_event_tags(writer, 1, tags, replace=True)
         inserted = [c.args[1] for c in writer.execute.call_args_list
                     if 'INSERT IGNORE INTO event_tags' in c.args[0]]
         self.assertEqual(inserted, [(1, 10)])

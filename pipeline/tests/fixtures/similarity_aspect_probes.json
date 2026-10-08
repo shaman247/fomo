@@ -17,7 +17,10 @@
     {"id":"yoga-background","text":"A slow yoga and breathing class with quiet instrumental jazz on the speakers. An instructor guides stretches and a resting meditation."},
     {"id":"yoga-live-music","text":"A joint program combines a guided yoga practice with a live jazz quartet concert. Musicians perform improvised sets before and after the movement session."},
     {"id":"clay","text":"Shape a ceramic cup on the potter's wheel, trim its base and choose a glaze for firing in the studio kiln."},
-    {"id":"software-design","text":"A software architecture meetup covers microservice boundaries, message queues, database replication and cloud deployments."}
+    {"id":"software-design","text":"A software architecture meetup covers microservice boundaries, message queues, database replication and cloud deployments."},
+    {"id":"gallery-talk-building-spanish","text":"Charla en la sala (en español): un educador del museo recorre la biblioteca histórica y explica su estilo arquitectónico, la fachada y los interiores del edificio."},
+    {"id":"gallery-talk-photography-spanish","text":"Charla en la sala (en español): un educador del museo comenta la exposición de fotografía, los retratos y el contexto artístico de la obra."},
+    {"id":"gallery-talk-painting-spanish","text":"Charla en la sala (en español): conversación en la galería sobre las pinturas de un maestro holandés y la historia del arte de su época."}
   ],
   "queries": [
     {"id":"architecture-across-language-and-format","positive":["tag:Architecture"],"judgments":{"probe:design-spanish":2,"probe:preservation-award":2,"probe:design-clinic":2,"probe:spanish-class":0,"probe:preservation-food":0,"probe:clinic-health":0,"probe:software-design":0}},
@@ -25,6 +28,7 @@
     {"id":"performed-versus-background-jazz","positive":["tag:Jazz"],"judgments":{"probe:history-music":2,"probe:generic-music":2,"probe:yoga-live-music":2,"probe:yoga-background":0,"probe:generic-children":0,"probe:clay":0}},
     {"id":"yoga-preserves-real-combinations","positive":["tag:Yoga"],"judgments":{"probe:yoga-background":2,"probe:yoga-live-music":2,"probe:generic-music":0,"probe:generic-children":0,"probe:clay":0}},
     {"id":"mixed-design-and-clay","positive":["tag:Architecture","tag:Ceramics"],"judgments":{"probe:design-clinic":2,"probe:preservation-award":2,"probe:clay":2,"probe:spanish-class":0,"probe:preservation-food":0,"probe:software-design":0}},
-    {"id":"disliked-history-preserves-generic-jazz","positive":["tag:Jazz"],"negative":["tag:Black History Month"],"judgments":{"probe:generic-music":2,"probe:history-music":1,"probe:generic-children":0,"probe:generic-art":0,"probe:clay":0}}
+    {"id":"disliked-history-preserves-generic-jazz","positive":["tag:Jazz"],"negative":["tag:Black History Month"],"judgments":{"probe:generic-music":2,"probe:history-music":1,"probe:generic-children":0,"probe:generic-art":0,"probe:clay":0}},
+    {"id":"architecture-not-spanish-gallery-talk","positive":["tag:Architecture"],"judgments":{"probe:gallery-talk-building-spanish":2,"probe:design-spanish":2,"probe:gallery-talk-photography-spanish":0,"probe:gallery-talk-painting-spanish":0,"probe:spanish-class":0}}
   ]
 }

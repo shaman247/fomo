@@ -128,7 +128,7 @@ class SourceAliasMergePathTests(unittest.TestCase):
             stack.enter_context(patch.object(aliases,'load_into',return_value=index))
             stack.enter_context(patch.object(merger,'get_active_date_window',return_value=(today,today+timedelta(days=90))))
             db=stack.enter_context(patch.object(merger,'db'))
-            db.build_tag_ancestor_map.return_value=({},set());db.archive_dead_source_events.return_value=(0,[])
+            db.build_tag_ancestor_map.return_value=({},set());db.archive_dead_source_events.return_value=(0,[]);db.prune_superseded_dates.return_value=(0,[]);db.archive_sourceless_events.return_value=(0,[])
             db.archive_outdated_events.return_value=(0,[])
             fallback=stack.enter_context(patch.object(merger,'_match_by_url_identity'))
             for _ in range(2):self.assertEqual(merger.merge_crawl_events(cursor,MagicMock(),website_ids=[7]),(0,0))

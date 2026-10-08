@@ -136,11 +136,23 @@ def _build_latest_merged_temps(cursor):
     2026-09-10: 882 unmerged crawl_events on w4 made 150 live BPL events look
     like candidates). `merged_at` is stamped at the end of merge_crawl_events,
     so keying on it means "the newest crawl whose absences are real".
+
+    Keyed by (website, surface) like `db.build_archival_temps`, surface =
+    `db._picnob_surface_sql`. A mixed website (w4545 Textile Arts Center: IG
+    plus a class calendar) is crawled by a Picnob bundle AND a site crawl, and
+    neither sees the other's content. Keyed per website, a newer bundle became
+    the "dropper" for every calendar event. Only the site surface is kept: a
+    `picnob_` bundle is the first page of a 12-post grid, so its absences carry
+    no evidence (the same per-source rule `archive_outdated_events` applies),
+    and an event sourced only by IG posts is never nominated.
     """
     cursor.execute("DROP TEMPORARY TABLE IF EXISTS _lp_latest")
-    cursor.execute("""
-        CREATE TEMPORARY TABLE _lp_latest (website_id INT UNSIGNED PRIMARY KEY, cr_id INT, latest DATETIME(6))
-        SELECT cr.website_id, MAX(cr.id) AS cr_id, MAX(cr.processed_at) AS latest
+    cursor.execute(f"""
+        CREATE TEMPORARY TABLE _lp_latest (
+            website_id INT UNSIGNED, picnob TINYINT, cr_id INT, latest DATETIME(6),
+            PRIMARY KEY (website_id, picnob))
+        SELECT cr.website_id, {db._picnob_surface_sql('cr')} AS picnob,
+               MAX(cr.id) AS cr_id, MAX(cr.processed_at) AS latest
         FROM crawl_results cr
         JOIN websites w ON w.id = cr.website_id
         LEFT JOIN _ws_no_absence_evidence nae ON nae.website_id = w.id
@@ -150,7 +162,8 @@ def _build_latest_merged_temps(cursor):
           AND (w.disabled = FALSE OR w.disabled IS NULL)
           AND COALESCE(w.skip_reenrichment, 0) = 0
           AND nae.website_id IS NULL
-        GROUP BY cr.website_id
+          AND NOT {db._picnob_surface_sql('cr')}
+        GROUP BY cr.website_id, picnob
     """)
     cursor.execute("DROP TEMPORARY TABLE IF EXISTS _lp_listed")
     cursor.execute("""
@@ -240,7 +253,9 @@ def get_candidates(cursor, event_ids=None, limit=MAX_EVENTS_PER_RUN, per_website
                 FROM event_sources es
                 JOIN crawl_events ce ON ce.id = es.crawl_event_id
                 JOIN crawl_results cr ON cr.id = ce.crawl_result_id
+                -- Same surface only (see _build_latest_merged_temps).
                 JOIN _lp_latest l ON l.website_id = cr.website_id
+                                 AND l.picnob = {db._picnob_surface_sql('cr')}
                 GROUP BY es.event_id, cr.website_id, l.latest
             ) d ON d.event_id = e.id AND d.rn = 1
             LEFT JOIN (
@@ -371,12 +386,14 @@ def _probeable(url):
 
 def get_control_urls(cursor, website_ids, exclude_urls):
     """One known-live URL per website: an event URL from the website's LATEST
-    processed crawl that is linked to a still-active event. Returns
+    processed site crawl that is linked to a still-active event. Returns
     {website_id: url}; a website with no such URL is absent (=> never trusted).
+    A mixed website's newest row can be a Picnob bundle, whose URLs are
+    never probeable; the control comes from the site surface the dropper is.
     """
     controls = {}
     for ws_id in website_ids:
-        cursor.execute("""
+        cursor.execute(f"""
             SELECT ce.url
             FROM crawl_results cr
             JOIN crawl_events ce ON ce.crawl_result_id = cr.id
@@ -387,6 +404,7 @@ def get_control_urls(cursor, website_ids, exclude_urls):
                   SELECT MAX(cr2.id) FROM crawl_results cr2
                   WHERE cr2.website_id = %s AND cr2.status IN ('processed', 'extracted')
                     AND cr2.merged_at IS NOT NULL
+                    AND NOT {db._picnob_surface_sql('cr2')}
               )
               AND e.archived = 0 AND e.suppressed = 0
               AND ce.url IS NOT NULL AND ce.url != ''

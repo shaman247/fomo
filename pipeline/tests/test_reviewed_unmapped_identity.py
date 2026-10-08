@@ -227,7 +227,7 @@ class UnmappedFullMergePathTests(unittest.TestCase):
             stack.enter_context(patch.object(identity,'load_index',return_value=test_index(venue)))
             stack.enter_context(patch.object(merger,'get_active_date_window',return_value=(today,today+timedelta(days=90))))
             db=stack.enter_context(patch.object(merger,'db'))
-            db.build_tag_ancestor_map.return_value=({},set());db.archive_dead_source_events.return_value=(0,[])
+            db.build_tag_ancestor_map.return_value=({},set());db.archive_dead_source_events.return_value=(0,[]);db.prune_superseded_dates.return_value=(0,[]);db.archive_sourceless_events.return_value=(0,[])
             fallback=stack.enter_context(patch.object(merger,'_match_by_url_identity',return_value=3))
             metadata=stack.enter_context(patch.object(merger,'refresh_source_metadata'))
             session=stack.enter_context(patch.object(merger,'refresh_source_session_details'))

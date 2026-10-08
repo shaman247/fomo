@@ -20,6 +20,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'pipeline'))
 from db import create_connection, build_tag_ancestor_map, get_tag_hierarchy_for_export
 from dblock import write_lock
 from tag_hierarchy_policy import validate_hierarchy
+from tag_facets import SHARED_LEAVES
 
 
 def backfill(apply=False, verbose=False, event_ids=None):
@@ -55,7 +56,7 @@ def _backfill(conn, apply, verbose, event_ids):
         scope_sql = " AND e.id IN (%s)" % ','.join(['%s'] * len(event_ids))
         params = list(event_ids)
     cursor.execute("""
-        SELECT e.id, e.name,
+        SELECT e.id, e.name, e.event_type,
                GROUP_CONCAT(t.name SEPARATOR '|||') as tags
         FROM events e
         LEFT JOIN event_tags et ON e.id = et.event_id
@@ -65,6 +66,13 @@ def _backfill(conn, apply, verbose, event_ids):
         GROUP BY e.id
     """, params)
     events = cursor.fetchall()
+    # Judged removals bind; leave them out of the plan so a dry run reports
+    # only what --apply would really write (and converges at zero).
+    cursor.execute("""SELECT b.event_id, t.name FROM event_tag_blocks b
+                      JOIN tags t ON t.id = b.tag_id AND t.scope = 'event'""")
+    blocked_by_event = {}
+    for row in cursor.fetchall():
+        blocked_by_event.setdefault(row['event_id'], set()).add(row['name'].lower().replace(' ', ''))
     if event_ids:
         print(f"Scoped to {len(event_ids)} requested event id(s); {len(events)} matched (active, unsuppressed)")
 
@@ -76,10 +84,16 @@ def _backfill(conn, apply, verbose, event_ids):
     for event in events:
         existing_tags = event['tags'].split('|||') if event['tags'] else []
         existing_normalized = set(t.lower().replace(' ', '') for t in existing_tags)
+        existing_normalized |= blocked_by_event.get(event['id'], set())
 
         # Derive ancestor tags from existing tags
         ancestors_to_add = set()
         for tag in existing_tags:
+            # A shared leaf present because of event_type (Format sync) does
+            # not imply its topic parents: a kids' craft Workshop is not
+            # thereby Education. Content evidence derived them at extraction.
+            if tag in SHARED_LEAVES and tag == event['event_type']:
+                continue
             key = tag.lower().replace(' ', '')
             for ancestor in ancestor_map.get(key, set()):
                 if ancestor.lower().replace(' ', '') not in existing_normalized:

@@ -149,11 +149,21 @@ def sync_event_tags(cur, conn, event_ids=None, commit=True):
         list(et.EVENT_TYPES) + (event_ids or []),
     )
     rows = cur.fetchall()
+    # Reviewed blocks bind here exactly as in db.upsert_event_tags, which
+    # enforces the same per-event membership; otherwise the two writers would
+    # undo each other on every merge/sync cycle.
+    format_ids = list(dict.fromkeys(wipe_ids + [leaf_id[t] for t in et.EVENT_TYPES]))
+    cur.execute(
+        "SELECT event_id, tag_id FROM event_tag_blocks WHERE tag_id IN ("
+        + ",".join(["%s"] * len(format_ids)) + ")" + scope_sql,
+        format_ids + (event_ids or []),
+    )
+    blocked = set(cur.fetchall())
     ins = []
     for eid, etype in rows:
-        ins.append((eid, leaf_id[etype]))
-        ins.append((eid, cat_id[type_cat[etype]]))
-        ins.append((eid, root))
+        for tid in (leaf_id[etype], cat_id[type_cat[etype]], root):
+            if (eid, tid) not in blocked:
+                ins.append((eid, tid))
     # Insert in chunks. mysql-connector's executemany collapses the whole list
     # into ONE multi-row INSERT statement, so a single call scales with the
     # active-event count and eventually exceeds `max_allowed_packet` — which it

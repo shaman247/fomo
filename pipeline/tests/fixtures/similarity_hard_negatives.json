@@ -7,6 +7,7 @@
     {"id":"history-versus-series-name","positive":["tag:4518"],"judgments":{"event:2149":2,"event:75523":2,"event:22932":2,"event:42226":2,"event:270175":0,"event:214723":0,"event:267508":0}},
     {"id":"yoga-positive-control","positive":["tag:959"],"judgments":{"event:267508":2,"event:222034":2,"event:249846":2,"event:214723":0,"event:265402":0}},
     {"id":"mixed-design-and-jazz-control","positive":["tag:33","tag:293"],"judgments":{"event:250122":2,"event:249775":2,"event:214723":2,"event:249736":2,"event:265402":0,"event:267508":0}},
-    {"id":"yoga-with-disliked-jazz-control","positive":["tag:959"],"negative":["tag:293"],"judgments":{"event:267508":2,"event:222034":2,"event:249846":2,"event:214723":0,"event:249736":0}}
+    {"id":"yoga-with-disliked-jazz-control","positive":["tag:959"],"negative":["tag:293"],"judgments":{"event:267508":2,"event:222034":2,"event:249846":2,"event:214723":0,"event:249736":0}},
+    {"id":"architecture-spanish-gallery-talks","positive":["tag:33"],"judgments":{"event:139640":2,"event:239852":2,"event:250122":2,"event:220702":0,"event:240738":0,"event:280642":0,"event:267454":0}}
   ]
 }

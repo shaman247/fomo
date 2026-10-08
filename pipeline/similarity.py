@@ -255,7 +255,7 @@ def documents(data, geotags):
 
 
 def fit(data, geotags=(), dimensions=96, min_df=5, seed=17, max_constituents=12,
-        encoder='lexical', workspace=None, model_cache=None, previous=None):
+        encoder='lexical', workspace=None, model_cache=None, previous=None, topic_roots=()):
     if previous is not None and encoder != 'minilm':
         raise ValueError('Stable refresh requires the semantic encoder')
     prior, previous_generation = previous_constituents(previous, data)
@@ -326,6 +326,7 @@ def fit(data, geotags=(), dimensions=96, min_df=5, seed=17, max_constituents=12,
     tag_positions = {t['id']: i for i, t in enumerate(data['tags'])}
     support = np.zeros(len(data['tags']), dtype=np.int32)
     tag_members = defaultdict(dict)
+    active_members = defaultdict(set)
     ancestors = ancestors_for(data['hierarchy'])
     for i, (kind, item) in enumerate(rows):
         direct = attached[kind][item['id']] - excluded
@@ -334,6 +335,8 @@ def fit(data, geotags=(), dimensions=96, min_df=5, seed=17, max_constituents=12,
             if tid in tag_positions:
                 ti = tag_positions[tid]
                 support[ti] += 1
+                if kind == 'event' and item['id'] in active:
+                    active_members[ti].add(i)
                 if kind == 'event':
                     key = (item['location_id'], normalize(item['name']))
                     previous_index = tag_members[ti].get(key)
@@ -395,6 +398,20 @@ def fit(data, geotags=(), dimensions=96, min_df=5, seed=17, max_constituents=12,
     result.parts = entity_parts + tag_parts
     result.topic_context = topic_context(data, rows, vectors, tag_vectors, tag_parts,
                                          attached, excluded, ancestors)
+    if topic_roots:
+        active_rows = [i for i, (kind, item) in enumerate(rows) if kind == 'event' and item['id'] in active]
+        outliers = outlier_examples(rows, vectors, tag_vectors, tag_parts, result.topic_context, active_members,
+                                    topic_tags(data, ancestors, excluded, topic_roots),
+                                    report['tagAnchorWeight'], active_rows)
+        result.topic_context = strengthen_outlier_context(data, rows, vectors, tag_vectors, result.topic_context,
+                                                          outliers, attached, excluded, ancestors)
+        report['aspectSuppression']['outliers'] = dict(
+            OUTLIER_ASPECTS, topicRoots=sorted(topic_roots), tags=len(outliers),
+            examples=sum(map(len, outliers.values())))
+        report['outlierExamples'] = [
+            {'tag': data['tags'][ti]['name'], 'event': rows[part][1]['id'], 'name': rows[part][1]['name'],
+             'share': round(share, 3), 'siblingMedian': round(median, 3)}
+            for ti, found in sorted(outliers.items()) for part, (share, median) in sorted(found.items())]
     result.projection = semantic_projection or {'vocabulary': np.array(vocabulary), 'idf': idf, 'basis': basis}
     return result
 
@@ -498,6 +515,13 @@ def suppress_incidental_aspects(vector, anchor, other_topics, strength=.5, max_t
     return unit(vector - strength * ((vector @ basis.T) @ basis))
 
 
+def co_topics(tid, event_id, attached, excluded, ancestors, positions):
+    """Positions of an event's other tags, outside the selected tag's own hierarchy."""
+    other = attached['event'][event_id] - excluded
+    return [positions[t] for t in sorted(other) if t in positions and t != tid
+            and t not in ancestors.get(tid, set()) and tid not in ancestors.get(t, set())]
+
+
 def topic_context(data, rows, vectors, tag_vectors, tag_parts, attached, excluded, ancestors):
     """Sparse tag-specific overrides; never change an event/venue preference."""
     positions = {tag['id']: i for i, tag in enumerate(data['tags'])}
@@ -509,13 +533,93 @@ def topic_context(data, rows, vectors, tag_vectors, tag_parts, attached, exclude
         for part in tag_parts[ti]:
             if part >= len(rows) or rows[part][0] != 'event':
                 continue
-            other = attached['event'][rows[part][1]['id']] - excluded
-            other = sorted(t for t in other if t in positions and t != tid
-                           and t not in ancestors.get(tid, set()) and tid not in ancestors.get(t, set()))
-            changed = suppress_incidental_aspects(vectors[part], anchor,
-                                                  tag_vectors[[positions[t] for t in other]])
+            other = co_topics(tid, rows[part][1]['id'], attached, excluded, ancestors, positions)
+            changed = suppress_incidental_aspects(vectors[part], anchor, tag_vectors[other])
             if not np.array_equal(changed, vectors[part]):
                 result.setdefault(ti, {})[part] = changed
+    return result
+
+
+# Pricing and delivery filters are attributes, not programs (the extractor emits both in every city).
+NON_TOPIC_ROOTS = ('Free', 'Virtual')
+# Outlier examples: a topic's event example whose nearest active events mostly lack
+# that topic, relative to the topic's other examples. Only those examples get the
+# stronger suppression; every other example keeps the ordinary context above.
+OUTLIER_ASPECTS = {'neighbors': 50, 'relativeShare': .25, 'minMedianShare': .2, 'minActiveMembers': 50,
+                   'minExamples': 4, 'maxTopicCosine': .3, 'strength': 1.}
+
+
+def topic_tags(data, ancestors, excluded, roots):
+    """Curated event-scope tags at or below a content root (never format/pricing/delivery)."""
+    roots = set(roots)
+    root_ids = {t['id'] for t in data['tags'] if t['type'] == 'tag'
+                and t.get('scope', 'event') == 'event' and t['name'] in roots}
+    return {ti for ti, t in enumerate(data['tags'])
+            if t['type'] == 'tag' and t.get('scope', 'event') == 'event' and t['id'] not in excluded
+            and ({t['id']} | ancestors.get(t['id'], set())) & root_ids}
+
+
+def tagged_neighbor_shares(examples, own_rows, active_rows, active_vectors, members, neighbors):
+    """Share of each example's nearest active events (itself excluded) that carry the topic."""
+    similarities = examples @ active_vectors.T
+    shares = []
+    for row, own in enumerate(own_rows):
+        scores = similarities[row].copy()
+        scores[active_rows == own] = -np.inf
+        nearest = np.argpartition(-scores, neighbors)[:neighbors] if len(scores) > neighbors else np.arange(len(scores))
+        shares.append(sum(int(active_rows[n]) in members for n in nearest) / max(1, min(neighbors, len(scores))))
+    return shares
+
+
+def outlier_examples(rows, vectors, tag_vectors, tag_parts, contexts, members, topics, weight, active_rows,
+                     settings=OUTLIER_ASPECTS):
+    """{tag index: {part: (share, sibling median)}} for event examples far below their siblings.
+
+    Measured on the vector as exported (context, then anchor conditioning), against
+    active events only. Outliers stay constituents; only their suppression changes.
+    """
+    active_rows = np.asarray(active_rows, dtype=np.int64)
+    active_vectors = vectors[active_rows]
+    result = {}
+    for ti in sorted(topics):
+        group = members.get(ti, set())
+        if len(group) < settings['minActiveMembers']:
+            continue
+        parts = [p for p in tag_parts[ti] if p < len(rows) and rows[p][0] == 'event']
+        if len(parts) < settings['minExamples']:
+            continue
+        context = contexts.get(ti, {})
+        examples = topic_constituents(np.array([context.get(p, vectors[p]) for p in parts]),
+                                      tag_vectors[ti], weight)
+        shares = tagged_neighbor_shares(examples, parts, active_rows, active_vectors, group, settings['neighbors'])
+        median = float(np.median(shares))
+        if median < settings['minMedianShare']:
+            continue  # siblings rarely find the topic either: no coherent norm to compare with
+        found = {p: (share, median) for p, share in zip(parts, shares)
+                 if share < settings['relativeShare'] * median}
+        if found:
+            result[ti] = found
+    return result
+
+
+def strengthen_outlier_context(data, rows, vectors, tag_vectors, contexts, outliers, attached, excluded,
+                               ancestors, settings=OUTLIER_ASPECTS):
+    """Recompute outlier examples' context from their raw vectors with stronger suppression."""
+    positions = {tag['id']: i for i, tag in enumerate(data['tags'])}
+    result = {ti: dict(group) for ti, group in contexts.items()}
+    for ti, found in outliers.items():
+        tid, anchor = data['tags'][ti]['id'], tag_vectors[ti]
+        for part in found:
+            other = co_topics(tid, rows[part][1]['id'], attached, excluded, ancestors, positions)
+            changed = suppress_incidental_aspects(vectors[part], anchor, tag_vectors[other],
+                                                  strength=settings['strength'],
+                                                  max_topic_cosine=settings['maxTopicCosine'])
+            if np.array_equal(changed, vectors[part]):
+                result.get(ti, {}).pop(part, None)
+            else:
+                result.setdefault(ti, {})[part] = changed
+        if ti in result and not result[ti]:
+            del result[ti]
     return result
 
 
@@ -750,7 +854,8 @@ def main():
         parser.error('--baseline requires --cases and a separate workspace')
     if args.previous_model and (args.encoder != 'minilm' or args.previous_model.resolve() == args.workspace.resolve()):
         parser.error('--previous-model requires minilm and a separate workspace')
-    from city_config import geotags
+    from city_config import geotags, get_config
+    roots = get_config().get('frontend', {}).get('filter_roots', {}).get('tag', [])
     start = time.monotonic()
     args.workspace.mkdir(parents=True, exist_ok=True)
     lock_stream = (args.workspace / 'build.lock').open('a')
@@ -783,7 +888,8 @@ def main():
         check_gate(browser_candidate, browser_baseline)
     report = write_model(data, fit(data, geotags(), args.dimensions, max_constituents=args.max_constituents,
                                   encoder=args.encoder, workspace=args.workspace, model_cache=args.model_cache,
-                                  previous=args.previous_model),
+                                  previous=args.previous_model,
+                                  topic_roots=[r for r in roots if r not in NON_TOPIC_ROOTS]),
                          args.output, args.workspace, validate=validate)
     print(json.dumps({k: v for k, v in report.items() if k != 'samples'}, indent=2), flush=True)
     print(f'Completed in {time.monotonic() - start:.1f}s; diagnostics: {args.workspace / "report.json"}')

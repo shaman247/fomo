@@ -130,10 +130,12 @@ def apply(cur, plan):
         if scope == 'event':
             cur.execute('UPDATE tag_rules SET replacement=%s WHERE BINARY replacement=BINARY %s', (target, source))
         cur.execute('UPDATE tag_aliases SET tag_id=%s WHERE tag_id=%s', (dst, src))
+        # Retire the source chip first: the alias writer refuses an alias that
+        # would shadow a still-curated identity.
+        cur.execute("UPDATE tags SET type='keyword',is_quick_filter=0,display_order=NULL WHERE id=%s", (src,))
         db.upsert_tag_alias(cur, source, dst)
         for column in ['context_tag_id', 'target_tag_id']:
             cur.execute(f'UPDATE tag_disambiguations SET {column}=%s WHERE {column}=%s', (dst, src))
-        cur.execute("UPDATE tags SET type='keyword',is_quick_filter=0,display_order=NULL WHERE id=%s", (src,))
     old_edges = {(e['parent_tag_id'], e['child_tag_id']) for e in plan['config']['edges']}
     new_edges = set(map(tuple, plan['next_edges']))
     for edge in old_edges - new_edges:

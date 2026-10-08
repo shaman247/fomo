@@ -60,7 +60,8 @@ class TagCanonicalizationTests(unittest.TestCase):
     def test_alias_writer_rejects_invalid_update_before_mutation(self):
         cursor=MagicMock()
         cursor.fetchone.return_value=('Music','event')
-        cursor.fetchall.return_value=[('Stand Up','Comedy')]
+        # First read: curated tags sharing the alias key (none); second: aliases.
+        cursor.fetchall.side_effect=[[],[('Stand Up','Comedy')]]
         with self.assertRaises(TagResolutionError):
             db.upsert_tag_alias(cursor,'standup',7)
         self.assertTrue(all(call.args[0].lstrip().startswith('SELECT') for call in cursor.execute.call_args_list))

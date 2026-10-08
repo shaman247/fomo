@@ -114,6 +114,33 @@ venue vectors, source memberships and refresh indices remain unchanged. Sparse
 contextual overrides are stored in the private archive; reports with
 `aspectSuppression` require those overrides when loaded.
 
+**Outlier examples** (`OUTLIER_ASPECTS`, since generation `f7d4b60b8bc1f910`) get
+stronger suppression; nothing else does. For each curated event topic below a
+content root in `frontend.filter_roots.tag` (pricing/delivery roots Free and Virtual
+excluded) with at least 50 active members and 4 event examples, measure each
+example's 50 nearest active events using the vector as exported. An example is an
+outlier when the share of those neighbors carrying the topic is below 0.25 × the
+median share of its sibling examples. A topic whose median is below 0.2 has no
+coherent norm and is skipped. An outlier stays a constituent, so its own event still
+matches. Its context is recomputed from the raw vector, removing co-topics with
+anchor cosine below 0.3 at full strength. This targets a legitimate example whose
+text is dominated by an incidental aspect, such as a Spanish-language architecture
+talk (Spanish Language sits at 0.151, just above the ordinary cutoff) that pulled other
+Spanish gallery talks, classes and book clubs into Architecture's top results.
+
+On the 2026-10-07 snapshot the rule touches 105 examples across 70 topics, changing 97
+contexts. Every recorded gate set passed at both precisions with no per-query
+regression. For each touched topic, the share of its own top 50 that carries the
+topic stayed the same in 43 topics, rose in 27 and fell in none. Rejected variants:
+pruning outliers, which removed the legitimate example's own match
+(`architecture-incidental-aspects` pairwise .85 → .80); no median floor, where
+topics such as Art Workshop (median .01) marked every example an outlier (246
+contexts, two topics' top-50 shares fell); and half or three-quarter strength, which
+left the Spanish gallery talks at #45/#25 or #447/#183 for Architecture rather than
+#5,186/#2,242. Many outliers are mis-tagged events. That is tag-data work; this rule
+only limits how far one example can spread a topic. The report records the
+settings and an `outlierExamples` list.
+
 Conditioning happens before signed-int8 quantization in both the exporter and
 evaluator. The public schema stays version 2 because its packed vectors already
 contain the transformation; the browser still uses the same closest-pair rule.
@@ -298,8 +325,9 @@ precisions, rather than pooling its metrics with the older cases:
   --report .scratch/similarity/hard-negatives.json --gate
 ```
 
-Repeat with `--browser` and a separate report path. Its 39 judgments cover
-incidental language, background music, repeated series names, genuine mixed-topic
+Repeat with `--browser` and a separate report path. Its 46 judgments cover
+incidental language (including Spanish-language gallery talks against a Spanish-language
+architecture talk), background music, repeated series names, genuine mixed-topic
 programs, and positive/negative preference controls. These cases and the authored
 text probes were used during model development, so neither is an independent
 held-out evaluation of the final scoring choice. Retain independent user review
@@ -307,8 +335,9 @@ as a separate release-quality requirement.
 
 Also run `similarity_probes.py --cases
 pipeline/tests/fixtures/similarity_aspect_probes.json` with the same workspace,
-snapshot, baseline and gate, at both precisions. Its 16 additional texts and 35
-judgments cover language versus subject, repeated series names, background music,
+snapshot, baseline and gate, at both precisions. Its 19 additional texts and 40
+judgments cover language versus subject (including a same-series Spanish gallery talk
+about a building versus one about photography or painting), repeated series names, background music,
 legitimate mixed topics and negative preferences. These authored cases were used
 for development; they do not replace independent user judgments.
 

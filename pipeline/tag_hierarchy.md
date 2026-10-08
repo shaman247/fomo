@@ -25,7 +25,15 @@ Run the audit after any hierarchy edit and weekly via `.claude/recurring-checks.
 
 ```sh
 ./venv/bin/python scripts/audit_tag_hierarchy.py --output .scratch/tag-orphans/NEW/audit.json
+./venv/bin/python scripts/audit_tag_facets.py --output .scratch/tag-orphans/NEW/facets.json
 ```
+
+The facet audit checks event *membership* against the graph: Format rows equal to
+`event_type`, closed topic ancestry (a format-implied shared leaf such as Workshop
+does not imply Education), no cross-scope rows, no blocked pairs, no alias that
+rewrites a curated topic into a format. Add `--apply --backup <new.json>` to repair
+drift/ancestors through `db.upsert_event_tags`; it commits only on convergence. See
+`.claude/notes/backlog-bl15-tags-20261007.md`.
 
 Exit 0 is clean; exit 1 reports findings. Unexpected failures must also be handled.
 The report checks curated reachability, cycles, explicit roots, invalid scope

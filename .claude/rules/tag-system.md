@@ -74,8 +74,10 @@ The "what is the event *about*?" (content/genre) axis. Each root has 2-4 levels 
 ### Format (1 root → 6 categories → 38 types)
 The "what is the attendee *doing*?" (structural) axis — mirrors `events.event_type` (see `.claude/rules/database-schema.md` and `pipeline/event_types.py`). One `Format` 🎫 root → six category tags (Performance, Participatory, Browsable, Social, Gathering, **Outings**) → the 38 type leaves (Concert, Workshop, Tour, …). Category tag names match the taxonomy category names exactly, with one unavoidable exception: the `Outing` category would collide with the `Outing` leaf (`(tags.name, tags.scope)` is UNIQUE), so the category tag is **"Outings"** (plural) while the leaf stays "Outing".
 
-- Membership is driven from `event_type`, not content keywords — `scripts/sync_format_tags.py` rebuilds `event_tags` for the family (run automatically in `/run-pipeline` Step 4). 30 leaves are Format-only and **authoritative** (membership == `event_type` exactly). 8 leaves (**Concert, Sports, Reading, Workshop, Fitness, Volunteer, Party, Festival**) also exist as content-genre nodes with their own subtrees, so they are **multi-parented** (under their genre root AND Format) and their membership is the **union** of content + `event_type` (additive, to keep the genre subtrees' ancestor invariant). `Sports` is the loosest — its content children (Swimming, Esports…) span formats; splitting genre-Sports from format-Sports is a possible future cleanup.
-- Search aliases (`tag_aliases`) map natural terms to the leaves (gig→Concert, standup→Comedy Show, gala→Benefit, career fair→Fair, …).
+- Membership is driven from `event_type`, not content keywords. 30 leaves are Format-only and **authoritative** (membership == `event_type` exactly). 8 leaves (**Concert, Sports, Reading, Workshop, Fitness, Volunteer, Party, Festival**) also exist as content-genre nodes with their own subtrees, so they are **multi-parented** (under their genre root AND Format) and their membership is the **union** of content + `event_type`.
+- **Facet rules (BL15, 2026-10-07, `pipeline/tag_facets.py`):** topic ancestry and keyword inference never reach Format-exclusive nodes (root, 6 categories, 30 exclusive leaves): `db.build_tag_ancestor_map` skips those edges, so Running → Sports but not → Performance/Format, and Sports is a computed topic root. `db.upsert_event_tags` ends with `sync_event_format_tags`, which makes the event's Format-exclusive rows exactly what `event_type` implies (minus blocks) and adds the shared leaf; a merge (`replace=True`) can therefore neither drop the mirror nor revive topic-derived Format rows from crawl history. `scripts/sync_format_tags.py` (full rebuild, `/run-pipeline` Step 4) honours blocks the same way. **A shared leaf present only because of `event_type` does not imply its topic parents** (a kids' craft Workshop is not Education; a Thanksgiving dinner Party is not Nightlife): backfill and the facet audit skip that derivation when `event_type == leaf`; content evidence still derives them at extraction. Whether shared-name topic chips should keep the union is a pending product choice (BL23).
+- **Facet health check:** `./venv/bin/python scripts/audit_tag_facets.py --output <new.json>` (exit 0 = converged) fails on Format drift, missing topic ancestors / `Other` fallback, cross-scope rows, present blocked pairs and aliases that rewrite a topic into a format. `--apply --backup <new.json>` repairs only the first two through the writer, under the lock, committing only on convergence. It also reports (never fails) Family-only-via-eligibility, delivery tags under a blocked Virtual and other shadowing aliases.
+- Search aliases (`tag_aliases`) map natural terms to the leaves (gig→Concert, standup→Comedy Show, career fair→Fair, …). They help search/classification only: the writer strips a Format-exclusive tag that `event_type` does not imply.
 - **Public UI separation (2026-09-08):** the date row has a dedicated FormatSelector, default **All Events**. Its 38 type checkboxes plus Other match exported `event_type` directly, OR within formats and AND with dates/topics. `export_tag_hierarchy` publishes `formats`, `format_only_tags`, and a topic graph with all format-only nodes/parent links removed. The 8 shared topic identities above remain in the topic graph with content parents only (Sports remains a root). `event_types.FORMAT_TOPIC_NAMES` is shared by the exporter and legacy sync; do not infer this set from non-Format parents, because Sports has none. Popups label the format separately. The DB mirror remains for pipeline compatibility; browser filtering no longer relies on that mirror.
 
 ### Venue Types (parallel hierarchy)
@@ -137,7 +139,7 @@ Some tag names have genuinely distinct meanings depending on context (e.g. "Pool
 - **Pipeline integration**: `process_tags()` in `pipeline/processor.py` defers ambiguous aliases during the main loop and resolves them in a second pass once co-tags are known. Rules are loaded via `db.get_tag_disambiguations()`.
 - **Default fallback**: every alias should have one rule with `context_tag_id=NULL` and `priority=0` — this is the variant chosen when no co-tag matches.
 
-Currently split: Avant Garde (Art / Music), Pool (Swimming / Billiards), Open Mic (Music / Comedy / Poetry), Biography (Film / Literature), Musical (Theater / Film), Drama (Theater / Film), Storytelling (Theater / Literature / Community).
+Currently split: Avant Garde (Art / Music), Pool (Swimming / Billiards), Open Mic (Music / Comedy / Poetry), Biography (Film / Literature), Musical (Theater / Film), Drama (Theater / Film), Storytelling (Theater / Literature / Community). Context-only rules (2026-10-07): `qa` → Q&A with Film, `rb` → R&B with Music, `indianclassical` → Indian Dance keyword with Dance; each falls back to the plain name.
 
 ## Tag Aliases
 
@@ -149,10 +151,14 @@ The `tag_aliases` table maps variant keyword names to canonical curated tags. Un
 - **Frontend**: aliases are indexed for search — typing "bingo night" surfaces the "Bingo" filter
 
 **Alias writes**: use `db.upsert_tag_alias(cursor, alias, tag_id)` under the shared
-`write_lock`. It validates normalized destinations and cycles before writing while
+`write_lock`. It refuses an alias whose key names a *different* curated topic (aliases
+resolve before curated names at ingestion, so `musical theater → Theater Show` erased the
+Musical Theater genre into a format; 13 such rows were removed 2026-10-07). Format-only
+names may still redirect to their topic (Game → Games). It validates normalized destinations and cycles before writing while
 preserving human-readable alias spelling for phrase search. Do not recreate the
-retired `Benefit → Fundraiser` back-edge: `fundraiser → Benefit` is the current
-Format alias. Existing curated tag identities remain distinct.
+retired `Benefit → Fundraiser` back-edge or the removed `fundraiser`/`gala → Benefit`
+aliases: Fundraiser and Gala are curated topics; the Benefit format comes from
+`event_type`. Existing curated tag identities remain distinct.
 
 **Historical repairs**: `scripts/reconcile_tag_aliases.py` previews alias flattening
 and keyword spelling/alias repairs. Application requires a reviewed config hash,
@@ -190,7 +196,7 @@ Examples of alias types:
 1. **Pipeline extracts keywords** — AI assigns raw keyword tags to crawled events
 2. **`tag_rules` rewrites + `tag_aliases`** — normalizes keywords and maps aliases to canonical tags during processing
 3. **`event_tags` stores direct tags** — both curated and keyword types
-4. **Backfill propagates ancestors** — `scripts/backfill_category_tags.py` adds all ancestor tags to `event_tags` so an event tagged "Latin Jazz" also gets "Jazz", "Music"
+4. **Backfill propagates topic ancestors** — `scripts/backfill_category_tags.py` adds topic ancestor tags to `event_tags` so an event tagged "Latin Jazz" also gets "Jazz", "Music" (never Format nodes; blocks bind; see the facet rules above). Format membership comes from `event_type` via the writer/sync
 5. **Export** — `pipeline/exporter.py` exports `src/data/tag_hierarchy.json` (with aliases) for the frontend filter panel
 6. **Frontend filters** — flat set intersection on `event_tags`, no tree traversal needed
 

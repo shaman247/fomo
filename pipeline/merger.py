@@ -1928,11 +1928,74 @@ def _visible_url_twin(suppressed_id, name, url, website_id, crawl_event_id,
 # - a winner that already holds the identity (the unrepaired bleed) is only
 #   skipped when the dismissed partner holds it at least as often AND carries
 #   the incoming name exactly.
+#
+# Posting boards retitle every repeat of one listing. Park Slope Parents posted
+# Dads Trivia as "Dads Trivia Night", "Dads Trivia Night at Sound & Fury" and
+# "Dads Trivia Night 10/21 @ Sound & Fury @ 6:30pm", so the exact identity never
+# matched and each new posting fused onto the venue's own Sound + Fury Trivia
+# Nights (510) despite the 510/253403 dismissed pair (BL13, 2026-10-07). When
+# no source matches exactly, a CORE identity is tried: same website, same known
+# venue, and the same words once date/time shapes and the venue's own words are
+# removed (_listing_core_words; at least two must remain). The home must carry
+# that core in its own name and the candidate must not. Exact matches always
+# decide first, so every verdict the exact identity reaches is unchanged.
 DISMISSED_HOME_SOURCES_SQL = (
     "SELECT es.event_id, ce.url, ce.name, ce.location_id FROM event_sources es "
     "JOIN crawl_events ce ON ce.id = es.crawl_event_id "
     "JOIN crawl_results cr ON cr.id = ce.crawl_result_id "
     "WHERE cr.website_id = %s AND es.event_id IN ({placeholders})")
+
+
+_CORE_MONTHS = frozenset(
+    'jan feb mar apr may jun jul aug sep sept oct nov dec january february march '
+    'april june july august september october november december'.split())
+_CORE_WEEKDAYS = frozenset(
+    'mon tue tues wed thu thur thurs fri sat sun monday tuesday wednesday thursday '
+    'friday saturday sunday'.split())
+_CORE_NUM_RE = re.compile(r'^\d{1,2}$')
+_CORE_ORDINAL_RE = re.compile(r'^\d{1,2}(st|nd|rd|th)$')
+_CORE_TIME_RE = re.compile(r'^\d{1,2}(am|pm)$')
+_CORE_YEAR_RE = re.compile(r'^(\d{2}|\d{4})$')
+CORE_NAME_MIN_WORDS = 2
+
+
+def _listing_core_words(norm_name, venue_norm=''):
+    """Words of a normalized listing name minus its date, time and venue words.
+
+    Removes only date/time SHAPES (weekday names, a month with its day, M/D and
+    a year, clock times) plus "at" and the venue's own name words, so "dads
+    trivia night 10 21 sound fury 6 30pm" and "dads trivia night at sound fury"
+    at Sound + Fury both give {dads, trivia, night}, while "Climate Imaginarium
+    (Day 2)" keeps its 2. Compared as a set, only between names at the SAME
+    known venue.
+    """
+    words = (norm_name or '').split()
+    drop = [False] * len(words)
+    for i, word in enumerate(words):
+        if word in _CORE_WEEKDAYS or word == 'at':
+            drop[i] = True
+        elif word in _CORE_MONTHS:
+            drop[i] = True
+            if i + 1 < len(words) and (_CORE_NUM_RE.match(words[i + 1])
+                                       or _CORE_ORDINAL_RE.match(words[i + 1])):
+                drop[i + 1] = True
+        elif _CORE_TIME_RE.match(word):
+            drop[i] = True
+            if i > 0 and _CORE_NUM_RE.match(words[i - 1]) and int(words[i - 1]) <= 12:
+                drop[i - 1] = True
+        elif word in ('am', 'pm') and i > 0 and _CORE_NUM_RE.match(words[i - 1]):
+            drop[i] = drop[i - 1] = True
+            if i > 1 and _CORE_NUM_RE.match(words[i - 2]) and int(words[i - 2]) <= 12:
+                drop[i - 2] = True
+        elif (_CORE_NUM_RE.match(word) and i + 1 < len(words)
+              and _CORE_NUM_RE.match(words[i + 1])
+              and 1 <= int(word) <= 12 and 1 <= int(words[i + 1]) <= 31):
+            drop[i] = drop[i + 1] = True
+            if i + 2 < len(words) and _CORE_YEAR_RE.match(words[i + 2]):
+                drop[i + 2] = True
+    venue_words = set((venue_norm or '').split())
+    return frozenset(w for w, dropped in zip(words, drop)
+                     if not dropped and w not in venue_words)
 
 
 def _source_identity_counts(group_sources, url_key, norm_name, location_id):
@@ -1956,19 +2019,53 @@ def _source_identity_counts(group_sources, url_key, norm_name, location_id):
 
 
 def _dismissed_home_veto(candidate_id, partners, group_sources, url_key, norm_name,
-                         location_id, event_name):
+                         location_id, event_name, venue_norm=None):
     """Skip `candidate_id` when a dismissed partner owns this listing.
 
     Returns None (no veto) or the tuple of partner ids holding the listing most
-    often. `event_name(event_id)` reads an event's stored name.
+    often. `event_name(event_id)` reads an event's stored name. `venue_norm`
+    (the normalized name of `location_id`) enables the core-identity fallback,
+    which is consulted only when no source carries the exact identity; every
+    name comparison below then uses core names.
     """
     if not partners:
         return None
     counts = _source_identity_counts(group_sources, url_key, norm_name, location_id)
+    key = norm_name
+    ident = normalize_name_for_dedup
+    core = False
+    if not counts and venue_norm is not None and location_id is not None:
+        key = _listing_core_words(norm_name, venue_norm)
+        if len(key) < CORE_NAME_MIN_WORDS:
+            return None
+        core = True
+
+        def ident(name):
+            return _listing_core_words(normalize_name_for_dedup(name or ''), venue_norm)
+        for event_id, sources in group_sources.items():
+            hits = sum(1 for _s_url, s_name, s_loc in sources
+                       if s_loc == location_id
+                       and _listing_core_words(s_name, venue_norm) == key)
+            if hits:
+                counts[event_id] = hits
     best = max((counts.get(p, 0) for p in partners), default=0)
-    if not best or normalize_name_for_dedup(event_name(candidate_id)) == norm_name:
+    if not best:
+        return None
+    if core:
+        # A core identity cannot tell apart two listings whose names differ
+        # only by date (Common Ground's dismissed 10/30 vs 10/31 parties), and
+        # a partner can hold a bleed of this listing (five Azure Day Party
+        # postings sit on RIVA 108035). So the candidate is exempt when its own
+        # name already covers the core, and a home must carry the core itself.
+        if key <= ident(event_name(candidate_id)):
+            return None
+    elif ident(event_name(candidate_id)) == key:
         return None
     homes = sorted(p for p in partners if counts.get(p, 0) == best)
+    if core:
+        homes = [h for h in homes if ident(event_name(h)) == key]
+        if not homes:
+            return None
     held = counts.get(candidate_id, 0)
     if held:
         # Contested: the candidate holds this listing too (usually the
@@ -1976,10 +2073,22 @@ def _dismissed_home_veto(candidate_id, partners, group_sources, url_key, norm_na
         # evidence outranks it.
         if best < held:
             return None
-        homes = [h for h in homes if normalize_name_for_dedup(event_name(h)) == norm_name]
+        homes = [h for h in homes if ident(event_name(h)) == key]
         if not homes:
             return None
     return tuple(homes)
+
+
+def _dormant_dismissed_home_ok(cursor, home_id, location_id):
+    """May a dismissed-pair home outside the dedup window take this source?"""
+    if location_id is None:
+        return False
+    cursor.execute(
+        "SELECT e.suppressed, e.location_id, "
+        "       EXISTS (SELECT 1 FROM event_merge_redirects r WHERE r.duplicate_id = e.id) "
+        "FROM events e WHERE e.id = %s", (home_id,))
+    row = cursor.fetchone()
+    return bool(row) and not row[0] and row[1] == location_id and not row[2]
 
 
 # ── Sibling-listing veto ──────────────────────────────────────────────────────
@@ -4036,7 +4145,9 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 verdict = _dismissed_home_veto(
                     existing_id, partners,
                     {eid: dismissed_home_sources[(eid, website_id)] for eid in group},
-                    identity_url_key, norm_name, location_id, _receiving_event_name)
+                    identity_url_key, norm_name, location_id, _receiving_event_name,
+                    venue_norm=(normalize_name_for_dedup(location_names_by_id[location_id])
+                                if location_id in location_names_by_id else None))
                 if verdict:
                     dismissed_home_skips += 1
                     print(f"  Dismissed-pair veto: source {ce_id} ({name}) skips "
@@ -4378,19 +4489,30 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         # Dismissed-pair home handoff: a veto above found the event that owns
         # this listing (same website + same name + same URL or venue on an
         # earlier source). When nothing else matched, give it the source rather
-        # than create a duplicate of it. Exactly one visible, dated home; dates
-        # must overlap; the home must not itself be contested. Like the URL
-        # tier it is exempt from the cross-location guard, and it never
-        # rewrites the home's venue below (the repair placed it there).
+        # than create a duplicate of it. Exactly one visible home whose dates
+        # overlap, or a DORMANT one; the home must not itself be contested.
+        # Like the URL tier it is exempt from the cross-location guard, and it
+        # never rewrites the home's venue below (the repair placed it there).
+        #
+        # Dormant = no occurrence in the dedup window (usually archived after
+        # its last date passed), so it is absent from the index and no tier can
+        # reach it. A recurring posting that returns weeks later (Park Slope
+        # Parents' monthly Dads Trivia, BL13) would otherwise create a fresh
+        # duplicate of its own home. A dormant home must be visible, at the
+        # incoming venue and not a merge-redirect duplicate; the matched path
+        # below un-archives it and adds the new dates.
         dismissed_home_handoff = False
         if matched_event_id is None and not dateless:
             homes = {h for verdict in dismissed_home_verdicts.values()
                      if verdict for h in verdict}
             if len(homes) == 1:
                 home_id = homes.pop()
-                if (home_id in event_ids_with_future
-                        and home_id not in suppressed_event_ids
-                        and _dates_overlap(home_id)
+                if home_id in event_ids_with_future:
+                    home_ok = (home_id not in suppressed_event_ids
+                               and _dates_overlap(home_id))
+                else:
+                    home_ok = _dormant_dismissed_home_ok(cursor, home_id, location_id)
+                if (home_ok
                         and not _program_veto({'id': home_id,
                                                'name': _receiving_event_name(home_id)})
                         and not _dismissed_home(home_id)):
@@ -4866,6 +4988,16 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         # run). See db.build_archival_temps for the correctness argument.
         db.build_archival_temps(cursor)
         try:
+            # Dates only a superseded crawl of the same website ever listed
+            # (a source switch, a retimed series). See db.prune_superseded_dates.
+            pruned, pruned_rows = _retry_on_deadlock(
+                db.prune_superseded_dates, cursor, connection, website_ids, temps_built=True,
+                edit_logger=_merge_edit_logger(
+                    cursor, connection, audit_context,
+                    archival_reason='superseded_source_dates'))
+            if pruned:
+                print(f"  Removed {pruned} future date(s) no current crawl supports "
+                      f"on {len({r[0] for r in pruned_rows})} event(s)")
             for website_id in website_ids:
                 archived_count, upcoming_events = _retry_on_deadlock(
                     db.archive_outdated_events, cursor, connection, website_id, temps_built=True,
@@ -4909,6 +5041,24 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                     for event_id, name, next_occ in dead_upcoming:
                         print(f"        - Event {event_id}: {name} (occurrence starts: {next_occ})")
                     total_upcoming_flagged += len(dead_upcoming)
+
+            # Visible events with NO event_sources rows (a crawl_events purge
+            # cascades them away) are unreachable from both passes above.
+            # See db.archive_sourceless_events.
+            sourceless_archived, sourceless_upcoming = _retry_on_deadlock(
+                db.archive_sourceless_events, cursor, connection,
+                website_ids=website_ids, temps_built=True,
+                edit_logger=_merge_edit_logger(
+                    cursor, connection, audit_context,
+                    archival_reason='no_sources'))
+            if sourceless_archived > 0:
+                print(f"  Archived {sourceless_archived} event(s) that no crawl sources")
+                total_archived += sourceless_archived
+                if sourceless_upcoming:
+                    print(f"    ⚠️  WARNING: {len(sourceless_upcoming)} current/upcoming event(s) among them:")
+                    for event_id, name, next_occ in sourceless_upcoming:
+                        print(f"        - Event {event_id}: {name} (occurrence starts: {next_occ})")
+                    total_upcoming_flagged += len(sourceless_upcoming)
         finally:
             db.drop_archival_temps(cursor)
 

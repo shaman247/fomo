@@ -32,7 +32,7 @@ except ImportError as e:
     sys.exit(1)
 
 from occurrence_times import standardize_time
-from tag_canonicalization import normalize_tag_key, canonical_names, resolve_aliases
+from tag_canonicalization import normalize_tag_key, canonical_names, resolve_aliases, TagResolutionError
 from constants import (MAX_PAGES_DEFAULT, FUTURE_WINDOW_DAYS,
                        FINGERPRINT_MAX_REUSE_DAYS, FINGERPRINT_COPY_MARKER,
                        CRAWL_EVENT_PASS_WINDOW_SECONDS)
@@ -1771,11 +1771,8 @@ def archive_dead_source_events(cursor, connection, temps_built=False, edit_logge
 
     Semantics, deliberately conservative:
     - Requires >= 1 event_sources row backed by a successful crawl. Events with
-      NO event_sources rows at all are also permanently unarchivable (the same
-      "has a source from website X" condition can never hold), but they are a
-      different population — 720 non-archived events today, mostly events whose
-      crawl history was pruned rather than events nobody lists any more — and
-      archiving them is not this function's call to make. They are left alone.
+      NO event_sources rows at all are a different population with their own
+      rules; see archive_sourceless_events.
     - Keeps the 14-day grace for events with a current/future occurrence, using
       the most recent supporting crawl from ANY source (the same rule as
       archive_outdated_events). A website disabled today therefore keeps its
@@ -1851,6 +1848,315 @@ def archive_dead_source_events(cursor, connection, temps_built=False, edit_logge
         drop_archival_temps(cursor)
 
     return archived_count, upcoming_events
+
+
+def archive_sourceless_events(cursor, connection, website_ids=(), temps_built=False,
+                              edit_logger=None):
+    """Archive visible events that NO crawl speaks for (zero event_sources rows).
+
+    Neither archival pass above can reach them: both start from an event's
+    sources. They appear when a `crawl_events` purge cascades away every
+    `event_sources` row of an event (CLAUDE.md "Crawler Debugging") or when a
+    script writes events without sources. Film-Maker's Co-op E238043 kept an
+    invented 2026-11-30 date live after its five bogus crawl_events were purged
+    (2026-10-07) until it was archived by hand.
+
+    Measured 2026-10-07: 1,268 non-archived sourceless events. 1,248 are
+    `suppressed` dedupe losers whose sources moved to their survivor; the dedupe
+    workflow owns those and they are never touched here. Of the 20 visible ones,
+    19 had only past dates and 1 had future dates on a never-crawled website.
+
+    Rules, deliberately conservative:
+    - Suppressed events are skipped.
+    - No current/future occurrence: archive now. Nothing is left to show,
+      which is what the per-website pass does for a sourced past event.
+    - Current/future occurrences: archive only when `events.website_id` is one
+      of `website_ids` (the websites whose latest crawl this merge just linked)
+      and that website's own evidence would archive a sourced event: its latest
+      site-crawl attempt is finished and its source horizon reaches one of the
+      event's remaining starts; it is neither an absence-free feed
+      (`_ws_no_absence_evidence`) nor a mixed IG + web site (a sourceless row
+      there may be an IG post, which the site crawl can never list, BL24); it
+      has >= 2 finished site crawls since the event was CREATED; the event is
+      older than the 14-day grace; and no recent start_too_future rejection
+      carries its name. A sourceless event has no "last seen", so its creation
+      time stands in for it. A website never crawled keeps its sourceless
+      events until their dates pass.
+    - The merger un-archives an archived event when a later crawl re-matches
+      it, so a false archive here lasts one crawl.
+
+    Returns (archived_count, upcoming_events) like archive_outdated_events.
+    """
+    if not temps_built:
+        build_archival_temps(cursor)
+    website_ids = sorted({w for w in (website_ids or ()) if w is not None})
+    future_branch = "FALSE"
+    params = []
+    if website_ids:
+        placeholders = ','.join(['%s'] * len(website_ids))
+        future_branch = f"""(
+                  e.website_id IN ({placeholders})
+                  AND e.created_at < DATE_SUB(NOW(), INTERVAL 14 DAY)
+                  AND EXISTS (
+                      SELECT 1 FROM _ws_crawl_state cs
+                      WHERE cs.website_id = e.website_id AND cs.picnob = 0
+                        AND cs.status IN ('processed', 'extracted')
+                        AND cs.processed_at IS NOT NULL
+                        AND (cs.last_start IS NULL OR EXISTS (
+                            SELECT 1 FROM event_occurrences eo
+                            WHERE eo.event_id = e.id
+                              AND (eo.start_date >= CURDATE() OR eo.end_date >= CURDATE())
+                              AND eo.start_date <= cs.last_start
+                        ))
+                  )
+                  AND NOT EXISTS (
+                      SELECT 1 FROM _ws_crawl_state cs
+                      WHERE cs.website_id = e.website_id AND cs.picnob = 1
+                  )
+                  AND e.website_id NOT IN (SELECT website_id FROM _ws_no_absence_evidence)
+                  AND (
+                      SELECT COUNT(*) FROM crawl_results crn
+                      WHERE crn.website_id = e.website_id
+                        AND NOT {_picnob_surface_sql('crn')}
+                        AND crn.status IN ('processed', 'extracted')
+                        AND crn.processed_at IS NOT NULL
+                        AND crn.processed_at > e.created_at
+                  ) >= 2
+                  AND NOT EXISTS (
+                      SELECT 1 FROM extraction_rejections er
+                      WHERE er.website_id = e.website_id
+                        AND er.rejection_type = 'start_too_future'
+                        AND er.created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY)
+                        AND er.event_name = e.name
+                  )
+              )"""
+        params = website_ids
+
+    cursor.execute(f"""
+        SELECT e.id, e.name,
+               (SELECT MIN(eo.start_date)
+                FROM event_occurrences eo
+                WHERE eo.event_id = e.id
+                  AND (eo.start_date >= CURDATE()
+                       OR eo.end_date >= CURDATE())) AS next_occurrence
+        FROM events e
+        WHERE e.archived = FALSE
+          AND COALESCE(e.suppressed, 0) = 0
+          AND NOT EXISTS (SELECT 1 FROM event_sources es WHERE es.event_id = e.id)
+          AND (
+              NOT EXISTS (SELECT 1 FROM _evt_future f WHERE f.event_id = e.id)
+              OR {future_branch}
+          )
+    """, params)
+    events_to_archive = cursor.fetchall()
+    upcoming_events = [(event_id, name, next_occ)
+                       for event_id, name, next_occ in events_to_archive if next_occ]
+    try:
+        archived_count = _archive_event_ids(
+            cursor, [row[0] for row in events_to_archive], edit_logger=edit_logger)
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        raise
+
+    if not temps_built:
+        drop_archival_temps(cursor)
+    return archived_count, upcoming_events
+
+
+# Superseded source dates (see prune_superseded_dates). The merge only ever
+# ADDS occurrences, so a date one source invented outlives the switch to a
+# better source: Laugh Tour w1367's homepage synthesized weekly shows through
+# Thanksgiving, Christmas and New Year's Day, and the Ticket Tailor feed that
+# replaced it never listed them (16 dates removed by hand, 2026-10-07). Same
+# grace and fresh-crawl count as event archival; the span floor stops a listing
+# that prints only a run's first and last date (BRIC's class cohorts) from
+# superseding the sessions between them.
+SUPERSEDED_DATE_GRACE_DAYS = 14
+SUPERSEDED_DATE_MIN_FRESH_CRAWLS = 2
+SUPERSEDED_DATE_MIN_SPAN_DATES = 3
+
+
+def _as_datetime(value):
+    """datetime or 'YYYY-MM-DD HH:MM:SS' string -> datetime (None passes through)."""
+    from datetime import datetime as _datetime
+    if value is None or isinstance(value, _datetime):
+        return value
+    return _datetime.fromisoformat(str(value)[:19])
+
+
+def prune_superseded_dates(cursor, connection, website_ids, temps_built=False,
+                           edit_logger=None):
+    """Delete future dates whose only support is a website's superseded crawls.
+
+    A future single-day occurrence O of a visible event E is deleted only when:
+    - every crawl_event of E that lists O's DATE (any time; a multi-day row
+      covering it counts too) comes from ONE website W in `website_ids`, on its
+      site-crawl surface. Dates with no crawl support at all (reviewed repairs,
+      envelopes) or with support from a second website or from a Picnob bundle
+      are kept, and so are W's dates when W carries no absence evidence
+      (`_ws_no_absence_evidence`);
+    - the newest of those supporting crawl_events is older than
+      SUPERSEDED_DATE_GRACE_DAYS;
+    - W's latest site-crawl attempt is finished, still lists E, and O lies
+      within its source horizon;
+    - at least SUPERSEDED_DATE_MIN_FRESH_CRAWLS of W's finished site crawls
+      newer than that support (the latest among them) list E with a span that
+      BRACKETS O: at least SUPERSEDED_DATE_MIN_SPAN_DATES distinct dates, the
+      first on or before O and the last on or after it, and none on O. A
+      listing that shows only an event's next date, or a run's first and last,
+      therefore never supersedes a detail page's fuller schedule.
+
+    Dates, not times: a listing that prints one start per day ("6:30pm" for
+    Merchant's House ghost tours that leave every half hour, 6:30-9pm) would
+    otherwise supersede every other real slot. Retimed duplicates on the same
+    day are out of scope here.
+
+    E always keeps the dates its latest bracketing crawl lists, so this never
+    empties an event; whole-event disappearance stays archival's job.
+    Returns (deleted_count, [(event_id, name, start_date), ...]).
+    """
+    from datetime import datetime as _datetime, timedelta as _timedelta, date as _date
+    website_ids = sorted({w for w in (website_ids or ()) if w is not None})
+    if not website_ids:
+        return 0, []
+    if not temps_built:
+        build_archival_temps(cursor)
+    try:
+        surface = _picnob_surface_sql('cr')
+        placeholders = ','.join(['%s'] * len(website_ids))
+        cursor.execute(f"""
+            SELECT cs.website_id, cs.crawl_result_id, cs.last_start
+            FROM _ws_crawl_state cs
+            WHERE cs.picnob = 0
+              AND cs.status IN ('processed', 'extracted')
+              AND cs.processed_at IS NOT NULL
+              AND cs.website_id IN ({placeholders})
+              AND cs.website_id NOT IN (SELECT website_id FROM _ws_no_absence_evidence)
+        """, website_ids)
+        state = {w: (cr_id, _as_date(last)) for w, cr_id, last in cursor.fetchall()}
+        if not state:
+            return 0, []
+        latest_ids = sorted({cr_id for cr_id, _ in state.values()})
+        placeholders = ','.join(['%s'] * len(latest_ids))
+        cursor.execute(f"""
+            SELECT DISTINCT cr.website_id, es.event_id
+            FROM crawl_results cr
+            JOIN crawl_events ce ON ce.crawl_result_id = cr.id
+            JOIN event_sources es ON es.crawl_event_id = ce.id
+            JOIN events e ON e.id = es.event_id
+            WHERE cr.id IN ({placeholders})
+              AND e.archived = FALSE AND COALESCE(e.suppressed, 0) = 0
+        """, latest_ids)
+        listed = {}  # event_id -> websites whose latest site crawl lists it
+        for w, event_id in cursor.fetchall():
+            if w in state:
+                listed.setdefault(event_id, set()).add(w)
+        if not listed:
+            return 0, []
+
+        today = _date.today()
+        grace_cutoff = _datetime.now() - _timedelta(days=SUPERSEDED_DATE_GRACE_DAYS)
+        event_ids = sorted(listed)
+        occurrences, sources, names = [], {}, {}
+        for start in range(0, len(event_ids), 1000):
+            chunk = event_ids[start:start + 1000]
+            ph = ','.join(['%s'] * len(chunk))
+            cursor.execute(f"""
+                SELECT eo.id, eo.event_id, eo.start_date, e.name
+                FROM event_occurrences eo
+                JOIN events e ON e.id = eo.event_id
+                WHERE eo.event_id IN ({ph})
+                  AND eo.start_date >= CURDATE()
+                  AND (eo.end_date IS NULL OR eo.end_date = eo.start_date)
+            """, chunk)
+            for occ_id, event_id, start_date, name in cursor.fetchall():
+                occurrences.append((occ_id, event_id, _as_date(start_date)))
+                names[event_id] = name
+            cursor.execute(f"""
+                SELECT es.event_id, ce.id, ce.created_at, cr.id, cr.website_id,
+                       {surface}, cr.status, cr.processed_at
+                FROM event_sources es
+                JOIN crawl_events ce ON ce.id = es.crawl_event_id
+                JOIN crawl_results cr ON cr.id = ce.crawl_result_id
+                WHERE es.event_id IN ({ph})
+            """, chunk)
+            for event_id, ce_id, created, cr_id, w, picnob, status, processed in cursor.fetchall():
+                sources.setdefault(event_id, []).append(
+                    (ce_id, _as_datetime(created), cr_id, w, bool(picnob),
+                     status in ('processed', 'extracted') and processed is not None))
+        ce_ids = sorted({s[0] for rows in sources.values() for s in rows})
+        ce_dates = {}  # crawl_event_id -> [(start, end)]
+        for start in range(0, len(ce_ids), 5000):
+            chunk = ce_ids[start:start + 5000]
+            ph = ','.join(['%s'] * len(chunk))
+            cursor.execute(
+                f"SELECT crawl_event_id, start_date, end_date FROM crawl_event_occurrences "
+                f"WHERE crawl_event_id IN ({ph})", chunk)
+            for ce_id, sd, ed in cursor.fetchall():
+                if sd is not None:
+                    ce_dates.setdefault(ce_id, []).append((_as_date(sd), _as_date(ed)))
+
+        def supports(ce_id, day):
+            return any(sd == day or (ed and sd < day <= ed)
+                       for sd, ed in ce_dates.get(ce_id, ()))
+
+        def brackets(ce_id, day):
+            starts = {sd for sd, _ in ce_dates.get(ce_id, ())}
+            return (len(starts) >= SUPERSEDED_DATE_MIN_SPAN_DATES
+                    and min(starts) <= day <= max(starts))
+
+        doomed = []
+        for occ_id, event_id, day in occurrences:
+            rows = sources.get(event_id, [])
+            support = [s for s in rows if supports(s[0], day)]
+            if not support or any(s[4] for s in support):
+                continue
+            websites = {s[3] for s in support}
+            if len(websites) != 1:
+                continue
+            (w,) = websites
+            if w not in listed.get(event_id, ()):
+                continue
+            latest_cr, horizon = state[w]
+            if horizon is not None and day > horizon:
+                continue
+            created = [s[1] for s in support if s[1] is not None]
+            if not created or max(created) >= grace_cutoff:
+                continue
+            newest_support = max(created)
+            fresh = {s[2] for s in rows
+                     if s[3] == w and not s[4] and s[5] and s[1] is not None
+                     and s[1] > newest_support and brackets(s[0], day)}
+            if latest_cr in fresh and len(fresh) >= SUPERSEDED_DATE_MIN_FRESH_CRAWLS:
+                doomed.append((occ_id, event_id, day))
+
+        if not doomed:
+            return 0, []
+        try:
+            for start in range(0, len(doomed), 1000):
+                chunk = doomed[start:start + 1000]
+                if edit_logger is not None:
+                    ph = ','.join(['%s'] * len(chunk))
+                    cursor.execute(
+                        f"SELECT id, event_id, start_date, start_time, end_date, end_time "
+                        f"FROM event_occurrences WHERE id IN ({ph})", [d[0] for d in chunk])
+                    for occ_id, event_id, sd, st, ed, et in cursor.fetchall():
+                        edit_logger.log_delete('event_occurrences', occ_id, {
+                            'event_id': event_id, 'start_date': str(sd), 'start_time': st,
+                            'end_date': str(ed) if ed else None, 'end_time': et})
+                ph = ','.join(['%s'] * len(chunk))
+                cursor.execute(f"DELETE FROM event_occurrences WHERE id IN ({ph})",
+                               [d[0] for d in chunk])
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
+        return len(doomed), [(event_id, names.get(event_id), day)
+                             for _, event_id, day in doomed]
+    finally:
+        if not temps_built:
+            drop_archival_temps(cursor)
 
 
 def get_extracted_content(cursor, crawl_result_id):
@@ -2620,7 +2926,13 @@ def build_tag_ancestor_map(cursor):
     Returns (ancestor_map, root_tags) where:
       - ancestor_map: dict mapping normalized_tag_name -> set of ancestor tag names
       - root_tags: set of normalized names for root tags (no parents, excl. Free/Virtual)
+
+    Topic ancestry only: edges touching a Format-exclusive node (Format root,
+    categories, exclusive type leaves) are skipped, so Running never derives
+    Performance/Format. Format membership comes from event_type alone
+    (tag_facets, upsert_event_tags, scripts/sync_format_tags.py).
     """
+    from tag_facets import FORMAT_EXCLUSIVE
     CROSS_CUTTING = {'free', 'virtual'}
 
     # Load all hierarchy edges with tag names
@@ -2631,7 +2943,9 @@ def build_tag_ancestor_map(cursor):
         JOIN tags c ON th.child_tag_id = c.id
         WHERE p.scope='event' AND c.scope='event'
     """)
-    edges = cursor.fetchall()
+    edges = [row for row in cursor.fetchall()
+             if _col(row, 'parent_name', 0) not in FORMAT_EXCLUSIVE
+             and _col(row, 'child_name', 1) not in FORMAT_EXCLUSIVE]
 
     # Build direct parent map: normalized_child -> set of parent names
     direct_parents = {}
@@ -2721,6 +3035,17 @@ def upsert_tag_alias(cursor, alias, tag_id):
         raise ValueError(f'Unknown tag id: {tag_id}')
     target = _col(row, 'name', 0)
     scope = _col(row, 'scope', 1)
+    # An alias must not shadow a different curated identity: ingestion resolves
+    # aliases first, so `musical theater -> Theater Show` erased the Musical
+    # Theater genre into a format. Format-exclusive names (Game -> Games) may
+    # still redirect to their topic counterpart.
+    from tag_facets import FORMAT_EXCLUSIVE
+    cursor.execute("SELECT name FROM tags WHERE scope=%s AND type='tag' AND REPLACE(LOWER(name),' ','')=%s",
+                   (scope, normalize_tag_key(alias)))
+    shadowed = [_col(r, 'name', 0) for r in cursor.fetchall()]
+    shadowed = [n for n in shadowed if n != target and not (scope == 'event' and n in FORMAT_EXCLUSIVE)]
+    if shadowed:
+        raise TagResolutionError(f'Alias {alias!r} would shadow curated {scope} tag {shadowed[0]!r}')
     cursor.execute('SELECT a.alias, t.name FROM tag_aliases a JOIN tags t ON t.id=a.tag_id WHERE a.scope=%s', (scope,))
     pairs = [(_col(r, 'alias', 0), _col(r, 'name', 1)) for r in cursor.fetchall()
              if _col(r, 'alias', 0).casefold() != alias.casefold()]
@@ -2785,6 +3110,57 @@ def upsert_event_tags(cursor, event_id, tag_names, replace=False):
             tag_id = cursor.lastrowid
         if tag_id in blocked:
             continue
+        cursor.execute(
+            "INSERT IGNORE INTO event_tags (event_id, tag_id) VALUES (%s, %s)",
+            (event_id, tag_id)
+        )
+    sync_event_format_tags(cursor, event_id, blocked)
+
+
+_format_tag_id_cache = None
+
+
+def _format_tag_ids(cursor):
+    """name -> id for the Format family (exclusive nodes + shared leaves)."""
+    global _format_tag_id_cache
+    if _format_tag_id_cache is not None:
+        return _format_tag_id_cache
+    from tag_facets import FORMAT_FAMILY
+    names = sorted(FORMAT_FAMILY)
+    cursor.execute("SELECT name, id FROM tags WHERE scope='event' AND name IN (%s)"
+                   % ','.join(['%s'] * len(names)), names)
+    ids = {_col(r, 'name', 0): _col(r, 'id', 1) for r in cursor.fetchall()}
+    if len(ids) == len(names):
+        _format_tag_id_cache = ids
+    return ids
+
+
+def sync_event_format_tags(cursor, event_id, blocked=None):
+    """Make one event's Format membership exactly what its event_type implies.
+
+    Format-exclusive rows (root, categories, exclusive leaves) not implied by
+    event_type are removed, wherever they came from (crawl history, topic
+    edges); the implied leaf/category/root are added unless blocked. Shared
+    leaves (Concert, Workshop, ...) are added for the type but never removed,
+    matching scripts/sync_format_tags.py. A merge therefore no longer drops or
+    re-derives the Format mirror between pipeline syncs.
+    """
+    from tag_facets import FORMAT_EXCLUSIVE, format_membership
+    ids = _format_tag_ids(cursor)
+    if not ids:
+        return
+    if blocked is None:
+        cursor.execute("SELECT tag_id FROM event_tag_blocks WHERE event_id = %s", (event_id,))
+        blocked = {row[0] for row in cursor.fetchall()}
+    cursor.execute("SELECT event_type FROM events WHERE id = %s", (event_id,))
+    row = cursor.fetchone()
+    want = {ids[n] for n in format_membership(_col(row, 'event_type', 0) if row else None)
+            if n in ids} - set(blocked)
+    stale = sorted(ids[n] for n in FORMAT_EXCLUSIVE if n in ids and ids[n] not in want)
+    if stale:
+        cursor.execute("DELETE FROM event_tags WHERE event_id = %s AND tag_id IN (%s)"
+                       % ('%s', ','.join(['%s'] * len(stale))), [event_id, *stale])
+    for tag_id in sorted(want):
         cursor.execute(
             "INSERT IGNORE INTO event_tags (event_id, tag_id) VALUES (%s, %s)",
             (event_id, tag_id)

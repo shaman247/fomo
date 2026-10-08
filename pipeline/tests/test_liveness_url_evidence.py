@@ -185,7 +185,7 @@ class ListedURLDatabaseTests(unittest.TestCase):
             'CREATE TABLE event_urls (id INT, event_id INT, url VARCHAR(2000), sort_order INT)',
             'CREATE TABLE event_sources (event_id INT, crawl_event_id INT)',
             'CREATE TABLE crawl_events (id INT, crawl_result_id INT)',
-            'CREATE TABLE crawl_results (id INT, website_id INT, processed_at DATETIME)',
+            'CREATE TABLE crawl_results (id INT, website_id INT, processed_at DATETIME, filename TEXT)',
             'CREATE TABLE event_occurrences (event_id INT, start_date DATE)',
             'CREATE TABLE event_liveness_probes (event_id INT, probed_at DATETIME)',
             "INSERT INTO events VALUES (1,'Tour',0,0),(2,'Case-sensitive path',0,0),(3,'Many links',0,0)",
@@ -195,7 +195,7 @@ class ListedURLDatabaseTests(unittest.TestCase):
             "(6,3,'https://example.test/older-3',2),(7,3,'https://example.test/fourth',3)",
             'INSERT INTO event_sources VALUES (1,10),(2,10),(3,10)',
             'INSERT INTO crawl_events VALUES (10,10)',
-            'INSERT INTO crawl_results VALUES (10,7,DATE_SUB(NOW(),INTERVAL 1 DAY))',
+            "INSERT INTO crawl_results VALUES (10,7,DATE_SUB(NOW(),INTERVAL 1 DAY),'site.md')",
             'INSERT INTO event_occurrences SELECT id,DATE_ADD(CURDATE(),INTERVAL 1 DAY) FROM events',
         ):
             cur.execute(sql)
@@ -203,8 +203,8 @@ class ListedURLDatabaseTests(unittest.TestCase):
         def archival(cursor):
             cursor.execute('CREATE TEMPORARY TABLE _evt_future AS SELECT id AS event_id FROM events')
         def latest(cursor):
-            cursor.execute('CREATE TEMPORARY TABLE _lp_latest (website_id INT,latest DATETIME)')
-            cursor.execute('INSERT INTO _lp_latest VALUES (7,NOW()),(8,NOW())')
+            cursor.execute('CREATE TEMPORARY TABLE _lp_latest (website_id INT,picnob TINYINT,latest DATETIME)')
+            cursor.execute('INSERT INTO _lp_latest VALUES (7,0,NOW()),(8,0,NOW())')
             cursor.execute('CREATE TEMPORARY TABLE _lp_listed (website_id INT,url VARCHAR(2000),INDEX(website_id,url(191)))')
             cursor.execute("INSERT INTO _lp_listed VALUES (7,'https://example.test/live'),"
                            "(8,'https://example.test/old'),(7,'https://example.test/case'),"

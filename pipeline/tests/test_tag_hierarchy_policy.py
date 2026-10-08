@@ -95,7 +95,7 @@ class HierarchyPolicyTests(unittest.TestCase):
         import backfill_category_tags as backfill
         conn, cur = MagicMock(), MagicMock()
         conn.cursor.return_value = cur
-        cur.fetchall.return_value = [{'id': 1, 'name': 'Uncategorized', 'tags': ''}]
+        cur.fetchall.side_effect = [[{'id': 1, 'name': 'Uncategorized', 'event_type': None, 'tags': ''}], []]
         cur.fetchone.return_value = None
         with patch.object(backfill, 'validate_hierarchy'), \
                 patch.object(backfill, 'get_tag_hierarchy_for_export', return_value=[]), \

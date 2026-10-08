@@ -200,7 +200,8 @@ class DryRunApplyTests(unittest.TestCase):
                 return self.result
 
         cursor = Cursor()
-        with patch('icon_catalog.record_unknown') as record:
+        with patch('icon_catalog.record_unknown') as record, \
+                patch.object(ate.db, 'sync_event_format_tags'):
             ate.write_changes(cursor, plan)
         links = [p for sql, p in cursor.calls if sql.startswith('INSERT IGNORE INTO event_tags')]
         self.assertIn((1, 11), links)

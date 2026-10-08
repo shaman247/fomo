@@ -41,6 +41,8 @@ class MergeScopeForwardingTests(unittest.TestCase):
             db = stack.enter_context(patch.object(merger, 'db'))
             db.build_tag_ancestor_map.return_value = ({}, set())
             db.archive_dead_source_events.return_value = (0, [])
+            db.prune_superseded_dates.return_value = (0, [])
+            db.archive_sourceless_events.return_value = (0, [])
             cleanup = stack.enter_context(patch.object(
                 merger, '_deduplicate_same_name_events', return_value=0))
             connection = MagicMock()

@@ -295,7 +295,11 @@ Each merge prints a unique `Merge audit ID`. Its edit-log entries share that ID
 in JSON `edits.editor_info`; full pipeline runs also include `crawl_run_id`.
 Archival transitions record `archived` from `0` to `1`, with
 `archival_reason=missing_from_latest_sources` and `trigger_website_id`, or
-`archival_reason=all_sources_disabled` for the global disabled-source sweep.
+`archival_reason=all_sources_disabled` for the global disabled-source sweep, or
+`archival_reason=no_sources` for visible events with no `event_sources` rows.
+Future dates removed because only a superseded crawl of the same website listed
+them are logged as `event_occurrences` deletes with
+`archival_reason=superseded_source_dates`.
 Updates and audit entries commit together. The existing candidate and grace
 rules still determine eligibility.
 
