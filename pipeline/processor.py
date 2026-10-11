@@ -4528,6 +4528,29 @@ def _numeric_identity_conflict(a, b):
     return not (na <= nb or nb <= na)
 
 
+def _contains_at_word_end(hay, needle):
+    """`needle in hay`, where the match does not end inside a word.
+
+    The fuzzy tier admits a candidate key that CONTAINS the source name, then
+    scores it by Levenshtein ratio. A name whose last word is cut short scores
+    high and names something else (BL31): "the shop" in "the shope" (0.94, a
+    Brooklyn cafe took a Midtown store's events), "manhatta" (a restaurant) in
+    "manhattan", a sublocation "roof" in "unlisted rooftop". A dropped plural
+    is the one in-word extension kept ("nowaday" / "nowadays"). The START may
+    fall inside a word: normalization glues hyphenated prefixes
+    ("PGML-Biblioteca Criolla" -> "pgmlbiblioteca criolla"), and no measured
+    mis-pin came from that side.
+    """
+    start = hay.find(needle)
+    while start != -1:
+        tail = hay[start + len(needle):]
+        if (not tail or not tail[0].isalnum()
+                or (tail[0] == 's' and (len(tail) == 1 or not tail[1].isalnum()))):
+            return True
+        start = hay.find(needle, start + 1)
+    return False
+
+
 def _fuzzy_ratio(candidate, key):
     """Levenshtein ratio for the fuzzy tier, but 0 for a venue-type swap or a
     numeric-identifier conflict."""
@@ -6461,6 +6484,22 @@ def build_locations_map(cursor):
     # not override a human's deliberate flagship choice.
     weak_keys -= strong_keys
 
+    # short_names key -> every location claiming it, for keys 2+ rows claim.
+    # The tier is a plain dict, so the last row written answers for all of
+    # them; the fuzzy tier picks among the claimants instead (BL31).
+    claimants = {}
+    for loc in locations_data:
+        short_name = loc.get('short_name') or ''
+        for key in {short_name.lower(), _normalize_location_name(short_name)}:
+            info = locations_map['short_names'].get(key)
+            if info is not None:
+                claimants.setdefault(key, {})[loc.get('id')] = dict(
+                    info, id=loc.get('id'), name=loc.get('name'),
+                    address=loc.get('address'), lat=loc.get('lat'),
+                    lng=loc.get('lng'), emoji=loc.get('emoji'))
+    locations_map['shared_short_names'] = {
+        key: list(by_id.values()) for key, by_id in claimants.items() if len(by_id) >= 2}
+
     # Website-linked locations (from website_locations table)
     locations_map['website_linked'] = db.get_website_locations_map(cursor)
     # Organizer names, for the multi-venue home-venue fallback (Step 7b): the
@@ -6969,8 +7008,22 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     # only consults primary keys — it represents user-curated mappings that take
     # precedence over our extraction-recovery heuristics.
     primary_search_keys = location_keys + short_exact_keys
+    # BL33: a location_name that normalization empties ("Manhattan", any bare
+    # borough or city name) builds no key, so a website-scoped alias spelling
+    # exactly that string was unreachable: w3614/w3631 curate "Manhattan" ->
+    # the borough pin and their ~60 rows in 90 days still fell through to a
+    # fallback or NULL. The scoped tier indexes the raw lowercase alias too, so
+    # try the raw string there, after the location keys and before the event
+    # name. Only without a sublocation: "Manhattan" + "Central Park" names the
+    # park, which the exact tier finds. Step 1 ONLY: the cross-site tier (5c)
+    # also reads primary_search_keys, and one site's bare-borough alias must
+    # not decide every other site's bare "Manhattan".
+    website_alt_keys = list(primary_search_keys)
+    if raw_loc_lower and not normalized_loc and not normalized_subloc:
+        website_alt_keys.append(raw_loc_lower)
     if len(normalized_name) > 3:
         primary_search_keys.append(normalized_name)
+        website_alt_keys.append(normalized_name)
 
     # Also let website-scoped alts (Step 1) match the venue-name portion before a
     # comma-address tail. Aggregators often emit "Columbus Park, 199 W Franklin
@@ -6981,6 +7034,7 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
         before_comma_key = _normalize_location_name(location_name_raw.split(',')[0])
         if len(before_comma_key) > 3 and before_comma_key not in primary_search_keys:
             primary_search_keys.append(before_comma_key)
+            website_alt_keys.append(before_comma_key)
 
     # Variant: handle "Branch, Room" patterns (e.g. BPL "Highlawn, Meeting Room")
     # by also trying just the part before the first comma. Some extraction passes
@@ -7059,7 +7113,7 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     # should win, and a per-website override deserves the original input.
     if website_id and website_id in locations_map.get('website_scoped', {}):
         website_tier = locations_map['website_scoped'][website_id]
-        for key in primary_search_keys:
+        for key in website_alt_keys:
             if key in website_tier:
                 # The ONE thing curation cannot speak for: the key is the
                 # COLLAPSED form, so a curated "Downtown Manhattan" alias also
@@ -7224,6 +7278,21 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                     # A derived bare key that names a ROOM rather than a venue
                     # ("dance room") can't pick the building it sits in.
                     if _is_bare_room_phrase(locations_map, key, raw_loc_lower):
+                        continue
+                    # A bare municipality/neighbourhood name is not the
+                    # display shorthand of a venue somewhere else (BL31): the
+                    # short_name "Sunnyside" of Washington Irving's house in
+                    # Irvington took every bare "Sunnyside" (a Queens
+                    # neighbourhood). Prefix/fuzzy already refuse `city_only`
+                    # input; this closes the exact short_names tier the same
+                    # way, unless the venue is a placemarker for that place or
+                    # this website's own linked venue.
+                    if (city_only and tier_name == 'short_names'
+                            and key == normalized_loc
+                            and not _is_city_placemarker(cand, normalized_loc)
+                            and cand.get('id') not in {
+                                v.get('id') for v in
+                                locations_map.get('website_linked', {}).get(website_id, ())}):
                         continue
                     if (home_is_initialism and key == normalized_loc
                             and cand.get('id') != home_venue.get('id')):
@@ -7525,6 +7594,34 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     loc_is_long = len(normalized_loc) > 3
     subloc_is_long = len(normalized_subloc) > 3
 
+    # A short_name two or more rows claim belongs to whichever claimant the
+    # source's own area/region text leaves standing, or to none of them (BL31).
+    # The tier is a dict, so it answered with the row written last: bare
+    # "Washington Park" (short_name of SAPO block 11433 in Fort Greene AND of
+    # Union City's park 7211) went to the block at 0.99 from every website,
+    # after Step 2 had declined it as a brand-family key. "Pratt Manhattan"
+    # still reaches the Manhattan campus, since the Brooklyn one conflicts.
+    # Narrower than a brand-family refusal here, which was measured on
+    # 2026-08-17 and un-pinned 2,971 rows: normalization is lossy on both
+    # sides, so "Green Room NYC" already looks like the bare brand.
+    shared_short_names = locations_map.get('shared_short_names', {})
+
+    def _sole_claimant(key):
+        alive = [c for c in shared_short_names[key]
+                 if not _area_qualifier_conflict(raw_geo_fields, c, area_classes)
+                 and not conflicts(c)]
+        return alive[0] if len(alive) == 1 else None
+
+    # When the source location is literally such a key (no qualifier, no
+    # sublocation), it is ambiguous, not misspelled: no global near-spelling
+    # may answer it either ("Washington Park" -> short_name "Washington Sq
+    # Park" at 0.91). The website's own scoped aliases and an exact event-name
+    # key still can. Raw, not normalized: "Tipsy Scoop Manhattan" collapses to
+    # the shared "tipsy scoop" but names its branch.
+    ambiguous_identity = (not normalized_subloc
+                          and raw_loc_lower in shared_short_names
+                          and _sole_claimant(raw_loc_lower) is None)
+
     if len(full_loc) > 3 or name_is_long:
         for priority, tier in all_tiers:
             for key in tier:
@@ -7541,17 +7638,28 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                 # answering it is pure loss.
                 if _is_bare_room_phrase(locations_map, key, raw_loc_lower):
                     continue
+                entry = get_first(tier[key])
+                # A short_name two or more rows claim: the dict kept whichever
+                # row was written last, so pick among the claimants instead.
+                if priority == 2 and key in shared_short_names:
+                    entry = _sole_claimant(key)
+                    if entry is None:
+                        continue
+                elif ambiguous_identity and priority >= 0 and key != normalized_name:
+                    continue
 
                 if (city_only and key != normalized_name
-                        and not _is_city_placemarker(get_first(tier[key]), normalized_loc)):
+                        and not _is_city_placemarker(entry, normalized_loc)):
                     continue
 
                 is_match = (
                     key == normalized_loc or
                     (name_is_long and key == normalized_name) or
                     (len(key) > 3 and key in full_loc) or
-                    (loc_is_long and not loc_is_generic and normalized_loc in key) or
-                    (subloc_is_long and not subloc_is_generic and normalized_subloc in key)
+                    (loc_is_long and not loc_is_generic
+                     and _contains_at_word_end(key, normalized_loc)) or
+                    (subloc_is_long and not subloc_is_generic
+                     and _contains_at_word_end(key, normalized_subloc))
                 )
 
                 # Token-overlap tripwire: if a variant shares ≥2 long tokens
@@ -7606,7 +7714,7 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                     # region-conflict half stays where it was: falling through
                     # to a second-best candidate across a state line is exactly
                     # the guess that guard exists to refuse.
-                    if _area_qualifier_conflict(raw_geo_fields, get_first(tier[key]), area_classes):
+                    if _area_qualifier_conflict(raw_geo_fields, entry, area_classes):
                         continue
                     if name_is_long and key == normalized_name:
                         score = 1.0
@@ -7658,7 +7766,7 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
 
                     if score >= FUZZY_MATCH_THRESHOLD and (score > best_score or (score == best_score and priority < best_priority)):
                         best_score, best_priority = score, priority
-                        best_result = get_first(tier[key])
+                        best_result = entry
 
     if best_result and (result := make_result(best_result, 'fuzzy')):
         return result
