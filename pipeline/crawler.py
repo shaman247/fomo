@@ -274,6 +274,41 @@ def _is_soft_404(content):
     return any(marker in lowered for marker in SOFT_404_MARKERS)
 
 
+# --- js_code that knows its own capture is incomplete -------------------------
+#
+# A pager js_code loads page 1 normally, then fetches later pages in-page (sync
+# XHR or awaited fetch). When the origin's WAF lets the document through but
+# 403s those follow-up requests, the old scripts skipped the failed page and
+# returned whatever they had, so page 1 alone was stored as `processed` and the
+# merger saw a truncated inventory: DOROT w2134 74 -> 10 events and St. John the
+# Divine w3190 12 -> 1 on 2026-10-10 (Cloudflare `cf-mitigated: challenge` on
+# `/calendar/page/2/` and the Nov-Jan month views). The crawler cannot see an
+# in-page request fail, so the script has to say so (BL29).
+#
+# Contract: on any non-2xx (or thrown) fetch the script REPLACES the body with
+#   <h1>FOMO-CRAWL-INCOMPLETE</h1><p><reason></p>
+# Replacing, not appending, matters: fit_markdown prunes a small note off a big
+# page, while a tiny body falls back to raw_markdown and keeps the token. The
+# <p> keeps crawl4ai's structural anti-bot check from calling the page a block.
+# The URL then takes the bot-challenge retry path (fresh full browser, backoff):
+# these walls are as transient as a page-level challenge, DOROT's 09-24 crawl
+# came back whole two hours after a 10-event one. Unresolved, it fails the
+# crawl with the script's own reason. DOC NYC (wu 1700) used a size-only form
+# of this (a sub-MIN_CRAWL_CONTENT_SIZE body), which a second URL would mask.
+JSCODE_INCOMPLETE_SENTINEL = 'FOMO-CRAWL-INCOMPLETE'
+_JSCODE_INCOMPLETE_RE = re.compile(re.escape(JSCODE_INCOMPLETE_SENTINEL) + r'[\s#*:_-]*([^\n]*)')
+
+
+def _jscode_incomplete_reason(content):
+    """The script's reason if a js_code marked this capture incomplete, else None."""
+    if not content:
+        return None
+    match = _JSCODE_INCOMPLETE_RE.search(content)
+    if not match:
+        return None
+    return match.group(1).strip()[:200] or 'no reason given'
+
+
 # A JSON API feed that legitimately has nothing to serve right now
 # ({"data":{"events":[],"has_next_page":false},"success":true} = 65 bytes) turns
 # into a ~163-byte combined_markdown (the URL line plus the payload) and trips
@@ -560,11 +595,13 @@ async def _refetch_past_challenge(url, url_config, user_agent, attempts=2, backo
                     chunk = result.markdown.fit_markdown
                     if not chunk or len(chunk) < 500:
                         chunk = result.markdown.raw_markdown
-                    if not chunk or _is_bot_challenge(chunk) or _is_soft_404(chunk):
+                    if (not chunk or _is_bot_challenge(chunk) or _is_soft_404(chunk)
+                            or _jscode_incomplete_reason(chunk)):
                         content = ""
                         break
                     content += chunk + "\n\n"
-            if content and not _is_bot_challenge(content) and not _is_soft_404(content):
+            if (content and not _is_bot_challenge(content) and not _is_soft_404(content)
+                    and not _jscode_incomplete_reason(content)):
                 print(f"      Challenge cleared on retry {attempt} ({len(content)} chars)")
                 return content
             print(f"      Retry {attempt}: still challenged")
@@ -840,6 +877,9 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         # Never retried — they are dropped and reported in the failure message.
         soft_404_urls = []
         empty_origin_urls = []
+        # URL -> reason, for URLs whose js_code reported an incomplete capture
+        # (JSCODE_INCOMPLETE_SENTINEL). Retried like a challenge; cleared on recovery.
+        incomplete_reasons = {}
         # How many URLs we actually tried, and how many came back as a real
         # fetch. A crawl where every URL failed must not be storable as healthy.
         attempted_urls = 0
@@ -1013,6 +1053,12 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                     print(f"    - Challenge/error interstitial ({len(url_content)} chars) - queued for retry")
                     challenged_urls.append((url, url_config))
                     continue
+                incomplete = _jscode_incomplete_reason(url_content)
+                if incomplete:
+                    print(f"    - js_code reported an incomplete capture ({incomplete[:100]}) - queued for retry")
+                    incomplete_reasons[url] = incomplete
+                    challenged_urls.append((url, url_config))
+                    continue
                 if _is_soft_404(url_content):
                     # Permanent, so no retry: storing it would look like a
                     # healthy 0-event crawl and let the merger archive on it.
@@ -1060,8 +1106,14 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
             if recovered:
                 combined_markdown += challenged_url + "\n" + recovered
                 succeeded_urls += 1
+                incomplete_reasons.pop(challenged_url, None)
             else:
                 unresolved_challenges += 1
+        incomplete_note = ''
+        if incomplete_reasons:
+            first_url, first_reason = next(iter(incomplete_reasons.items()))
+            incomplete_note = (f"js_code capture incomplete after retries ({len(incomplete_reasons)} URL(s)): "
+                               f"{first_reason} [{first_url}]")
 
         if not combined_markdown.strip():
             # Distinguish a genuine empty crawl from an unbeaten bot challenge:
@@ -1084,6 +1136,11 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                     f"({_host_block_strikes.get(skipped_host, 0)} consecutive blocks this run); "
                     f"{len(circuit_skipped_urls)} URL(s) skipped unfetched"
                 )
+            elif incomplete_note:
+                error_msg = incomplete_note
+                other_challenges = unresolved_challenges - len(incomplete_reasons)
+                if other_challenges > 0:
+                    error_msg += f"; {other_challenges} other URL(s) still bot-challenged"
             elif unresolved_challenges:
                 error_msg = (
                     f"Bot challenge / origin error page not cleared after retries ({unresolved_challenges} URL(s))"
@@ -1128,7 +1185,8 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                 f'Incomplete crawl: fetched {succeeded_urls} of {len(urls)} URLs; '
                 f'{len(urls) - succeeded_urls} failed or skipped '
                 f'({len(circuit_skipped_urls)} circuit-skipped, '
-                f'{unresolved_challenges} unresolved challenges)')
+                f'{unresolved_challenges} unresolved challenges)'
+                + (f'; {incomplete_note}' if incomplete_note else ''))
             db.update_website_last_crawled(cursor, connection, website['id'])
             return None
 

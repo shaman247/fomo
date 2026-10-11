@@ -91,6 +91,40 @@ class CaptureIntegrityTests(unittest.TestCase):
         self.assertEqual(returned, 123)
         database.update_crawl_result_crawled.assert_called_once()
 
+    def test_jscode_incomplete_sentinel_fails_closed(self):
+        # BL29: DOROT's pager got page 1 then a 403 on /calendar/page/2/.
+        stub = '# FOMO-CRAWL-INCOMPLETE\n\nDOROT pager: HTTP 403 at page 2 of 35\n'
+        for replies in ([[page(stub)]], [[page()], [page(stub)]]):
+            with self.subTest(urls=len(replies)):
+                database, _ = self.assert_failed(replies)
+                message = str(database.update_crawl_result_failed.call_args)
+                self.assertIn('js_code capture incomplete', message)
+                self.assertIn('HTTP 403 at page 2 of 35', message)
+
+    def test_jscode_incomplete_retry_can_recover(self):
+        stub = '# FOMO-CRAWL-INCOMPLETE\n\nmonth view HTTP 403\n'
+        returned, database, _ = self.run_capture([[page(stub)]], recovery=BODY)
+        self.assertEqual(returned, 123)
+        database.update_crawl_result_failed.assert_not_called()
+
+    def test_jscode_incomplete_reason_parsing(self):
+        self.assertIsNone(crawler._jscode_incomplete_reason(BODY))
+        self.assertEqual(crawler._jscode_incomplete_reason('# FOMO-CRAWL-INCOMPLETE\n\nx: HTTP 403'),
+                         'x: HTTP 403')
+        self.assertEqual(crawler._jscode_incomplete_reason('FOMO-CRAWL-INCOMPLETE: HTTP 403 at page 2'),
+                         'HTTP 403 at page 2')
+
+    def test_refetch_rejects_a_still_incomplete_capture(self):
+        client = MagicMock()
+        client.__aenter__ = AsyncMock(return_value=client)
+        client.__aexit__ = AsyncMock(return_value=False)
+        client.arun = AsyncMock(return_value=[page('# FOMO-CRAWL-INCOMPLETE\n\nHTTP 403\n')])
+        with patch.object(crawler, 'AsyncWebCrawler', return_value=client):
+            result = asyncio.run(crawler._refetch_past_challenge(
+                'https://calendar.test/', crawler.CrawlerRunConfig(), None,
+                backoff=0, attempts=1))
+        self.assertIsNone(result)
+
     def test_retry_does_not_hide_a_failed_deep_crawl_child(self):
         client = MagicMock()
         client.__aenter__ = AsyncMock(return_value=client)
