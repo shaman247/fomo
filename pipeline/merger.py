@@ -1429,6 +1429,42 @@ def _team_names_differ(name1, name2, _norm1, _norm2):
     return SequenceMatcher(None, team1, team2).ratio() < 0.75
 
 
+# A placeholder lineup tail names nobody: "+ Special Guests TBA", ": Special
+# Guest", "w/ DJs TBA", "Lineup TBD". RA titles a night by its headliner plus
+# that tail, so two different parties at one club ("Youngins: Special Guests
+# TBA" 10/24, "señoritajuicy + Special Guests TBA" 10/25, distinct RA ids)
+# shared three of four significant words and cleared the asymmetric
+# containment tier (BL43b, Jupiter Disco 264934).
+_PLACEHOLDER_LINEUP_TAIL_RE = re.compile(
+    r'(?:\s*(?:[:+&|,/-]|\bw/|\bwith\b|\band\b|\bplus\b|\bfeat\b\.?|\bft\b\.?))*\s*'
+    r'(?:(?:very\s+)?special\s+guests?(?:\s+(?:tba|tbd|to\s+be\s+announced))?'
+    r'|(?:more\s+|guests?\s+|lineup\s+|line-up\s+|djs?\s+|artists?\s+)?'
+    r'(?:tba|tbd|to\s+be\s+announced))'
+    r'\s*[.!)\]]*\s*$',
+    re.IGNORECASE)
+
+
+def _strip_placeholder_lineup_tail(name):
+    return _PLACEHOLDER_LINEUP_TAIL_RE.sub('', name or '').strip()
+
+
+def _placeholder_lineup_differs(name1, name2, _norm1=None, _norm2=None):
+    """Headliner names sharing nothing but a placeholder lineup tail.
+
+    Fires only when at least one name carries the tail, both names keep a
+    remainder once it is stripped, and the remainders share no significant
+    (stemmed) word: "Youngins" vs "señoritajuicy" differ, "Youngins: Special
+    Guests TBA" vs "Youngins" do not.
+    """
+    core1 = _strip_placeholder_lineup_tail(name1)
+    core2 = _strip_placeholder_lineup_tail(name2)
+    if core1 == (name1 or '').strip() and core2 == (name2 or '').strip():
+        return False
+    words1 = get_significant_words(core1, stem=True)
+    words2 = get_significant_words(core2, stem=True)
+    return bool(words1) and bool(words2) and not (words1 & words2)
+
+
 _PAIR_DISCRIMINATORS = (
     _attendance_modes_differ,
     _trailing_dates_differ,
@@ -1449,6 +1485,8 @@ _PAIR_DISCRIMINATORS = (
     lambda _1, _2, norm1, norm2: _level_variant_mismatch(norm1, norm2),
     # Same sport, different team. Regression 2026-10-01 (Giants/Jets).
     _team_names_differ,
+    # Different headliners + one shared "Special Guests TBA". BL43b.
+    _placeholder_lineup_differs,
 )
 
 
@@ -2484,6 +2522,10 @@ def same_capture_names_related(name_a, name_b, head=''):
     norm_b = normalize_name_for_dedup(name_b or '')
     if not norm_a or not norm_b or norm_a == norm_b:
         return True
+    # Two headliners sharing only "+ Special Guests TBA" (BL43b): the shared
+    # tail alone lifts the ratio past the threshold.
+    if _placeholder_lineup_differs(name_a, name_b):
+        return False
     if _lineup_only_title(name_a) or _lineup_only_title(name_b):
         return True
     # SequenceMatcher is not symmetric ("potluck halloween" vs "jacobdior
