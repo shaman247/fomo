@@ -1866,6 +1866,140 @@ def _match_by_url_identity(name, url, website_id, location_id, crawl_event_slots
     return best[2] if best else None
 
 
+def is_organizer_fallback_location(location_id, location_name, linked_location_ids,
+                                   website_name):
+    """True when a crawl_event's venue is only the publisher's own fallback.
+
+    The processor pins a venue-less row ("", "Online", "TBA", or just the
+    organizer's own name) to the website's linked/home venue (processor Step 7).
+    That pin says who publishes the event, not where it happens: NYC-DSA w591's
+    10-09 crawl lost the venue of 42 canvasses, which landed on the NYC-DSA
+    Office (l1940) instead of the greenmarkets their earlier rows named.
+    """
+    if location_id is None or location_id not in (linked_location_ids or ()):
+        return False
+    label = normalize_name_for_dedup(location_name or '')
+    if not label or label in _GENERIC_LOCATION_LABELS:
+        return True
+    return bool(website_name) and label == normalize_name_for_dedup(website_name)
+
+
+_GENERIC_LOCATION_LABELS = frozenset({
+    'online', 'virtual', 'zoom', 'tba', 'tbd', 'in person', 'various',
+    'multiple locations', 'not specified', 'na', 'n a',
+})
+
+
+# Kind words that make a listing a different program from a title it shares
+# words with: the exhibition vs its opening reception, a class vs its class
+# show, a program vs its teen-volunteer shift.
+_RETITLE_KIND_WORDS = frozenset({
+    'reception', 'opening', 'show', 'class', 'workshop', 'talk', 'panel',
+    'screening', 'tour', 'rehearsal', 'volunteer', 'volunteers', 'registration',
+    'camp', 'party',
+})
+_QUOTED_SEGMENT_RE = re.compile(r'["“”]([^"“”]{2,})["“”]')
+
+
+def retitle_names_compatible(new_name, old_name):
+    """May `new_name` be a retitle of `old_name` (same URL, same slot)?
+
+    Measured on 21 days of creations (`.scratch/merger-fixes/replay_relaxed.py`):
+    the related-title test alone (`same_capture_names_related`) still let
+    through two "Monday Night Movie: \"…\"" films, "Social Seniors: <topic>"
+    programs, a class and its class show, and an exhibition and its artist
+    reception, each sitting on a URL the older event had picked up by an
+    earlier fusion. Those shapes are refused here.
+    """
+    if not same_capture_names_related(new_name, old_name) or is_false_positive(new_name, old_name):
+        return False
+    quoted_new = {normalize_name_for_dedup(q) for q in _QUOTED_SEGMENT_RE.findall(new_name or '')}
+    quoted_old = {normalize_name_for_dedup(q) for q in _QUOTED_SEGMENT_RE.findall(old_name or '')}
+    if quoted_new and quoted_old and not (quoted_new & quoted_old):
+        return False
+    split_new = _split_on_subtitle_colon(new_name or '')
+    split_old = _split_on_subtitle_colon(old_name or '')
+    if (split_new and split_old
+            and normalize_name_for_dedup(split_new[0]) == normalize_name_for_dedup(split_old[0])
+            and not (get_significant_words(split_new[1], stem=True)
+                     & get_significant_words(split_old[1], stem=True))):
+        return False
+    kinds_new = set(normalize_name_for_dedup(new_name).split()) & _RETITLE_KIND_WORDS
+    kinds_old = set(normalize_name_for_dedup(old_name).split()) & _RETITLE_KIND_WORDS
+    return kinds_new == kinds_old
+
+
+def _match_by_url_identity_relaxed(name, url, website_id, location_id, crawl_event_slots,
+                                   existing_by_url, url_name_counts, listing_url_keys,
+                                   location_coords, *, incoming_is_fallback=False,
+                                   capture_names=frozenset()):
+    """The URL tier for a listing that lost a field the strict tier insists on (BL25).
+
+    Same publisher and same event-specific URL as `_match_by_url_identity`,
+    plus ONE of these relaxations, and only when exactly one visible event
+    qualifies:
+
+    - **venue**: the incoming venue is the organizer fallback
+      (`is_organizer_fallback_location`), so the distance check is skipped;
+    - **time**: an untimed incoming date matches the event's slot on that date
+      (the NYC-DSA canvasses came back with neither venue nor time);
+    - **title**: a renamed listing ("1 Candidate Canvass" -> "2 Candidate
+      Canvasses", a Film Forum / Dance Manhattan / Green Room 42 retitle) keeps
+      its URL and its exact date + time, and the old title is gone from the
+      same capture (`capture_names`, normalized names of every listing of the
+      incoming crawl_result): a title the page still prints is another
+      listing, not a rename (an exhibition and its opening reception, two
+      "Monday Night Movie" films on one series page). The URL must carry this
+      one event's name only, the titles must share a significant word and
+      pass `retitle_names_compatible`. A presenter page shared by
+      several concerts (Carnegie "Oratorio Society of New York") carries
+      several names, and a different concert has a different URL and slot, so
+      neither can collect it.
+
+    Returns an event id or None.
+    """
+    if not url or website_id is None or not crawl_event_slots:
+        return None
+    url_key = normalize_url_for_identity(url)
+    if not url_key:
+        return None
+    index_key = (website_id, url_key)
+    if index_key in listing_url_keys:
+        return None
+    names_at_url = url_name_counts.get(index_key, 0)
+    if names_at_url > URL_IDENTITY_MAX_DISTINCT_NAMES:
+        return None
+    norm_name = normalize_name_for_dedup(name)
+    if not norm_name:
+        return None
+    untimed_dates = {d for d, t in crawl_event_slots if not t}
+    words = get_significant_words(name, stem=True)
+
+    hits = set()
+    for existing in existing_by_url.get(index_key, []):
+        if existing.get('suppressed'):
+            continue
+        same_name = normalize_name_for_dedup(existing['name']) == norm_name
+        if (_screening_versions_differ(name, existing['name'])
+                or _numbered_levels_differ(name, existing['name'])):
+            continue
+        full_slot = bool(crawl_event_slots & existing['slots'])
+        date_slot = bool(untimed_dates & {d for d, _ in existing['slots']})
+        near = _locations_within(location_id, existing.get('location_id'), location_coords)
+        if same_name:
+            if not (full_slot or date_slot) or not (near or incoming_is_fallback):
+                continue
+        else:
+            if (not full_slot or names_at_url != 1
+                    or normalize_name_for_dedup(existing['name']) in capture_names
+                    or not (near or incoming_is_fallback)
+                    or not (words & get_significant_words(existing['name'], stem=True))
+                    or not retitle_names_compatible(name, existing['name'])):
+                continue
+        hits.add(existing['id'])
+    return hits.pop() if len(hits) == 1 else None
+
+
 def _visible_url_twin(suppressed_id, name, url, website_id, crawl_event_id,
                       dates_overlap, existing_by_url, url_name_counts,
                       listing_url_keys, roster, dismissed_pairs,
@@ -4007,6 +4141,11 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     # logic here.
     cursor.execute("SELECT id FROM websites WHERE strict_name_match = 1")
     strict_name_match_ids = {row[0] for row in cursor.fetchall()}
+    # Publisher names, to recognise a venue string that only names the
+    # organizer (is_organizer_fallback_location).
+    cursor.execute("SELECT id, name FROM websites")
+    website_names = {row[0]: row[1] for row in cursor.fetchall()}
+    url_relaxed_matches = 0
 
     # Build lookups of existing events for deduplication:
     # 1. By location_id for events with matched locations
@@ -4332,6 +4471,10 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         crawl_event_ranges = [(occ[0], occ[2]) for occ in valid_occurrences if occ[0] and occ[2]]
         crawl_event_slots = {(str(occ[0]), occ[1] or '') for occ in valid_occurrences if occ[0]}
         strict_match = website_id in strict_name_match_ids
+        incoming_is_fallback = is_organizer_fallback_location(
+            location_id, location_name, website_location_ids.get(website_id, ()),
+            website_names.get(website_id))
+        url_relaxed_match = False
         # Inputs to `_sibling_listing_veto` (see its block comment).
         ce_url_key = normalize_url_for_identity(url) if url else ''
         crawl_result_roster = crawl_result_rosters.get(crawl_result_id, ())
@@ -4775,6 +4918,21 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             if matched_event_id is not None and (_dismissed_home(matched_event_id)
                                                  or _same_capture(matched_event_id)):
                 matched_event_id = None
+            # Same URL, but the listing lost its venue (organizer fallback),
+            # its time, or was retitled: see _match_by_url_identity_relaxed.
+            if matched_event_id is None:
+                relaxed_id = _match_by_url_identity_relaxed(
+                    name, url, website_id, location_id, crawl_event_slots,
+                    existing_events_by_url, url_key_name_counts, listing_url_keys,
+                    location_coords, incoming_is_fallback=incoming_is_fallback,
+                    capture_names={entry[2] for entry in
+                                   capture_listings.get(crawl_result_id, ())},
+                )
+                if relaxed_id is not None and not (_dismissed_home(relaxed_id)
+                                                   or _same_capture(relaxed_id)):
+                    matched_event_id = relaxed_id
+                    url_relaxed_match = True
+                    url_relaxed_matches += 1
             if matched_event_id is not None and location_id is not None:
                 cursor.execute("SELECT location_id FROM events WHERE id = %s", (matched_event_id,))
                 _m = cursor.fetchone()
@@ -5005,6 +5163,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 current_location_id = current_loc_id
                 if not current_location_id or (
                     not suppressed_handoff and not dismissed_home_handoff and
+                    not (url_relaxed_match and incoming_is_fallback) and
                     should_repin_location(current_location_id, location_id,
                                           website_location_ids.get(website_id, ()),
                                           location_containment)
@@ -5279,6 +5438,9 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     if same_capture_skips:
         print(f"  Same-capture veto: {same_capture_skips} candidate(s) skipped "
               "(a sibling listing of the same capture holds them)")
+    if url_relaxed_matches:
+        print(f"  URL identity (relaxed): {url_relaxed_matches} source(s) matched by URL "
+              "despite an organizer-fallback venue, a missing time or a retitle")
     if single_occasion_report['events']:
         print(f"  Single-occasion guard: dropped "
               f"{single_occasion_report['spans_dropped']} parent span(s), "
