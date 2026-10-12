@@ -216,5 +216,177 @@ class FrequencyLockTest(unittest.TestCase):
         self.assertFalse(any('UPDATE websites' in q for q in statements))
         conn.commit.assert_not_called()
 
+
+class AnalysisWindowTest(unittest.TestCase):
+    """BL39: the lookback is a function of the crawl history, never of
+    crawl_frequency (the analyzer's own output)."""
+
+    def setUp(self):
+        self.today = date(2026, 10, 12)
+
+    def test_reaches_back_to_last_four_crawls(self):
+        from frequency_analyzer import _analysis_window
+        dates = [self.today - timedelta(days=d) for d in (300, 150, 120, 60, 20)]
+        # 4th-newest crawl is 150 days back -> span 151 -> bucketed to 180
+        self.assertEqual(_analysis_window(dates, self.today), 180)
+
+    def test_floor_and_cap(self):
+        from frequency_analyzer import (
+            ANALYSIS_WINDOW_DAYS, ANALYSIS_WINDOW_MAX_DAYS, _analysis_window)
+        recent = [self.today - timedelta(days=d) for d in (40, 30, 20, 10)]
+        self.assertEqual(_analysis_window(recent, self.today), ANALYSIS_WINDOW_DAYS)
+        ancient = [self.today - timedelta(days=d) for d in (900, 800, 700, 600)]
+        self.assertEqual(_analysis_window(ancient, self.today), ANALYSIS_WINDOW_MAX_DAYS)
+        self.assertEqual(_analysis_window(recent[:3], self.today), ANALYSIS_WINDOW_MAX_DAYS)
+
+
+# 10th Muses (w4460) as of 2026-10-12: productive May/June crawls, then six
+# empty crawls Aug 9 - Sep 22. (days_ago, new_events, horizon, lead_time)
+TENTH_MUSES_CRAWLS = [
+    (161, 1, 27, 27), (154, 1, 20, 12), (147, 1, 14, None), (141, 0, 12, None),
+    (132, 1, 5, None), (126, 0, None, None),
+    (64, 0, None, None), (58, 0, None, None), (56, 0, None, None),
+    (50, 0, None, None), (44, 0, None, None), (20, 0, None, None),
+]
+
+
+class FakeSite:
+    """In-memory stand-in for one website's DB rows, served through the
+    analyzer's loader functions so each metric honours the lookback window."""
+
+    def __init__(self, wid, frequency, crawls, today):
+        self.wid = wid
+        self.frequency = frequency
+        self.today = today
+        self.crawls = list(crawls)
+        self.updated_at = None
+        self.evidence_at = None
+        self.windows_seen = []
+        self._clock = 0
+        self.add_crawl_evidence()
+        self.touch()  # row last changed after its last crawl...
+        self.add_crawl_evidence()  # ...then a new crawl arrived
+
+    def _tick(self):
+        self._clock += 1
+        from datetime import datetime
+        return datetime(2026, 10, 12, 9, 0, self._clock)
+
+    def touch(self):
+        self.updated_at = self._tick()
+
+    def add_crawl_evidence(self):
+        self.evidence_at = self._tick()
+
+    def _in_window(self, window):
+        self.windows_seen.append(window)
+        return [c for c in self.crawls if c[0] < window]
+
+    def patches(self):
+        from unittest.mock import patch
+        import frequency_analyzer as fa
+        wid = self.wid
+        site = self
+
+        def websites(cursor, ids=None):
+            return [{'id': wid, 'name': '10th Muses', 'crawl_frequency': site.frequency,
+                     'locked': False, 'crawl_after': None, 'updated_at': site.updated_at}]
+
+        def histories(cursor, ids):
+            return {wid: [(site.today - timedelta(days=c[0]), 1) for c in
+                          sorted(site.crawls, key=lambda c: -c[0])]}
+
+        def rates(cursor, ids, window):
+            crawls = sorted(self._in_window(window), key=lambda c: c[0])  # newest first
+            rows = [{'crawled_at': None, 'event_count': 0, 'new_events': c[1]} for c in crawls]
+            with_new = sum(1 for r in rows if r['new_events'])
+            return {wid: {'total_crawls': len(rows), 'crawls_with_new_events': with_new,
+                          'rate': with_new / len(rows) if rows else 0.0, 'crawls': rows}}
+
+        return [
+            patch.object(fa, '_load_websites', websites),
+            patch.object(fa, '_load_crawl_histories', histories),
+            patch.object(fa, '_load_latest_evidence', lambda c, ids: {wid: site.evidence_at}),
+            patch.object(fa, '_load_lead_times', lambda c, ids, w: {wid: sorted(
+                x[3] for x in site.crawls if x[0] < w and x[3] is not None)}),
+            patch.object(fa, '_load_event_horizons', lambda c, ids, w: {wid: sorted(
+                x[2] for x in site.crawls if x[0] < w and x[2] is not None)}),
+            patch.object(fa, '_load_new_event_rates', rates),
+            patch.object(fa, '_load_content_staleness', lambda c, ids, w: {}),
+            patch.object(fa, '_load_has_upcoming', lambda c, ids: set()),
+        ]
+
+    def cursor(self):
+        from unittest.mock import Mock
+        site = self
+        cursor = Mock()
+
+        def execute(sql, params=()):
+            if sql.startswith('UPDATE websites SET crawl_frequency'):
+                site.frequency = params[0]
+                site.touch()  # ON UPDATE CURRENT_TIMESTAMP
+        cursor.execute.side_effect = execute
+        return cursor
+
+
+class FrequencyFixedPointTest(unittest.TestCase):
+    """BL39: 10th Muses flipped 24d -> 48d -> 24d on alternating pipeline runs
+    with no new crawl, because the lookback (4 x crawl_frequency) changed which
+    crawls the analyzer saw: 96 days -> "No new events", 192 days -> horizon."""
+
+    def analyze(self, site, **kwargs):
+        from contextlib import ExitStack
+        from unittest.mock import Mock
+        import frequency_analyzer as fa
+        with ExitStack() as stack:
+            for p in site.patches():
+                stack.enter_context(p)
+            return fa.analyze_frequencies(site.cursor(), Mock(), website_ids=[site.wid], **kwargs)
+
+    def test_branch_does_not_depend_on_current_frequency(self):
+        today = date.today()
+        reasons = []
+        for freq in (24, 48):
+            site = FakeSite(4460, freq, TENTH_MUSES_CRAWLS, today)
+            result = self.analyze(site)
+            reasons.append(result['details'][0]['reason'])
+            self.assertEqual(set(site.windows_seen), {90})
+        self.assertTrue(all(r.startswith('No new events in 6 crawls') for r in reasons), reasons)
+
+    def test_two_analyses_without_new_crawl_are_a_fixed_point(self):
+        site = FakeSite(4460, 24, TENTH_MUSES_CRAWLS, date.today())
+        first = self.analyze(site)
+        self.assertEqual(first['adjusted'], 1)
+        after_first = site.frequency
+        self.assertEqual(after_first, 48)
+
+        second = self.analyze(site)
+        self.assertEqual((second['analyzed'], second['adjusted']), (0, 0))
+        self.assertEqual(site.frequency, after_first)
+
+        # A new crawl is new evidence: the site is analyzed again.
+        site.crawls.append((0, 0, None, None))
+        site.add_crawl_evidence()
+        third = self.analyze(site)
+        self.assertEqual(third['analyzed'], 1)
+
+    def test_unchanged_recommendation_is_stable_on_rerun(self):
+        # Same history, already at the analyzer's answer: re-running with
+        # forced re-evaluation repeats the decision instead of drifting.
+        steady = [(d, 1, 14, 14) for d in (80, 66, 52, 38, 24, 10)]
+        site = FakeSite(1, 14, steady, date.today())
+        for _ in range(2):
+            result = self.analyze(site, require_new_evidence=False)
+            self.assertEqual(result['adjusted'], 0, result['details'])
+            self.assertEqual(site.frequency, 14)
+
+    def test_empty_scope_analyzes_nothing(self):
+        from unittest.mock import Mock
+        import frequency_analyzer as fa
+        cursor = Mock()
+        results = fa.analyze_frequencies(cursor, Mock(), website_ids=[])
+        self.assertEqual(results['analyzed'], 0)
+        cursor.execute.assert_not_called()
+
 if __name__ == '__main__':
     unittest.main()

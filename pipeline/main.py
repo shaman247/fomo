@@ -809,7 +809,12 @@ async def _run_pipeline(website_ids=None, limit=None, *, work_dir=None, resume=F
         # STEP 9: Adjust crawl frequencies based on historical data
         step("STEP 9: Adjusting Crawl Frequencies")
 
-        freq_results = frequency_analyzer.analyze_frequencies(cursor, connection)
+        # Scoped to this run's websites: only they gained crawl evidence, and an
+        # `--ids` run re-tuning every other site churned unrelated cadences
+        # (BL39). The analyzer also skips any site with no crawl since its last
+        # change, so a retry of this run is a no-op.
+        freq_results = frequency_analyzer.analyze_frequencies(
+            cursor, connection, website_ids=state['website_ids'])
         if freq_results['adjusted'] > 0:
             print(f"\n✓ Adjusted {freq_results['adjusted']} website frequency(s)\n")
         else:

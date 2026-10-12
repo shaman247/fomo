@@ -408,6 +408,9 @@ def merge_pair(cursor, keep_id, delete_id, *, merge_tags=True):
         INSERT IGNORE INTO event_tag_blocks (event_id, tag_id, reason)
         SELECT %s, tag_id, reason FROM event_tag_blocks WHERE event_id = %s
     """, (keep_id, delete_id))
+    # A copied block must also strip the tag the keeper already holds (BL24).
+    from db import enforce_event_tag_blocks
+    enforce_event_tag_blocks(cursor, keep_id)
     from event_icon_assignments import merge_assignments
     merge_assignments(cursor, keep_id, delete_id)
     # reviewed=1 alongside suppressed=1: a suppressed row left reviewed=0 is indistinguishable

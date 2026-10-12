@@ -211,7 +211,9 @@ class DryRunApplyTests(unittest.TestCase):
         emoji_updates = [p for sql, p in cursor.calls if sql.startswith('UPDATE events SET emoji')]
         self.assertEqual(emoji_updates, [('🧠', 1)])  # event 2 keeps its existing emoji
         record.assert_called_once()
-        self.assertFalse(any('DELETE' in sql for sql, _ in cursor.calls))
+        # Additive: the only delete is the blocked pair itself (BL24), never another tag.
+        deletes = [(sql, p) for sql, p in cursor.calls if 'DELETE' in sql]
+        self.assertEqual(deletes, [('DELETE FROM event_tags WHERE event_id = %s AND tag_id IN (%s)', [1, 12])])
 
 
 class SelectionAndCliTests(unittest.TestCase):

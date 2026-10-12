@@ -446,6 +446,26 @@ SKIP_LOCATION_NAMES = {
     'niche night nyc', 'notch theatre company',
     #   Online sessions already pinned to the hosting org's home venue (virtual-events policy).
     'online & in person', 'online only - zoom', 'online webinar',
+    # 2026-10-12 unmapped/generic sweep. Each event was researched against its source page and is
+    # already pinned to the best row that will exist.
+    #   Parade / road-race / street-fair permits: the address is only a route start or a street
+    #   segment, and the neighborhood or park pin is the event's real footprint.
+    '349 cabrini boulevard manhattan', '407 east 59 street manhattan', '4211 14 avenue brooklyn',
+    '125 crossbay boulevard queens', 'between 38th & 39th streets, borough park',
+    'between 78th & 79th streets, jackson heights', 'park avenue at 68th street',
+    'bergenline avenue', 'bergen point district on broadway', '97th st and 5th ave',
+    'main street & roosevelt avenue, flushing', 'marcy ave & greene ave, brooklyn, ny 11216',
+    'south village',
+    #   Private residences / rental towers / shelters / unnamed rentable storefronts (no public venue).
+    '1299 gates ave, brooklyn, ny 11221', '241 w 37th st, new york, ny 10018',
+    'one lic, 42-10 27th st, long island city, ny 11101', '538 johnson ave, brooklyn, ny 11237',
+    '168 ludlow st, new york, ny 10002', '220 9th street', '537 w 59th st', '220 e 72nd st',
+    '801 e 156th st',
+    #   Meeting points away from the event (Apollo Bakery = bus meet-up for a Fort Totten walk);
+    #   a tour series whose meeting point changes per date (200 Vesey St is only one of them).
+    'apollo bakery', '200 vesey st. lobby',
+    #   Venue withheld / roving org / unknowable office: pinned to the borough or org generic.
+    'hearth', 'gallim', 'green tile social club', 'capital one - corporate office',
 }
 
 # Websites whose feed emits the HOST/PARTNER ORG as `location_name` for every

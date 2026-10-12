@@ -3139,15 +3139,35 @@ def get_tag_disambiguations(cursor):
     return rules
 
 
+def enforce_event_tag_blocks(cursor, event_id):
+    """Delete the event's event_tags rows that its own event_tag_blocks forbid.
+
+    Call after copying blocks onto an event (merge keeper): INSERT IGNORE of a
+    block leaves a tag the keeper already held in place (BL24). Returns rows
+    deleted."""
+    cursor.execute("""
+        DELETE et FROM event_tags et
+        JOIN event_tag_blocks b ON b.event_id = et.event_id AND b.tag_id = et.tag_id
+        WHERE et.event_id = %s
+    """, (event_id,))
+    return cursor.rowcount
+
+
 def upsert_event_tags(cursor, event_id, tag_names, replace=False):
     """Set tags for an event. If replace=True, deletes existing tags first.
 
     Pairs in event_tag_blocks are never (re-)inserted — a judged audit removed
-    them as mis-applied, and that decision is binding across re-crawls."""
+    them as mis-applied, and that decision is binding across re-crawls. A
+    blocked pair the event already holds is deleted too (BL24: blocks copied
+    onto a merge keeper used to leave its existing row in place)."""
     cursor.execute("SELECT tag_id FROM event_tag_blocks WHERE event_id = %s", (event_id,))
     blocked = {row[0] for row in cursor.fetchall()}
     if replace:
         cursor.execute("DELETE FROM event_tags WHERE event_id = %s", (event_id,))
+    elif blocked:
+        ids = sorted(blocked)
+        cursor.execute("DELETE FROM event_tags WHERE event_id = %s AND tag_id IN (%s)"
+                       % ('%s', ','.join(['%s'] * len(ids))), [event_id, *ids])
     for tag in tag_names:
         if not tag:
             continue

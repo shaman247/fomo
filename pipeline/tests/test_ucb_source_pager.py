@@ -22,10 +22,16 @@ class UcbPagerTests(unittest.TestCase):
         self.assertIn('NY Mainstage Livestream',md)
         self.assertIn('https://ucbcomedy.com/show/3/',md)
 
+    def test_single_page_inventory_completes_without_terminal_page(self):
+        # The terminal page is never fetched; its drifting total must not matter.
+        md,n=self.run_pages([page(2,[1,2]),page(5,[])])
+        self.assertEqual(n,2)
+        self.assertIn('https://ucbcomedy.com/show/2/',md)
+
     def test_truncation_and_repeated_page_fail(self):
         for pages in ([page(3,[1,2]),page(3,[])],[page(3,[1,2]),page(3,[1,2])]):
             with self.assertRaises(ValueError): self.run_pages(pages)
 
     def test_changed_total_and_missing_terminal_fail(self):
-        for pages in ([page(3,[1,2]),page(4,[3])],[page(2,[1,2]),'<option value="nyc">NYC (2)</option>']):
+        for pages in ([page(3,[1,2]),page(4,[3])],[page(3,[1,2]),'<option value="nyc">NYC (3)</option>']):
             with self.assertRaises(ValueError): self.run_pages(pages)

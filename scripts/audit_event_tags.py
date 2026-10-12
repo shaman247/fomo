@@ -19,6 +19,10 @@ per-event judgment) can be scoped. Two modes:
   --pattern KEY  Write full review snapshots for a known candidate set, including
                  raw location labels, complete descriptions and source URLs.
 
+  --blockcheck   Invariant check (BL24): list every event_tags row whose (event, tag)
+                 pair is also in event_tag_blocks, archived/suppressed events included.
+                 Writes audit_blockcheck.json; exits 1 when any pair is present.
+
 Patterns are intentionally broad candidate sets — every one is heterogeneous, so
 NEVER bulk-delete from these lists. Feed them to the judged pass in /audit-event-tags.
 """
@@ -249,18 +253,50 @@ def run_pattern(cur, key, output_dir=SCRATCH):
     print(f'Wrote {len(out)} review snapshots -> {path}')
 
 
+def blockcheck(cur):
+    """Rows in event_tags ∩ event_tag_blocks (should be empty: a block binds)."""
+    cur.execute("""
+        SELECT et.event_id, t.name, b.reason, e.archived, e.suppressed, e.name
+        FROM event_tags et
+        JOIN event_tag_blocks b ON b.event_id = et.event_id AND b.tag_id = et.tag_id
+        JOIN tags t ON t.id = et.tag_id
+        JOIN events e ON e.id = et.event_id
+        ORDER BY et.event_id, t.name""")
+    return [dict(event_id=r[0], tag=r[1], block_reason=r[2], archived=r[3],
+                 suppressed=r[4], name=r[5]) for r in cur.fetchall()]
+
+
+def run_blockcheck(cur, output_dir=SCRATCH):
+    rows = blockcheck(cur)
+    os.makedirs(output_dir, exist_ok=True)
+    path = os.path.join(output_dir, 'audit_blockcheck.json')
+    with open(path, 'w') as stream:
+        json.dump(rows, stream, ensure_ascii=False, indent=2, default=str)
+    live = sum(1 for r in rows if not r['archived'] and not r['suppressed'])
+    print(f'Blocked-but-present tag rows: {len(rows)} ({live} on live events) -> {path}')
+    for r in rows:
+        print(f"  {r['event_id']}  {r['tag']}  [{r['block_reason']}]  {r['name'][:60]}")
+    return len(rows)
+
+
 def main():
     ap = argparse.ArgumentParser(description="Surface event-tag audit candidates (read-only)")
     mode = ap.add_mutually_exclusive_group()
     mode.add_argument("--sample", type=int, metavar="N",
                     help="write a deterministic random sample of N live events for the discovery spot-check")
     mode.add_argument('--pattern', help='write complete review snapshots for one known pattern')
+    mode.add_argument('--blockcheck', action='store_true',
+                      help='report event_tags rows that their own event_tag_blocks forbid (exit 1 if any)')
     ap.add_argument('--output-dir', default=SCRATCH, help='directory for read-only audit output')
     args = ap.parse_args()
     if args.sample is not None and args.sample < 1:
         ap.error('--sample must be positive')
     conn = create_connection()
     cur = conn.cursor()
+    if args.blockcheck:
+        found = run_blockcheck(cur, args.output_dir)
+        conn.close()
+        sys.exit(1 if found else 0)
     if args.sample is not None:
         run_sample(cur, args.sample, args.output_dir)
     elif args.pattern:

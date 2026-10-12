@@ -9264,12 +9264,37 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10,
                     name, content, notes=site_notes, url=url),
                 timeout=EXTRACT_TIMEOUT,
             )
+            if not (data or {}).get('description'):
+                # Prose-less text: the description may be printed on a flyer.
+                data = await _detail_flyer_pass(name, content, site_notes, url) or data
         except agent_extraction.AgentExtractionPending as exc:
             pending.append(exc)
             return
         if data:
             results.append((ce_id, name, data))
         attempted_ids.append(ce_id)
+
+    async def _detail_flyer_pass(name, content, site_notes, url):
+        """Re-ask with the page's content images (extractor.select_detail_images).
+
+        Image downloads are best effort here: the text pass already gave this
+        page's usable answer, so a missing flyer keeps it rather than failing
+        the phase."""
+        image_urls = extractor.select_detail_images(content, url)
+        if not image_urls:
+            return None
+        try:
+            images, _count = await extractor.prepare_image_parts(image_urls)
+        except extractor.ExtractionCallFailure as exc:
+            print(f"    - Flyer pass skipped for {name}: {exc}")
+            return None
+        if not images:
+            return None
+        return await asyncio.wait_for(
+            extractor.extract_single_event(
+                name, content, notes=site_notes, url=url, images=images),
+            timeout=EXTRACT_TIMEOUT,
+        )
 
     cached_outcomes = await asyncio.gather(
         *(extract_details(event_tuple, content)

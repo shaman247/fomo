@@ -27,12 +27,16 @@ Standalone usage:
     python frequency_analyzer.py --dry-run        # Report only, no changes
     python frequency_analyzer.py --ids 123,456    # Analyze specific websites
     python frequency_analyzer.py --verbose        # Show detailed metrics
+    python frequency_analyzer.py --force          # Also re-tune sites with no new crawl
 
 Integration:
-    Called as step in main.py after merge/archive.
+    Called as step in main.py after merge/archive, scoped to the run's websites.
+    A site is only re-tuned when it has a processed crawl newer than its row's
+    last change, so repeated runs over the same history are a fixed point.
 """
 
 import argparse
+import math
 import sys
 from datetime import date, timedelta
 
@@ -53,11 +57,21 @@ DEFAULT_FREQUENCY = 7
 MAX_CHANGE_FACTOR = 2.0
 
 # Lookback window for historical analysis (days). A site crawled every 90 days
-# has ONE crawl in a 90-day window, so slow sites widen it to
-# WINDOW_FREQUENCY_MULTIPLE x their current frequency — otherwise they return
-# "Insufficient data" forever and can never come back down.
+# has ONE crawl in a 90-day window, so slow sites reach further back — far
+# enough to see their last WINDOW_MIN_CRAWLS processed crawls — otherwise they
+# return "Insufficient data" forever and can never come back down.
+#
+# The reach is derived from the crawl HISTORY, never from crawl_frequency (BL39,
+# 2026-10-12). It used to be 4 x the current frequency, which made the
+# analyzer's output an input to its next run: 10th Muses at 24d looked back 96
+# days (6 empty crawls -> "No new events", relax to 48d), and at 48d looked back
+# 192 days (older productive crawls -> horizon branch, tighten to 24d), flipping
+# on every pipeline run with no new crawl at all. The span is rounded up to
+# ANALYSIS_WINDOW_BUCKET_DAYS so the bulk metric queries run once per bucket.
 ANALYSIS_WINDOW_DAYS = 90
-WINDOW_FREQUENCY_MULTIPLE = 4
+WINDOW_MIN_CRAWLS = 4
+ANALYSIS_WINDOW_BUCKET_DAYS = 30
+ANALYSIS_WINDOW_MAX_DAYS = 4 * MAX_FREQUENCY
 
 # Lead time percentile for "safe minimum" calculation
 LEAD_TIME_PERCENTILE = 25
@@ -255,18 +269,62 @@ def _load_crawl_histories(cursor, website_ids):
     return out
 
 
-def _analysis_window(current_frequency):
-    """Lookback (days) for a site at this frequency — see ANALYSIS_WINDOW_DAYS."""
-    return max(ANALYSIS_WINDOW_DAYS,
-               WINDOW_FREQUENCY_MULTIPLE * (current_frequency or DEFAULT_FREQUENCY))
+def _analysis_window(crawl_dates, today):
+    """Lookback (days) for a site with these processed-crawl dates (ascending).
+
+    Reaches back far enough to include the last WINDOW_MIN_CRAWLS crawls, never
+    less than ANALYSIS_WINDOW_DAYS nor more than ANALYSIS_WINDOW_MAX_DAYS. A pure
+    function of the history and the date: see ANALYSIS_WINDOW_DAYS for why it
+    must not depend on crawl_frequency.
+    """
+    if len(crawl_dates) < WINDOW_MIN_CRAWLS:
+        return ANALYSIS_WINDOW_MAX_DAYS
+    span = (today - crawl_dates[-WINDOW_MIN_CRAWLS]).days + 1
+    bucketed = math.ceil(span / ANALYSIS_WINDOW_BUCKET_DAYS) * ANALYSIS_WINDOW_BUCKET_DAYS
+    return min(ANALYSIS_WINDOW_MAX_DAYS, max(ANALYSIS_WINDOW_DAYS, bucketed))
 
 
-def _load_metrics(cursor, website_ids, window=ANALYSIS_WINDOW_DAYS):
+def _load_websites(cursor, website_ids=None):
+    """Website rows the analyzer may tune. `updated_at` marks the row's last
+    change (the analyzer's own UPDATEs included) for the new-evidence gate."""
+    filter_sql = ''
+    params = ()
+    if website_ids is not None:
+        filter_sql = f'\n              AND w.id IN ({_in_clause(website_ids)})'
+        params = tuple(website_ids)
+    cursor.execute(f"""
+        SELECT w.id, w.name, w.crawl_frequency, w.crawl_frequency_locked, w.crawl_after,
+               w.updated_at
+        FROM websites w
+        WHERE w.disabled = FALSE{filter_sql}
+        ORDER BY w.name
+    """, params)
+    return [
+        {'id': row[0], 'name': row[1], 'crawl_frequency': row[2], 'locked': bool(row[3]),
+         'crawl_after': row[4], 'updated_at': row[5]}
+        for row in cursor.fetchall()
+    ]
+
+
+def _load_latest_evidence(cursor, website_ids):
+    """website_id -> when its newest processed crawl last fed the event tables
+    (merged_at, else processed_at)."""
+    cursor.execute(f"""
+        SELECT website_id, MAX(COALESCE(merged_at, processed_at))
+        FROM crawl_results
+        WHERE website_id IN ({_in_clause(website_ids)}) AND status = 'processed'
+        GROUP BY website_id
+    """, tuple(website_ids))
+    return {wid: at for wid, at in cursor.fetchall() if at is not None}
+
+
+def _load_metrics(cursor, website_ids, window=ANALYSIS_WINDOW_DAYS, histories=None):
     """Run the six per-metric queries once over all analyzed websites.
 
     Replaces six queries per website (~13k round trips per run) with six
     GROUP BY / IN(...) queries. Returns website_id -> dict of raw metric inputs.
     `window` is the lookback in days; callers group sites by _analysis_window.
+    `histories` (from _load_crawl_histories) skips reloading the full history.
     """
     if not website_ids:
         return {}
@@ -275,7 +333,8 @@ def _load_metrics(cursor, website_ids, window=ANALYSIS_WINDOW_DAYS):
     new_event_rates = _load_new_event_rates(cursor, website_ids, window)
     staleness = _load_content_staleness(cursor, website_ids, window)
     has_upcoming = _load_has_upcoming(cursor, website_ids)
-    histories = _load_crawl_histories(cursor, website_ids)
+    if histories is None:
+        histories = _load_crawl_histories(cursor, website_ids)
     return {
         wid: {
             'lead_times': lead_times.get(wid, []),
@@ -614,52 +673,32 @@ def _recommend_frequency(lead_times, horizons, new_event_data, stability,
     }
 
 
-def analyze_frequencies(cursor, connection, website_ids=None, dry_run=False, verbose=False):
+def analyze_frequencies(cursor, connection, website_ids=None, dry_run=False, verbose=False,
+                        require_new_evidence=True):
     """
     Analyze and optionally adjust crawl frequencies for eligible websites.
+
+    The decision is a function of the site's crawl history, not of how many
+    times the analyzer has run: a site is re-tuned only when it has a processed
+    crawl newer than its row's last change (`websites.updated_at`, which the
+    analyzer's own UPDATE bumps). Without that gate every pipeline run of the
+    day compounded the stale-crawl relaxation (x1.5, x2 clamp) off the same
+    crawls (BL39). Two consecutive analyses with no new crawl data are therefore
+    a fixed point.
 
     Args:
         cursor: Database cursor
         connection: Database connection
-        website_ids: Optional list of website IDs to analyze
+        website_ids: Optional list of website IDs to analyze (None = all; an
+            empty list analyzes nothing)
         dry_run: If True, print recommendations without applying
         verbose: If True, print detailed metrics per website
+        require_new_evidence: If False, re-tune sites with no crawl since their
+            last change too (manual re-tune after an analyzer logic change)
 
     Returns:
         dict with analyzed, adjusted, skipped counts and details list
     """
-    # Get eligible websites. `crawl_after` is pulled so we can skip sites that
-    # already have a future skip-until date set (manually or by a prior run).
-    filter_sql = ''
-    params = ()
-    if website_ids:
-        placeholders = ','.join(['%s'] * len(website_ids))
-        filter_sql = f'\n              AND w.id IN ({placeholders})'
-        params = tuple(website_ids)
-    cursor.execute(f"""
-        SELECT w.id, w.name, w.crawl_frequency, w.crawl_frequency_locked, w.crawl_after,
-               (SELECT COUNT(*) FROM crawl_results cr
-                WHERE cr.website_id = w.id
-                  AND cr.status = 'processed'
-                  AND cr.crawled_at >= DATE_SUB(NOW(), INTERVAL GREATEST({ANALYSIS_WINDOW_DAYS},
-                      {WINDOW_FREQUENCY_MULTIPLE} * COALESCE(w.crawl_frequency, {DEFAULT_FREQUENCY})) DAY)
-               ) as crawl_count
-        FROM websites w
-        WHERE w.disabled = FALSE{filter_sql}
-        ORDER BY w.name
-    """, params)
-
-    websites = []
-    for row in cursor.fetchall():
-        websites.append({
-            'id': row[0],
-            'name': row[1],
-            'crawl_frequency': row[2],
-            'locked': bool(row[3]),
-            'crawl_after': row[4],
-            'crawl_count': row[5],
-        })
-
     results = {
         'analyzed': 0,
         'adjusted': 0,
@@ -667,11 +706,15 @@ def analyze_frequencies(cursor, connection, website_ids=None, dry_run=False, ver
         'crawl_after_set': 0,
         'details': [],
     }
+    if website_ids is not None and not website_ids:
+        return results
+
+    websites = _load_websites(cursor, website_ids)
 
     today = date.today()
 
-    # Pass 1: apply the skip guards, collecting the websites to analyze.
-    eligible = []
+    # Pass 1: apply the skip guards that need no history.
+    candidates = []
     for w in websites:
         name = w['name']
         current_freq = w['crawl_frequency'] or DEFAULT_FREQUENCY
@@ -699,24 +742,51 @@ def analyze_frequencies(cursor, connection, website_ids=None, dry_run=False, ver
             results['skipped'] += 1
             continue
 
+        candidates.append(w)
+
+    # Pass 2: history-derived window, then the history and evidence guards.
+    candidate_ids = [w['id'] for w in candidates]
+    histories = _load_crawl_histories(cursor, candidate_ids) if candidate_ids else {}
+    evidence = _load_latest_evidence(cursor, candidate_ids) if candidate_ids else {}
+    eligible = []
+    windows = {}
+    for w in candidates:
+        wid = w['id']
+        name = w['name']
+        dates = [d for d, _ in histories.get(wid, [])]
+        window = _analysis_window(dates, today)
+        crawl_count = sum(1 for d in dates if d >= today - timedelta(days=window))
+
         # Skip websites with insufficient history
-        if w['crawl_count'] < MIN_CRAWL_HISTORY:
+        if crawl_count < MIN_CRAWL_HISTORY:
             if verbose:
-                print(f"  Skipped {name}: only {w['crawl_count']} crawls (need {MIN_CRAWL_HISTORY})")
+                print(f"  Skipped {name}: only {crawl_count} crawls (need {MIN_CRAWL_HISTORY})")
             results['skipped'] += 1
             continue
 
+        # Skip websites with no processed crawl since the row last changed —
+        # the analyzer already acted on this exact history.
+        latest = evidence.get(wid)
+        if (require_new_evidence and w['updated_at'] is not None
+                and (latest is None or latest <= w['updated_at'])):
+            if verbose:
+                print(f"  Skipped {name}: no new crawl since {w['updated_at']}")
+            results['skipped'] += 1
+            continue
+
+        windows[wid] = window
         eligible.append(w)
 
-    # Pass 2: load every metric for the eligible set in six bulk queries per
+    # Pass 3: load every metric for the eligible set in five bulk queries per
     # lookback window (slow sites look further back), then score each website
     # from the in-memory inputs.
     by_window = {}
     for w in eligible:
-        by_window.setdefault(_analysis_window(w['crawl_frequency']), []).append(w['id'])
+        by_window.setdefault(windows[w['id']], []).append(w['id'])
     metrics = {}
     for window, ids in by_window.items():
-        metrics.update(_load_metrics(cursor, ids, window))
+        metrics.update(_load_metrics(cursor, ids, window,
+                                     histories={wid: histories.get(wid, []) for wid in ids}))
 
     for w in eligible:
         wid = w['id']
@@ -815,6 +885,7 @@ Examples:
   python frequency_analyzer.py --ids 941,942    # Specific websites
   python frequency_analyzer.py --verbose        # Detailed metrics
   python frequency_analyzer.py --dry-run -v     # Full report, no changes
+  python frequency_analyzer.py --force          # Re-tune sites with no new crawl too
         """
     )
     parser.add_argument(
@@ -831,6 +902,11 @@ Examples:
         '--verbose', '-v',
         action='store_true',
         help='Show detailed metrics for each website'
+    )
+    parser.add_argument(
+        '--force',
+        action='store_true',
+        help='Also re-tune sites with no crawl since their last change'
     )
     return parser.parse_args()
 
@@ -860,7 +936,8 @@ if __name__ == "__main__":
             cursor, connection,
             website_ids=website_ids,
             dry_run=args.dry_run,
-            verbose=args.verbose
+            verbose=args.verbose,
+            require_new_evidence=not args.force,
         )
 
         print(f"\n{'='*60}")

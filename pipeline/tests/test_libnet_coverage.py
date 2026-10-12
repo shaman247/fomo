@@ -84,3 +84,26 @@ class LibnetCoverageTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+@unittest.skipIf(libnet_api is None, 'deployment-specific source plugin not installed')
+class LibnetOffsiteRoomTests(unittest.TestCase):
+    """SCLSNJ registers off-site places as branch rooms (BL41, 2026-10-12)."""
+
+    def _card(self, room):
+        row = {"id": "1", "recurring_id": None, "location": "Somerville branch",
+               "venues": room, "venue_type": "internal", "title": "Library program",
+               "event_type": "INPERSON", "event_start": "2026-10-15 10:00:00",
+               "time_string": "10-11am", "url": "https://sclsnj.libnet.info/event/1"}
+        with patch.object(libnet_api, "_fetch_events", return_value=[row]):
+            text, _ = libnet_api.fetch_and_build_markdown(["https://sclsnj.libnet.info/events"])
+        return text
+
+    def test_offsite_room_becomes_the_venue(self):
+        self.assertIn("**Venue**: Middlemist", self._card("Middlemist"))
+        self.assertIn("**Venue**: United Reformed Church\n", self._card("United Reformed Church-Room 1"))
+        self.assertIn("**Venue**: Somerset County Human Services Building (27 Warren Street)",
+                      self._card("Somerset County Human Services Building, Room 1 (27 Warren Street)"))
+
+    def test_ordinary_room_stays_in_the_branch(self):
+        self.assertIn("**Venue**: Somerville Branch Library", self._card("Community Room"))

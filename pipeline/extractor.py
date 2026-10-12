@@ -124,6 +124,24 @@ class EventOccurrence(BaseModel):
     _v_end_time = field_validator('end_time', mode='before')(_clean_extracted_time)
 
 
+# Tags and emoji must come from the event's own evidence (title, text, flyer).
+# "Always include a category" forced a guess on title-only records, and the
+# guess came from the venue: Parkside Lounge's "SomethingTogether" (a poetry
+# reading + book launch, stated only on its flyer) was tagged Music/Concert 🎶
+# because the venue is a "bar and live music venue" (2026-10-09). An empty list
+# falls back to Other and an empty emoji to the venue's emoji downstream.
+HASHTAGS_FIELD_DESCRIPTION = (
+    "Up to 7 CamelCase tags supported by what the source says or shows about THIS "
+    "event (title, own text, flyer). Include a category (Music, Nightlife, Comedy, "
+    "Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, "
+    "Outdoor, Sports, Games) when that evidence supports one, Free if free, Virtual "
+    "if online, plus granular tags. The venue's usual programming is not evidence; "
+    "return [] rather than guess.")
+EMOJI_FIELD_DESCRIPTION = (
+    'Single emoji for the kind of event, or "" when nothing about the event itself '
+    'says what kind it is')
+
+
 class Event(BaseModel):
     """Schema for a single event extracted from website content."""
     name: str = Field(description="The name of the event")
@@ -142,9 +160,9 @@ class Event(BaseModel):
         description="URL for the specific event, if available"
     )
     hashtags: list[str] = Field(
-        description="4-7 CamelCase tags. Always include at least one category (Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games). Also add Free if the event is free, Virtual if online. Then add granular tags."
+        description=HASHTAGS_FIELD_DESCRIPTION
     )
-    emoji: str = Field(description="A single emoji that represents the event")
+    emoji: str = Field(description=EMOJI_FIELD_DESCRIPTION)
 
 
 class EventList(BaseModel):
@@ -223,8 +241,8 @@ class EventEnrichment(BaseModel):
     """Schema for enrichment data added in second pass."""
     name: str = Field(description="The event name (must match exactly)")
     description: str = Field(description="1-3 sentence description based ONLY on source content. If no details available beyond the event name, use 'No description available.' Do NOT fabricate.")
-    hashtags: list[str] = Field(description="4-7 CamelCase tags. Include at least one category (Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games), Free if free, Virtual if online, plus granular tags")
-    emoji: str = Field(description="Single emoji")
+    hashtags: list[str] = Field(description=HASHTAGS_FIELD_DESCRIPTION)
+    emoji: str = Field(description=EMOJI_FIELD_DESCRIPTION)
 
 
 class EnrichmentBatch(BaseModel):
@@ -623,8 +641,12 @@ async def download_and_encode_image(url, max_dimension=MAX_IMAGE_DIMENSION):
 
 async def prepare_vision_content(content, base_url=None, max_images=MAX_VISION_IMAGES):
     """Persist all source images once; failed downloads never become empty events."""
+    return await prepare_image_parts(extract_image_urls(content, base_url))
+
+
+async def prepare_image_parts(image_urls):
+    """Download and snapshot `image_urls` for an agent packet; fail closed on misses."""
     import hashlib
-    image_urls = extract_image_urls(content, base_url)
     if not image_urls:
         return None, 0
     key = hashlib.sha256(json.dumps(image_urls, sort_keys=True).encode()).hexdigest()
@@ -670,6 +692,66 @@ async def prepare_vision_content(content, base_url=None, max_images=MAX_VISION_I
         return None, 0
     agent_extraction.atomic_json(cache, {'urls': image_urls, 'images': image_parts, 'not_images': not_images})
     return image_parts, len(image_parts)
+
+
+# Detail-page flyer pass. A detail page whose text has no prose often carries
+# the event's whole description in a flyer image (Parkside Lounge's
+# "SomethingTogether" page is a title, a date and one JPEG saying "poetry
+# reading + book launch"). The text-only detail pass returned "No description
+# available." for 104 of 702 detail pages on 2026-10-09, 90 of them with images
+# on the page -- so after a prose-less text pass the reviewer gets the page's
+# content images. Most detail pages also carry chrome images (seat maps, ad
+# pixels, SVG icons, theme spinners); only raster content images are sent, at
+# most DETAIL_IMAGE_LIMIT, in page order.
+DETAIL_IMAGE_LIMIT = 3
+_DETAIL_IMAGE_SKIP_HOSTS = ('googlesyndication.', 'doubleclick.', 'googleapis.', 'mapsapi.',
+                            'adservice.', 'gstatic.', 'userway.', 'gravatar.', 'facebook.',
+                            'google-analytics.')
+_DETAIL_IMAGE_SKIP_PATH = re.compile(
+    r'\.(?:svg|gif|ico)$|/(?:plugins|flags|emoji|icons?|maps|fallbacks)/'
+    r'|placeholder|loading|spinner|powered-by|avatar|favicon|sprite',
+    re.IGNORECASE)
+
+
+def _rendition_width(url):
+    """Width a rendition URL asks for; the unsized original ranks largest."""
+    sizes = [int(n) for n in re.findall(
+        r'(?:[?&,/]w[_=]|format=|-)(\d{2,5})(?:w\b|x\d+|\b)', url)]
+    return min(sizes) if sizes else float('inf')
+
+
+def select_detail_images(content, page_url=None, limit=DETAIL_IMAGE_LIMIT):
+    """Content images on a detail page, in page order, chrome and duplicates removed.
+
+    Of several renditions of one picture the largest is kept: a q_5 384px
+    thumbnail of a flyer is unreadable.
+    """
+    selected, seen = [], {}
+    page = (page_url or '').split('#')[0].rstrip('/')
+    for url in extract_image_urls(content, page_url):
+        parsed = urlparse(url)
+        host = (parsed.hostname or '').lower()
+        if url.split('#')[0].rstrip('/') == page:
+            continue  # an <img> pointing back at the page itself
+        if any(token in host for token in _DETAIL_IMAGE_SKIP_HOSTS):
+            continue
+        if _DETAIL_IMAGE_SKIP_PATH.search(parsed.path):
+            continue
+        # One picture per file: Squarespace ?format= renditions, WordPress
+        # -232x300 thumbnails, Wix /v1/fill/... crops and Cloudinary
+        # /upload/<transforms>/v123/ renditions (Shotgun) are the same image.
+        path = re.sub(r'/upload/(?:[a-z]{1,3}_[^/]+/|v\d+/)+', '/upload/', parsed.path)
+        key = (host, re.sub(r'-\d+x\d+(?=\.\w+$)', '', path.split('/v1/')[0]))
+        if key in seen:
+            index = seen[key]
+            if _rendition_width(url) > _rendition_width(selected[index]):
+                selected[index] = url
+            continue
+        if len(selected) >= limit:
+            continue  # keep scanning only for larger renditions of the kept ones
+        seen[key] = len(selected)
+        selected.append(url)
+    return selected
 
 
 WEEKLY_SCHEDULE_RULE = (
@@ -778,8 +860,8 @@ For EACH event you find in EITHER source, extract:
   - end_time: End time if shown
 - description: Brief description based on the text and image. If neither gives detail beyond the event name, use "No description available." Do NOT fabricate.
 - url: The event's own link if the text gives one, else null
-- hashtags: 4-7 CamelCase tags. Always include at least one category (Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games). Add Free if free, Virtual if online. Then granular tags.
-- emoji: A single emoji representing the event
+- hashtags: Up to 7 CamelCase tags, each supported by what the source says or shows about THIS event (its title, its own text, or its flyer). Include a category (Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games) when that evidence supports one. Add Free if free, Virtual if online. Then granular tags. The venue's name, description or usual programming is NOT evidence about this event: a bare title such as "SomethingTogether" at a live-music bar could be a reading, a party or a concert. If nothing about the event itself indicates what kind of event it is, return [] rather than guessing.
+- emoji: A single emoji representing the event, or "" when nothing about the event itself indicates what kind of event it is (the venue's emoji is used instead)
 Rules:
 - {SCHEDULE_EXCEPTIONS_RULE}
 - {EVENT_STATUS_RULE}
@@ -2511,8 +2593,8 @@ def _looks_like_boilerplate_fabrication(desc):
 
 ENRICHMENT_PROMPT_TEMPLATE = '''For each event at {venue_name}, provide:
 - description: 1-3 sentence description built from words and sentences that actually appear in the event's own Context block. If there is no Context block, or it only has the name, date/time, venue, and links — with no descriptive prose — return EXACTLY "No description available." Do NOT paraphrase the event name. Do NOT write generic filler like "is a local community event" or "visit the official website for more details". Do NOT use background knowledge about the artist, venue, or topic. Each event's description must come from THAT event's Context block, not a neighbor's.
-- hashtags: 4-7 CamelCase tags. Always include at least one category (Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games). Add Free if free, Virtual if online. Then granular tags.
-- emoji: Single emoji representing the event
+- hashtags: Up to 7 CamelCase tags, each supported by what the source says or shows about THIS event (its title, its own text, or its flyer). Include a category (Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games) when that evidence supports one. Add Free if free, Virtual if online. Then granular tags. The venue's name, description or usual programming is NOT evidence about this event: a bare title such as "SomethingTogether" at a live-music bar could be a reading, a party or a concert. If nothing about the event itself indicates what kind of event it is, return [] rather than guessing.
+- emoji: A single emoji representing the event, or "" when nothing about the event itself indicates what kind of event it is (the venue's emoji is used instead)
 
 {SCHEDULE_EXCEPTIONS_RULE}
 {EVENT_STATUS_RULE}
@@ -2643,13 +2725,9 @@ class SingleEventExtraction(BaseModel):
                     "or ongoing installations without date bounds, return null."
     )
     hashtags: list[str] = Field(
-        description="4-7 CamelCase tags. Include at least one category "
-                    "(Music, Nightlife, Comedy, Art, Theater, Dance, Film, "
-                    "Literature, Community, Family, Wellness, Education, "
-                    "Outdoor, Sports, Games), Free if free, Virtual if online, "
-                    "plus granular tags"
+        description=HASHTAGS_FIELD_DESCRIPTION
     )
-    emoji: str = Field(description="Single emoji representing the event")
+    emoji: str = Field(description=EMOJI_FIELD_DESCRIPTION)
 
 
 DETAIL_RULES = """CRITICAL — DESCRIPTION: The description MUST be derived from words and sentences actually present on the page. If the page only contains the event name, date/time, venue, and links (no descriptive prose), set description to exactly "No description available." Do NOT paraphrase the event name. Do NOT write generic filler like "is a local community event" or "visit the official website for more details". Do NOT use background knowledge about the artist, venue, or topic. If you would only be guessing, return "No description available." instead.
@@ -2685,8 +2763,19 @@ DETAIL_PROMPT_TEMPLATE = (
     'Page content:\n\n{content}'
 )
 
+# Added to the detail prompt only on the flyer pass (images attached), after the
+# URL line. Spliced into url_section rather than given its own template field so
+# the snapshotted DETAIL_PROMPT_TEMPLATE keeps its text and keys.
+DETAIL_IMAGE_SECTION = (
+    'The page\'s content images are attached ({count}, in page order). The page text '
+    'has no description of this event, and a flyer or poster often carries it. Text '
+    'printed on an attached flyer for THIS event counts as page content: use it for '
+    'the description, hashtags, emoji, venue and dates. Ignore images that are logos, '
+    'ads, maps, stock photos, or another event\'s flyer. If no image says anything '
+    'about this event, answer exactly as you would from the text alone.\n')
 
-async def extract_single_event(event_name, content, notes="", url=""):
+
+async def extract_single_event(event_name, content, notes="", url="", images=None):
     """
     Extract event details from a single event page.
 
@@ -2707,6 +2796,8 @@ async def extract_single_event(event_name, content, notes="", url=""):
             Park's dated series pages carry the installment date in the path),
             and it is the only signal distinguishing one dated page of a
             series from another when the body lists them all.
+        images: image parts from `prepare_image_parts` for the flyer pass
+            (`select_detail_images`); None for the ordinary text pass.
 
     Returns dict with 'description', 'hashtags', 'emoji', and optionally
     'location', 'sublocation', 'occurrences', or None on failure.
@@ -2722,9 +2813,12 @@ async def extract_single_event(event_name, content, notes="", url=""):
     # instructions hash by the reviewing agent); the prompt keeps only what is
     # specific to this page. Site notes are per-website, so they share too.
     instructions = detail_instructions(notes)
+    image_section = DETAIL_IMAGE_SECTION.format(count=len(images)) if images else ''
+    # image_section='' also satisfies runs snapshotted while the template
+    # briefly carried an {image_section} field (2026-10-09); same text either way.
     prompt = _prompt_rule('DETAIL_PROMPT_TEMPLATE').format(
         current_date=current_date, event_name=event_name,
-        url_section=url_section, content=content)
+        url_section=url_section + image_section, image_section='', content=content)
 
     estimated_tokens = (len(prompt) + len(instructions)) // CHARS_PER_TOKEN
     if estimated_tokens > MAX_REQUEST_TOKENS:
@@ -2741,7 +2835,7 @@ async def extract_single_event(event_name, content, notes="", url=""):
         response_text = await llm_providers.generate_structured(
             prompt, SingleEventExtraction, DETAIL_TIMEOUT,
             provider=llm_providers.provider_for('detail'),
-            instructions=instructions,
+            images=images, instructions=instructions,
         )
         data = json.loads(response_text)
         desc = (data.get('description') or '').strip().strip('"')
@@ -2871,8 +2965,8 @@ Based on the website content below, extract all upcoming events. For each event,
   RECEPTION vs RUN: A timed opening/closing reception, opening night, or preview is a DISTINCT single-day event — NOT an occurrence of the exhibition it celebrates. When a page describes both a dated, timed reception AND a broader exhibition run (e.g. "Opening reception June 4, 6–8pm" for a show "on view June 4 – July 10"), emit TWO separate events: (1) the reception, with ONE single-day occurrence (its date + time), and (2) the exhibition, with ONE run occurrence (start_date = opening, end_date = closing). Never attach the exhibition's full run as a second occurrence of the reception event, and never put the reception's time on the exhibition run. Separately scheduled gallery tours and curator/artist talks (including Coffee with a Curator) are also separate events. Retain each program's published label in its name and use its own format tag (Tour or Talk); do not give it only the exhibition's title and Exhibition tag.
 - description: 1-3 sentence description based ONLY on what is stated in the source content. If the listing only has a name/date/time with no further details, use "No description available." Do NOT make up or infer descriptions.
 - url: Specific event URL if available
-- hashtags: 4-7 CamelCase tags (e.g., ["Comedy", "StandUp", "Free"]). Always include at least one category from: Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games. Also include Free if the event is free, or Virtual if online. Then add granular descriptive tags. {tag_avoidance}
-- emoji: A single emoji representing the event
+- hashtags: Up to 7 CamelCase tags (e.g., ["Comedy", "StandUp", "Free"]), each supported by what the source says or shows about THIS event (its title, its own text, or its flyer). Include a category (Music, Nightlife, Comedy, Art, Theater, Dance, Film, Literature, Community, Family, Wellness, Education, Outdoor, Sports, Games) when that evidence supports one. Add Free if free, Virtual if online. Then granular tags. {tag_avoidance} The venue's name, description or usual programming is NOT evidence about this event: a bare title such as "SomethingTogether" at a live-music bar could be a reading, a party or a concert. If nothing about the event itself indicates what kind of event it is, return [] rather than guessing.
+- emoji: A single emoji representing the event, or "" when nothing about the event itself indicates what kind of event it is (the venue's emoji is used instead)
 
 {note_section}{rid_section}
 Rules:

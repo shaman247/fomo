@@ -6,6 +6,7 @@ Archives outdated events that are no longer found in recent crawls.
 Logs all changes to the edits table for sync tracking.
 """
 
+import difflib
 import functools
 import json
 import re
@@ -46,6 +47,8 @@ from constants import get_active_date_window
 
 
 from occurrence_times import standardize_time as _standardize_time
+
+NO_DESCRIPTION = 'No description available.'
 
 # Maximum retries for deadlock errors
 DEADLOCK_MAX_RETRIES = 3
@@ -2406,6 +2409,126 @@ def _sibling_listing_veto(name, url_key, website_id, crawl_event_slots, crawl_ev
     return _disjoint_permalinks() and _clean_sibling_in_pass()
 
 
+# ── Same-capture partition veto (BL25) ────────────────────────────────────────
+# One crawl_result is one publisher's inventory. When it lists two things at two
+# different event-specific permalinks under clearly different titles, the
+# publisher has already said they are two events, and they must not end up on
+# one row. `are_names_similar` is far looser than that ("Sos26: Us" ~ "SOS26:
+# The Addams Family (1991)", "Monday Meditation" ~ "Monday: Open Game Time for
+# Adults", "Intro to xTool Fiber Laser" ~ "Intro to: Direct To Garment
+# Printing"), so the second listing of a capture fused onto the first one's
+# event, its own listing was lost, and its dates and URL bled onto the winner.
+# 2026-10-11 recheck: 49 → 53 → 75 such live events per week, 123 of 131
+# absorbed listings with no event of their own (Regal SOS26 at six theaters, RA
+# w388, Hunterdon w5240, Oceanside w5247, Sachem w6013, Monmouth w5238, FUUB).
+#
+# A candidate event is refused when a SIBLING listing from the same capture —
+# one already attached to it in this capture, or one whose name IS the event's
+# name (so it will claim the event whichever order the two are merged in) —
+# sits at a different event-specific URL and its title is not related to the
+# incoming one (`same_capture_names_related`). The listing then falls through
+# to the other tiers and, usually, creates its own event. Exact-name siblings
+# are always related, so the multi-date listings of one event (a fresh LibCal
+# id per occurrence) still group; a shared listing/calendar URL is no evidence
+# at all and never fires it.
+#
+# Replayed over the event_sources linked 2026-09-20 → 10-12 (.scratch/bl25/
+# replay.py): live events holding a name-divergent same-capture fusion fall
+# 60 → 26, 53 → 29 and 75 → 28 per week, and none of the 1,506 live
+# name-related same-capture groups is split. What still passes is mostly one
+# show under two titles ("Fatherland" / "FATHERLAND – Q&A with …", "Matinee
+# with Ry Daddy ft: …", "Sunday Platform with …"), which the relation keeps on
+# purpose. Known losses, each degrading to a duplicate /dedupe-events catches:
+# a LibCal room-change re-post ("Bridge * In the Loft today only"), a
+# short-link vs long-link spelling of one DICE event, and two listings of one
+# Harlem One Stop concert.
+SAME_CAPTURE_MIN_NAME_RATIO = 0.5  # the 2026-10-11 detector's divergence cut
+SAME_CAPTURE_MIN_SERIES_WORDS = 2
+
+_TITLE_BREAK_RE = re.compile(
+    r':|\s[-–—|]\s|—|\b(?:with|w/|ft|feat|featuring|presents?)\b', re.IGNORECASE)
+
+
+def _lineup_only_title(name):
+    """True for a title that is nothing but a performer list.
+
+    Comedy clubs list each night of a named show under its lineup ("Ayanna
+    Dookie, Dara Jemmott, Liam Dalton, …" on East Ville's "Stand Up
+    Shenanigans", Westside's "Saturday Favs"). Such a title names no event of
+    its own, so it is related to any sibling. Three or more short items and no
+    title break (colon, spaced dash, "with"/"ft"/"presents"): "Families, Books,
+    and Tunes Storytime - West Long Branch" is a title, not a lineup.
+    """
+    name = name or ''
+    if _TITLE_BREAK_RE.search(name):
+        return False
+    items = [item.strip() for item in re.split(r',|&|\+|\band\b', name) if item.strip()]
+    return len(items) >= 3 and all(len(item.split()) <= 4 for item in items)
+
+
+def same_capture_names_related(name_a, name_b, head=''):
+    """May two listings of ONE capture, at different permalinks, be one event?
+
+    True when the titles are the same or near-same (normalized ratio >= 0.5),
+    when one is the other's leading or trailing run of (stemmed) words
+    ("Nice Try" / "Nice Try ft: …", "Unzipped" / "Isaac Mizrahi in UNZIPPED"),
+    when either is a bare performer list, or when both open with every
+    significant word of `head` — the receiving event's own name — and that name
+    has at least two ("Sunday Platform with Jean Rohe" / "… with Curt Collier"
+    on "Sunday Platform"). The head rule is what keeps a shared one-word brand
+    ("Ritmos: …", "SOS26: …") or a shared program prefix that is not the event
+    ("Child's Play: Legally Blonde Jr." / "Child's Play - Holiday Camp") from
+    passing as a series.
+    """
+    norm_a = normalize_name_for_dedup(name_a or '')
+    norm_b = normalize_name_for_dedup(name_b or '')
+    if not norm_a or not norm_b or norm_a == norm_b:
+        return True
+    if _lineup_only_title(name_a) or _lineup_only_title(name_b):
+        return True
+    # SequenceMatcher is not symmetric ("potluck halloween" vs "jacobdior
+    # presents halloween" scores 0.53 one way, 0.49 the other); the lower score
+    # keeps the verdict independent of merge order.
+    ratio = min(difflib.SequenceMatcher(None, norm_a, norm_b).ratio(),
+                difflib.SequenceMatcher(None, norm_b, norm_a).ratio())
+    if ratio >= SAME_CAPTURE_MIN_NAME_RATIO:
+        return True
+    words_a = [stem_word(w) for w in norm_a.split()]
+    words_b = [stem_word(w) for w in norm_b.split()]
+    short, long_words = sorted((words_a, words_b), key=len)
+    if long_words[:len(short)] == short or long_words[-len(short):] == short:
+        return True
+    head_words = _ordered_significant_words(head or '')
+    if len(head_words) >= SAME_CAPTURE_MIN_SERIES_WORDS:
+        n = len(head_words)
+        if (_ordered_significant_words(name_a)[:n] == head_words
+                and _ordered_significant_words(name_b)[:n] == head_words):
+            return True
+    return False
+
+
+def _same_capture_conflict(name, url_key, website_id, head, siblings,
+                           listing_url_keys, url_key_name_counts):
+    """The first sibling listing that rules `name` off the event named `head`.
+
+    `siblings` = [(crawl_event_id, name, url_key)] from the same capture. Both
+    URLs must be event-specific (`_url_key_is_event_specific`) and different;
+    then an unrelated title is a conflict. Returns that sibling's name or None.
+    """
+    if not _url_key_is_event_specific(website_id, url_key, listing_url_keys,
+                                      url_key_name_counts):
+        return None
+    for _sibling_id, sibling_name, sibling_key in siblings:
+        if not sibling_key or sibling_key == url_key:
+            continue
+        if not _url_key_is_event_specific(website_id, sibling_key, listing_url_keys,
+                                          url_key_name_counts):
+            continue
+        if not same_capture_names_related(name, sibling_name, head):
+            return sibling_name
+    return None
+
+
 def _event_has_live_occurrence(cursor, event_id, current_date):
     """True when the event still has a current or future occurrence.
 
@@ -3370,6 +3493,8 @@ def _deduplicate_same_name_events(cursor, connection, current_date, edit_logger=
             INSERT IGNORE INTO event_tag_blocks (event_id, tag_id, reason)
             SELECT %s, tag_id, reason FROM event_tag_blocks WHERE event_id = %s
         """, (keep_id, remove_id))
+        # A copied block must also strip the tag the keeper already holds (BL24).
+        db.enforce_event_tag_blocks(cursor, keep_id)
 
         if edit_logger:
             cursor.execute("SELECT * FROM events WHERE id = %s", (remove_id,))
@@ -3473,7 +3598,7 @@ MAX_KEYWORD_TAGS = 6
 
 
 def compute_voted_tags(cursor, event_id, current_crawl_tags, curated_tag_set,
-                       ancestor_map, root_tags):
+                       ancestor_map, root_tags, current_described=None):
     """Compute tags for an event using majority vote across crawl history.
 
     Tags that appear consistently across multiple crawl runs are kept;
@@ -3490,6 +3615,19 @@ def compute_voted_tags(cursor, event_id, current_crawl_tags, curated_tag_set,
         curated_tag_set: Set of tag names with type='tag'
         ancestor_map: Dict mapping normalized_tag -> set of ancestor tag names
         root_tags: Set of normalized root tag names
+        current_described: whether the current crawl event carries a real
+            description. When given and the event has any described source
+            (this one or a linked one), only described sources vote: tags
+            from title-only records are guesses, and repeated guesses must
+            not outvote the source that says what the event is. Parkside
+            Lounge's "SomethingTogether" was tagged Music/Concert by every
+            title-only listing crawl; its flyer says poetry reading + book
+            launch (2026-10-09). When no source is described, every tag was
+            read off a title and the current (newest) crawl's tags are
+            authoritative: crawls before the 2026-10-09 prompt fix guessed a
+            genre from the venue, and those stale guesses must not outvote a
+            newer [] / ["Other"] (E282893 "Drive in Saturdays" kept Concert).
+            None keeps every source voting.
 
     Returns:
         List of tag names that passed the vote
@@ -3497,35 +3635,64 @@ def compute_voted_tags(cursor, event_id, current_crawl_tags, curated_tag_set,
     def _norm(t):
         return db.normalize_tag_key(t)
 
-    # Count how many crawl runs produced each tag (from already-linked crawl events)
-    cursor.execute("""
-        SELECT cet.tag, COUNT(DISTINCT es.crawl_event_id) as crawl_count
-        FROM event_sources es
-        JOIN crawl_event_tags cet ON cet.crawl_event_id = es.crawl_event_id
-        WHERE es.event_id = %s
-        GROUP BY cet.tag
-    """, (event_id,))
-    tag_counts = {row[0]: row[1] for row in cursor.fetchall()}
+    evidence_only = False
+    if current_described is not None:
+        cursor.execute("""
+            SELECT EXISTS(SELECT 1 FROM event_sources es
+                          JOIN crawl_events ce ON ce.id = es.crawl_event_id
+                          WHERE es.event_id = %s AND ce.description IS NOT NULL
+                            AND ce.description NOT IN ('', %s))
+        """, (event_id, NO_DESCRIPTION))
+        evidence_only = bool(current_described or cursor.fetchone()[0])
+    if current_described is not None and not evidence_only:
+        # Title-only everywhere: the newest crawl's tags stand alone, still
+        # expanded with ancestors and the Other fallback below.
+        tag_counts = {tag: 1 for tag in dict.fromkeys(current_crawl_tags) if tag}
+        threshold = 1
+    else:
+        described = (" AND ce.description IS NOT NULL AND ce.description NOT IN ('', %s)"
+                     if evidence_only else "")
+        params = (event_id, NO_DESCRIPTION) if evidence_only else (event_id,)
+        current_votes = not evidence_only or bool(current_described)
 
-    # Count existing crawl runs for this event
-    cursor.execute(
-        "SELECT COUNT(DISTINCT crawl_event_id) FROM event_sources WHERE event_id = %s",
-        (event_id,)
-    )
-    existing_crawl_count = cursor.fetchone()[0]
+        # Count how many crawl runs produced each tag (from already-linked crawl events)
+        cursor.execute(f"""
+            SELECT cet.tag, COUNT(DISTINCT es.crawl_event_id) as crawl_count
+            FROM event_sources es
+            JOIN crawl_event_tags cet ON cet.crawl_event_id = es.crawl_event_id
+            JOIN crawl_events ce ON ce.id = es.crawl_event_id
+            WHERE es.event_id = %s{described}
+            GROUP BY cet.tag
+        """, params)
+        tag_counts = {row[0]: row[1] for row in cursor.fetchall()}
 
-    # Include current crawl's tags (not yet in event_sources)
-    for tag in dict.fromkeys(current_crawl_tags):
-        if tag:
-            tag_counts[tag] = tag_counts.get(tag, 0) + 1
-    total_crawls = existing_crawl_count + 1
+        # Count existing crawl runs for this event
+        cursor.execute(
+            "SELECT COUNT(DISTINCT es.crawl_event_id) FROM event_sources es "
+            "JOIN crawl_events ce ON ce.id = es.crawl_event_id "
+            f"WHERE es.event_id = %s{described}",
+            params
+        )
+        existing_crawl_count = cursor.fetchone()[0]
 
-    # If only 1 crawl total, keep all tags (no history to vote on)
-    if total_crawls <= 1:
-        return list(current_crawl_tags)
+        if not current_votes:
+            # A title-only crawl adds nothing to described history.
+            current_crawl_tags = []
+            if existing_crawl_count <= 1:
+                return list(tag_counts)
 
-    # Apply majority vote threshold
-    threshold = max(2, ceil(total_crawls * 0.3))
+        # Include current crawl's tags (not yet in event_sources)
+        for tag in dict.fromkeys(current_crawl_tags):
+            if tag:
+                tag_counts[tag] = tag_counts.get(tag, 0) + 1
+        total_crawls = existing_crawl_count + (1 if current_votes else 0)
+
+        # If only 1 crawl total, keep all tags (no history to vote on)
+        if total_crawls <= 1:
+            return list(current_crawl_tags)
+
+        # Apply majority vote threshold
+        threshold = max(2, ceil(total_crawls * 0.3))
 
     surviving = []
     current_curated = set(current_crawl_tags) & curated_tag_set
@@ -3920,6 +4087,32 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 crawl_result_rosters.setdefault(result_id, _CaptureRoster()).films[sibling_id] = (
                     normalize_name_for_dedup(sibling_name), normalize_url_for_identity(sibling_url))
 
+    # ── Same-capture partition (see _same_capture_conflict) ── every listing of
+    # each pending capture, and the events its already-linked listings sit on.
+    # `capture_claims` grows as this merge links more of them.
+    capture_listings = {}  # crawl_result_id -> [(ce_id, name, norm_name, url_key)]
+    capture_claims = {}    # (crawl_result_id, event_id) -> [(ce_id, name, url_key)]
+    same_capture_skips = 0
+    if pending_result_ids:
+        cursor.execute(
+            f"SELECT ce.crawl_result_id, ce.id, ce.name, ce.url, es.event_id "
+            f"FROM crawl_events ce LEFT JOIN event_sources es ON es.crawl_event_id = ce.id "
+            f"WHERE ce.crawl_result_id IN ({placeholders})",
+            tuple(pending_result_ids),
+        )
+        seen_listings = set()
+        for result_id, sibling_id, sibling_name, sibling_url, linked_event in cursor.fetchall():
+            if not sibling_name:
+                continue
+            key = normalize_url_for_identity(sibling_url)
+            if sibling_id not in seen_listings:
+                seen_listings.add(sibling_id)
+                capture_listings.setdefault(result_id, []).append(
+                    (sibling_id, sibling_name, normalize_name_for_dedup(sibling_name), key))
+            if linked_event is not None:
+                capture_claims.setdefault((result_id, linked_event), []).append(
+                    (sibling_id, sibling_name, key))
+
     # ── Occurrences and tags for every pending crawl_event, prefetched in
     # chunked IN(...) queries instead of two round trips per crawl_event.
     pending_ce_ids = [row[0] for row in new_crawl_events]
@@ -4155,6 +4348,34 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             dismissed_home_verdicts[existing_id] = verdict
             return verdict
 
+        same_capture_verdicts = {}  # candidate id -> conflicting sibling name (or None)
+
+        def _same_capture(existing_id):
+            """Veto attaching this listing to an event a sibling listing of the
+            same capture holds or will hold (see _same_capture_conflict)."""
+            nonlocal same_capture_skips
+            if existing_id in same_capture_verdicts:
+                return same_capture_verdicts[existing_id]
+            head = _receiving_event_name(existing_id)
+            siblings = [s for s in capture_claims.get((crawl_result_id, existing_id), ())
+                        if s[0] != ce_id]
+            head_norm = normalize_name_for_dedup(head or '')
+            if head_norm and head_norm != norm_name:
+                # A sibling titled exactly like the event claims it however the
+                # two listings are ordered in this merge.
+                siblings += [(sid, sname, skey) for sid, sname, snorm, skey
+                             in capture_listings.get(crawl_result_id, ())
+                             if sid != ce_id and snorm == head_norm]
+            verdict = _same_capture_conflict(
+                name, ce_url_key, website_id, head, siblings,
+                listing_url_keys, url_key_name_counts) if siblings else None
+            if verdict:
+                same_capture_skips += 1
+                print(f"  Same-capture veto: source {ce_id} ({name}) skips {existing_id}; "
+                      f"sibling listing '{verdict}' holds it")
+            same_capture_verdicts[existing_id] = verdict
+            return verdict
+
         def _dates_overlap(existing_id):
             """Check if crawl event dates overlap with existing event dates.
             First checks start_date intersection, then falls back to date range overlap
@@ -4278,14 +4499,16 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 existing_events_by_location_id, existing_events_by_coords,
                 existing_events_by_location, website_id, existing_events_by_website,
             )
-            if matched_event_id is not None and _dismissed_home(matched_event_id):
+            if matched_event_id is not None and (_dismissed_home(matched_event_id)
+                                                 or _same_capture(matched_event_id)):
                 matched_event_id = None
             if matched_event_id is None:
                 continue
 
         def _undismissed(matcher, candidates, **kwargs):
             # Run a tier, and if its winner is vetoed by a dismissed pair (see
-            # _dismissed_home_veto) re-run it without that candidate. Same
+            # _dismissed_home_veto) or by a sibling listing of the same capture
+            # (_same_capture_conflict), re-run it without that candidate. Same
             # result as skipping it inside the tier, but a verdict is only ever
             # computed for an actual winner.
             excluded = set()
@@ -4293,7 +4516,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 pool = (candidates if not excluded
                         else [c for c in candidates if c['id'] not in excluded])
                 found = matcher(pool, **kwargs)
-                if found is None or not _dismissed_home(found):
+                if found is None or not (_dismissed_home(found) or _same_capture(found)):
                     return found
                 excluded.add(found)
 
@@ -4453,7 +4676,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 existing_events_by_url, url_key_name_counts, listing_url_keys,
                 location_coords,
             )
-            if matched_event_id is not None and _dismissed_home(matched_event_id):
+            if matched_event_id is not None and (_dismissed_home(matched_event_id)
+                                                 or _same_capture(matched_event_id)):
                 matched_event_id = None
             if matched_event_id is not None and location_id is not None:
                 cursor.execute("SELECT location_id FROM events WHERE id = %s", (matched_event_id,))
@@ -4475,7 +4699,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 crawl_result_roster, url_twin_dismissed_pairs,
                 url_twin_redirect_survivors, url_twin_reviewed_owners,
             )
-            if twin_id is not None:
+            if twin_id is not None and not _same_capture(twin_id):
                 print(f"  Suppressed twin {matched_event_id} -> visible URL twin "
                       f"{twin_id}: source {ce_id} ({name})")
                 matched_event_id = twin_id
@@ -4515,7 +4739,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 if (home_ok
                         and not _program_veto({'id': home_id,
                                                'name': _receiving_event_name(home_id)})
-                        and not _dismissed_home(home_id)):
+                        and not _dismissed_home(home_id)
+                        and not _same_capture(home_id)):
                     print(f"  Dismissed-pair handoff: source {ce_id} ({name}) -> {home_id}")
                     matched_event_id = home_id
                     dismissed_home_handoff = True
@@ -4775,10 +5000,20 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 if neutral_short and neutral_short != result[3]:
                     backfill_fields.append("short_name = %s")
                     backfill_values.append(neutral_short[:255])
-            if (description and description != 'No description available.'
-                    and (not current_desc or current_desc == 'No description available.')):
+            first_description = (description and description != NO_DESCRIPTION
+                                 and (not current_desc or current_desc == NO_DESCRIPTION))
+            if first_description:
                 backfill_fields.append("description = %s")
                 backfill_values.append(description)
+                # The emoji and Format were chosen from the title alone; now
+                # that a source says what the event is, take its emoji and
+                # let the classifier (event_type IS NULL) look again.
+                if emoji and emoji[:10] != current_emoji:
+                    backfill_fields.append("emoji = %s")
+                    backfill_values.append(emoji[:10])
+                    current_emoji = emoji[:10]
+                if result and result[4]:
+                    backfill_fields.append("event_type = NULL")
             if not current_emoji or current_emoji == '📅':
                 new_emoji = (emoji[:10] if emoji else None) or location_emoji_by_id.get(location_id)
                 if new_emoji and new_emoji != current_emoji:
@@ -4798,11 +5033,15 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                                         today=current_date, edit_logger=edit_logger)
                 refresh_source_session_details(cursor, matched_event_id, ce_id,
                                                raw_data_by_ce.get(ce_id))
-            # Update tags using majority vote across crawl history
-            if tags:
+            # Update tags using majority vote across crawl history. A
+            # title-only crawl with no tags still runs it: its [] may be the
+            # newest word on an event older crawls tagged with a venue guess.
+            current_described = bool(description) and description != NO_DESCRIPTION
+            if tags or not current_described:
                 voted_tags = compute_voted_tags(
                     cursor, matched_event_id, tags,
-                    curated_tag_set, ancestor_map, root_tags
+                    curated_tag_set, ancestor_map, root_tags,
+                    current_described=current_described,
                 )
                 db.upsert_event_tags(cursor, matched_event_id, voted_tags, replace=True)
 
@@ -4812,6 +5051,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 (matched_event_id, ce_id)
             )
             merged_count += 1
+            capture_claims.setdefault((crawl_result_id, matched_event_id), []).append(
+                (ce_id, name, ce_url_key))
             if (matched_event_id, website_id) in dismissed_home_sources:
                 dismissed_home_sources[(matched_event_id, website_id)].append(
                     (ce_url_key, norm_name, location_id))
@@ -4893,6 +5134,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 "INSERT IGNORE INTO event_sources (event_id, crawl_event_id, is_primary) VALUES (%s, %s, TRUE)",
                 (new_event_id, ce_id)
             )
+            capture_claims.setdefault((crawl_result_id, new_event_id), []).append(
+                (ce_id, name, ce_url_key))
 
             # Add to lookup indexes for future dedup within this batch. These
             # describe what was STORED, so they follow `created_occurrences`
@@ -4937,6 +5180,9 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     if dismissed_home_skips or dismissed_home_handoffs:
         print(f"  Dismissed-pair veto: {dismissed_home_skips} candidate(s) skipped, "
               f"{dismissed_home_handoffs} source(s) handed to their listing's home")
+    if same_capture_skips:
+        print(f"  Same-capture veto: {same_capture_skips} candidate(s) skipped "
+              "(a sibling listing of the same capture holds them)")
     if single_occasion_report['events']:
         print(f"  Single-occasion guard: dropped "
               f"{single_occasion_report['spans_dropped']} parent span(s), "
