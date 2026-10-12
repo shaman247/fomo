@@ -1023,6 +1023,86 @@ PATTERNS = [
               AND (e.name REGEXP '{_NON_NYC_REGEXP}' OR e.description REGEXP '{_NON_NYC_REGEXP}')
         """,
     },
+    {
+        # BL26 (2026-10-12): help desks staffed one patron at a time -- homework
+        # help, tech help, job/resume coaching, insurance/benefits enrollment.
+        # 11 of 16 suppressions in the 2026-10-09 hide pass were this shape and
+        # only #13 (high-occurrence) reached them. The unambiguous half (a desk
+        # name AND a one-on-one body) is dropped at ingest by processor rule
+        # `one_on_one_service_desk`; this is the review net for the rest.
+        # Homework help in particular is a judgment call: reviewers have kept 13
+        # and suppressed 17. "Tech Time"/"Tech Tuesday" count only with a
+        # one-on-one body, since BPL's Teen Tech Time is a gaming hangout.
+        # Measured over all events: catches all 11 Service suppressions of the
+        # 10-09 pass and none of its 184 keeps; reviewed history 141 suppressed
+        # vs 42 kept.
+        'id': 40,
+        'name': 'One-on-one service desk (homework/tech/job/benefits help)',
+        'query': r"""
+            SELECT DISTINCT e.id FROM events e
+            WHERE e.archived = 0 AND e.reviewed = 0
+              AND (
+                e.name REGEXP '\\b(homework (help|club|center|assistance)|(tech(nology)?|computer|device|digital) (help|assistance|support|drop[- ]?in|clinic|q ?& ?a|appointments?)|(job|career|employment) coach(ing)?|resume (help|review|clinic|assistance)|(health )?insurance enrollment|(medicare|medicaid|ship|hiicap|snap|benefits?) (counsel[a-z]*|assistance|enrollment)|enrollment (assistance|drop[- ]?in|hours)|peer (mentor|support project)|one[- ]on[- ]one|1[- ]on[- ]1|drop[- ]in (hours|help))\\b'
+                OR (
+                  e.description REGEXP '\\b(one[- ]on[- ]one|1[- ]on[- ]1|one[- ]to[- ]one|personali[sz]ed (assistance|help)|individual(ized)? (assistance|help|appointments?)|first[- ]come,? first[- ]serve|appointments? (are )?(preferred|required|recommended)|no appointment (is )?(required|needed|necessary)|drop[- ]in hours|stop by to (get|speak|talk))\\b'
+                  AND e.name REGEXP '\\b(help|assistance|support|hours|coach(ing)?|tutoring|counsel[a-z]*|enrollment|navigat[a-z]*|tech(nology)? (time|tuesdays?))\\b'
+                )
+              )
+        """,
+    },
+    {
+        # BL26: an occasion reserved for one bank's card or rewards-tier members
+        # (NYCWFF "Dinner Hosted By Flynn McGarry ... reserved exclusively for
+        # Bank of America Rewards Premier tier members"). The tier-dinner shape
+        # is dropped at ingest (`card_member_exclusive`); this net also reaches
+        # "Museums on Us" cardholder-only admissions, which reviewers suppressed.
+        # Library-card residency limits ("NENPL cardholders only") never match:
+        # the card must be a bank's.
+        'id': 41,
+        'name': 'Bank card / rewards-tier members only',
+        'query': r"""
+            SELECT DISTINCT e.id FROM events e
+            WHERE e.archived = 0 AND e.reviewed = 0
+              AND e.description REGEXP '(rewards premier|premier (rewards )?tier|rewards (tier )?members|card ?members?|bank of america|\\bbofa\\b|merrill lynch|chase sapphire|american express|\\bamex\\b|capital one|citi ?card)'
+              AND e.description REGEXP '\\b(exclusive(ly)?|reserved|only|card ?holders?|tier members|(dinner|brunch|lunch|tasting|reception) for)\\b'
+        """,
+    },
+    {
+        # BL26 (2026-10-10 event-type classification): an outside organization's
+        # booking of a library meeting room, published on the library's own
+        # calendar under the org's bare name ("Hafa Event", "National Charity
+        # League NJ Bergen Blazers", "Bergenfield School District BECAC", "TAB",
+        # "White Plains Beautification Foundation"): one occurrence, and no body
+        # or only "No description available." / contact details. Processor rule
+        # `org_room_booking` drops the civic-club subset by name; arbitrary org
+        # names need a human. Title gate: an org word (Foundation, League,
+        # Club, Commission, Meeting, Event, ...) or a single word, and no program
+        # word. Measured over all events: catches all 6 BL26 bookings; reviewed
+        # history 27 suppressed vs 2 kept (a "Library Board Meeting" and a BPL
+        # outreach table).
+        'id': 42,
+        'name': 'Library meeting-room booking (bare org name, no body)',
+        'query': r"""
+            SELECT DISTINCT e.id FROM events e
+            JOIN websites w ON w.id = e.website_id
+            WHERE e.archived = 0 AND e.reviewed = 0
+              AND w.name REGEXP '(public librar|bccls|librar(y|ies)( system)?$|community library)'
+              AND w.name NOT LIKE '%Museum%'
+              AND (SELECT COUNT(*) FROM event_occurrences eo WHERE eo.event_id = e.id) = 1
+              AND (
+                e.description IS NULL
+                OR e.description REGEXP '^[[:space:]]*(no description( available)?\\.?|n/?a|tbd|tba)?[[:space:]]*$'
+                OR (CHAR_LENGTH(e.description) <= 200
+                    AND e.description REGEXP '^[^.]{0,40}\\b(contact|call|email|e-mail)\\b')
+                OR LOWER(TRIM(e.description)) = LOWER(TRIM(e.name))
+              )
+              AND e.name NOT REGEXP '(\\b(story ?time|craft|class|workshop|lecture|talk|film|movies?|concert|music|yoga|chess|lego|games?|bingo|knit|crochet|paint|drawing|writing|reading|esl|tour|show|performance|festival|fair|sale|celebration|seminar|webinar|computer|tech|tutor|homework|kids|children|toddler|baby|family|cinema|screening|meditation|dance|zumba|fitness|exercise|cooking|garden|science|stem|coding|discussion|presentation|author|poetry|open mic|trivia|social|support group|caregiver|candidates|election|trustees|friends of|halloween|holiday|anniversary|ages?|grades?|with|meet the|book club|photo)\\b|[:|])'
+              AND (
+                e.name REGEXP '\\b(foundation|association|society|league|club|council|commission|committee|auxiliary|district|chapter|guild|alliance|coalition|federation|union|lodge|post|troop|pta|pto|hoa|inc|llc|quilters|meeting|event|rehearsal|booking|reserved|reservation|group|board|school|church|ministry|ministries|organization|org|network|party)\\b'
+                OR e.name NOT REGEXP '[[:space:]]'
+              )
+        """,
+    },
 ]
 
 

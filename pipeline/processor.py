@@ -1586,6 +1586,82 @@ _NOT_PUBLIC_PARTIAL_VETO_RE = re.compile(
 _SENTENCE_BREAK_RE = re.compile(r'[.;!?]')
 
 
+# (BL26, 2026-10-12) One-on-one service desks: a staffer helps one patron at a
+# time with their device, benefits paperwork or job search, so nothing is held
+# that a visitor could attend as an audience ("Tech Time (Point Lookout)":
+# "one-on-one tech help monthly"). 11 of 16 suppressions in the 2026-10-09
+# hide-uninteresting pass were this shape. Two signals: a help-desk NAME and a
+# one-on-one BODY. Measured over all 256,683 events (2026-10-12): 29 reviewed
+# hits, all suppressed by hand, 0 kept (e193555 "Provide Tech Support for Food
+# Access Programming", a volunteer shift reviewers kept, is spared by the name
+# veto); the 17 live unreviewed hits are all booked/drop-in help sessions.
+# Homework Help is deliberately NOT here: reviewers kept 13 of 30 (drop-in
+# tutoring rooms read as programs), so it goes to find_review_candidates #40.
+_SERVICE_DESK_NAME_RE = re.compile(
+    r'\b(?:tech(?:nology)?|computer|device|digital|smartphone|phone)\s+(?:help|assistance|'
+    r'support|clinic|q\s*&\s*a|appointments?|drop[- ]?in|time|tuesdays?)\b|'
+    r'\b(?:job|career|employment)\s+coach(?:ing)?\b|'
+    r'\bresume\s+(?:help|review|clinic|assistance)\b|'
+    r'\b(?:health\s+)?insurance\s+enrollment\b|'
+    r'\b(?:medicare|medicaid|ship|hiicap|snap|benefits?)\s+(?:counsel\w*|assistance|enrollment|'
+    r'q\s*(?:and|&)\s*a)\b',
+    re.IGNORECASE)
+_ONE_ON_ONE_DESC_RE = re.compile(
+    r'\b(?:one[- ]on[- ]one|1[- ]on[- ]1|one[- ]to[- ]one|'
+    r'personali[sz]ed\s+(?:assistance|help)|individual(?:ized)?\s+(?:assistance|help|appointments?))\b',
+    re.IGNORECASE)
+# A class/workshop/group is held for an audience even when its blurb promises
+# one-on-one attention, and a "one-on-one tech class" is taught, not staffed
+# (e112534 "Tech Assistance with Library Staff"); a volunteer listing recruits
+# the helpers instead.
+_SERVICE_DESK_NAME_VETO_RE = re.compile(
+    r'\b(?:volunteer\w*|provide|class(?:es)?|workshops?|course|seminar|lecture|'
+    r'presentation|group|training|series)\b',
+    re.IGNORECASE)
+_SERVICE_DESK_DESC_VETO_RE = re.compile(
+    r'\bone[- ]on[- ]one\s+(?:\w+\s+)?(?:class|lesson|workshop)\b|\bnot\s+one[- ]on[- ]one\b|\bvolunteer\s+(?:opportunit\w*|roles?|positions?|shifts?)\b|'
+    r'\bseeking\b[^.]{0,40}\bvolunteers\b',
+    re.IGNORECASE)
+
+
+def _is_one_on_one_service_desk(name, description=None):
+    """True for a help desk staffed one patron at a time (see the block above)."""
+    if not name or not description or not _SERVICE_DESK_NAME_RE.search(name):
+        return False
+    if _SERVICE_DESK_NAME_VETO_RE.search(name) or _SERVICE_DESK_DESC_VETO_RE.search(description):
+        return False
+    return bool(_ONE_ON_ONE_DESC_RE.search(description))
+
+
+# (BL26) A dinner/brunch reserved for one bank's card or rewards-tier members
+# (NYCWFF "Dinner Hosted By Flynn McGarry": "reserved exclusively for Bank of
+# America Rewards Premier tier members"). The card term and the exclusivity cue
+# must share a sentence, and the card is a bank's: a LIBRARY card restriction
+# ("Teens in Grades 6-12 NENPL cardholders only") is a residency rule on a real
+# program, and a craft class that sews "cardholders" is a craft class.
+# Measured over all 256,683 events (2026-10-12): 3 hits, the 3 NYCWFF tier
+# meals suppressed by hand; 0 library programs. Bank "Museums on Us" free-entry
+# promos are a different shape (the museum itself is open) and stay out.
+_CARD_MEMBER_TERM_RE = re.compile(
+    r'\b(?:rewards\s+premier|premier\s+(?:rewards\s+)?tier|rewards\s+(?:tier\s+)?members|'
+    r'(?:credit|debit)\s+card\s*(?:holders?|members?)|'
+    r'(?:bank\s+of\s+america|bofa|merrill|chase|citi(?:bank)?|amex|american\s+express|'
+    r'capital\s+one|mastercard|visa)\b[^.]{0,60}\bcard\s*(?:holders?|members?))\b',
+    re.IGNORECASE)
+_CARD_MEMBER_EXCLUSIVE_RE = re.compile(
+    r'\b(?:exclusive(?:ly)?|reserved|only)\b|'
+    r'\b(?:dinner|brunch|lunch(?:eon)?|tasting|reception|party)\s+for\b',
+    re.IGNORECASE)
+
+
+def _is_card_member_exclusive(name, description=None):
+    """True when one sentence of the body limits the occasion to card members."""
+    for sentence in re.split(r'(?<=[.;!?])\s+', description or ''):
+        if _CARD_MEMBER_TERM_RE.search(sentence) and _CARD_MEMBER_EXCLUSIVE_RE.search(sentence):
+            return True
+    return False
+
+
 def _is_not_public_notice(name, description=None):
     """True when the body states the occasion itself is not open to the public.
 
@@ -3586,6 +3662,10 @@ _JUNK_RULES = (
     # The body says, in the venue's own words, that this occasion is not open
     # to the public — enough on its own; see `_is_not_public_notice`.
     _JunkRule('not_public_notice', desc_mode='present', pred=_pred(_is_not_public_notice)),
+    # One-on-one help desks and card-member-only occasions (BL26); see the
+    # regex blocks above `_is_not_public_notice` for the measurements.
+    _JunkRule('one_on_one_service_desk', desc_mode='present', pred=_pred(_is_one_on_one_service_desk)),
+    _JunkRule('card_member_exclusive', desc_mode='present', pred=_pred(_is_card_member_exclusive)),
     _JunkRule('private_booking_desc', (( _PRIVATE_BOOKING_DESC_RE, 'search'),), desc_mode='present',
               pred=lambda n, d, loc, sub: bool(_PRIVATE_BOOKING_DESC_RE.search(d)
                                                and _NOT_PUBLIC_DESC_RE.search(d))),

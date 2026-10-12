@@ -26,3 +26,9 @@ when you set either column on a new site.
 | w5207 The Boat Yard | force_chunked=1 | ~40-90 season events sit just under LARGE_PAGE_THRESHOLD, and single-call mode's 8K output cap truncates the tail. |
 | w1813 Weill Cornell Medicine | force_chunked=1 | the Localist-API js_code injects 29 cards at ~38.7 KB — estimate 29-38, just under LARGE_PAGE_THRESHOLD, and under MAX_CHUNK_CHARS*2. Same cliff as w950 Nook. Single-call returned 15 of the 19 policy-eligible events on 2026-09-08; chunked (3 chunks) returned all 19, including the patient wellness series (Hanna Somatic, MBSR, Loving Kindness Meditation). |
 | w1717 Hoff-Barthelson Music School | force_chunked=1 | 2026-10-05: switched from page 1 of the HTML listing (ended Nov 6) to the Tribe-API body-wipe js_code, which injects all 44 upcoming events at ~30 KB HTML / ~25 KB text — estimate 44 (< LARGE_PAGE_THRESHOLD) on content at the MAX_CHUNK_CHARS cliff. Set pre-emptively, same shape as w950 Nook / w4102. |
+
+## excluded_title_patterns
+
+| website | patterns | rationale |
+|---|---|---|
+| w5053 The Dram Shop | `^The Best Happy Hour in Park Slope!?$`, `^Weekday Lunch & Happy Hour!?$`, `^Tex-Mex Brunch( in Crown Heights)?$`, `^Burger Tuesday$`, `^Taco Thursday$`, `^Kids Eat Free Saturdays$` | BL37, measured on cr-131206 (2026-10-11): the Eventbrite organizer feed lists 259 recurring food/drink-special records around 3 real events; dropping them before chunking takes 169,770 chars / 8 chunked packets to 18,841 chars / 1 single call, and all 3 real events (NBA Season Opener watch party, Annual Pumpkin Carving, Camp Friendship Pancake Breakfast) stay in every rendering (cards, day groups, API block). |

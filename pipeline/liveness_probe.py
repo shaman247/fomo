@@ -32,7 +32,8 @@ count as the "dropper".
 Verdicts
 --------
 Per URL: `dead` on HTTP 404/410, on a not-found page signature in the title
-(any status — parks.ny.gov serves its tombstone as 403), on a soft-404 body
+(any status — parks.ny.gov serves its tombstone as 403), on a host-specific
+tombstone (`HOST_TOMBSTONES`: nps.gov's 200 empty template), on a soft-404 body
 (`crawler._is_soft_404`), or on a redirect to the site root. `unknown` on a bot
 challenge, a 401/403/429/5xx without a tombstone title, a timeout or fetch
 error. Everything else is `alive`. Instagram/Facebook URLs are never probed.
@@ -71,6 +72,7 @@ under the publish lock). Standalone:
 import argparse
 import asyncio
 import concurrent.futures
+import re
 import sys
 import time
 from urllib.parse import urlparse
@@ -114,6 +116,37 @@ NOT_FOUND_TITLE_MARKERS = (
     "can't be found",
     "page missing",
 )
+
+# Host-specific tombstones that answer HTTP 200 under a title no marker above
+# can catch: (host suffix, title regex or None, body regex, reason). Both
+# regexes must match. nps.gov serves a DELETED event-details.htm?id= page as
+# the bare template -- title "Event Details (U.S. National Park Service)", no
+# event heading, coordinates 0.00, 0.00, an empty "Date:" -- so e139621 (Home of
+# FDR Top Cottage Tour, w4795) stayed live after NPS deleted its October series
+# (BL40). Its other URL, the summer series' page, says the series is over in
+# words; NPS keeps such pages "for reference only".
+HOST_TOMBSTONES = (
+    ('nps.gov', re.compile(r'^event details \(u\.s\. national park service\)$'),
+     re.compile(r'latitude and longitude\W*0\.00,\s*0\.00', re.IGNORECASE),
+     'nps.gov empty event template'),
+    ('nps.gov', None,
+     re.compile(r'this event has already occurred\.\s*this page is provided for reference only',
+                re.IGNORECASE),
+     'nps.gov: event has already occurred'),
+)
+
+
+def _host_tombstone(url, lowered_title, content):
+    host = (urlparse(url or '').hostname or '').lower()
+    for suffix, title_re, body_re, reason in HOST_TOMBSTONES:
+        if host != suffix and not host.endswith('.' + suffix):
+            continue
+        if title_re is not None and not title_re.search(lowered_title.strip()):
+            continue
+        if body_re.search(content or ''):
+            return reason
+    return None
+
 
 # Hosts whose pages are walled to any automated client; probing them can only
 # ever return `unknown`, so skip the fetch.
@@ -446,6 +479,9 @@ def classify(result_url, status, title, content, redirected_url, error=None):
         return 'unknown', 'bot challenge'
     if title_hit and (status is None or status >= 400 or len(content or '') <= SOFT_404_MAX_CHARS):
         return 'dead', f'not-found title "{title_hit}" (http {status})'
+    host_hit = _host_tombstone(result_url, lowered_title, content)
+    if host_hit:
+        return 'dead', f'{host_hit} (http {status})'
     if content and crawler._is_soft_404(content):
         return 'dead', 'soft-404 body'
     if redirected_url and redirected_url != result_url:

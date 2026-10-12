@@ -2108,6 +2108,90 @@ def dedupe_repeated_paragraphs(content, min_chars=DEDUPE_PARAGRAPH_MIN_CHARS):
     return (text, removed) if removed else (content, 0)
 
 
+# Per-site title exclusions (websites.excluded_title_patterns, BL37). The Dram
+# Shop's Eventbrite organizer feed (w5053, cr-131206) listed 248 cards that were
+# ~99% recurring food/drink specials (Weekday Lunch & Happy Hour, Burger
+# Tuesday, Taco Thursday, Tex-Mex Brunch, Kids Eat Free) and cost 8 packets for
+# 3 real events. A record here is a markdown heading and everything up to the
+# next heading of any level; a bare image link right above the heading whose
+# alt text carries the title is the card's own image and goes with it.
+_EXCLUSION_HEADING_RE = re.compile(r'^\s*#{1,6}\s+(.*\S)\s*$')
+_EXCLUSION_IMAGE_LINE_RE = re.compile(r'^\s*\[?!\[([^\]]*)\]\([^)]*\)(?:\]\([^)]*\))?\s*$')
+
+
+def parse_title_exclusions(raw):
+    """Compile websites.excluded_title_patterns: one case-insensitive regex per
+    line, searched against a record's title; a line that is not a valid regex
+    is matched literally. Blank lines are ignored."""
+    patterns = []
+    for line in (raw or '').splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            patterns.append(re.compile(line, re.IGNORECASE))
+        except re.error:
+            patterns.append(re.compile(re.escape(line), re.IGNORECASE))
+    return patterns
+
+
+def _heading_title(line):
+    m = _EXCLUSION_HEADING_RE.match(line)
+    if not m:
+        return None
+    title = re.sub(r'\]\([^)]*\)', '', m.group(1))
+    return re.sub(r'[\[\]*_`]', '', title).strip()
+
+
+def drop_excluded_records(content, patterns):
+    """Remove the heading records whose title matches one of `patterns`.
+
+    Returns (text, dropped_records, dropped_chars). Text that is not under a
+    heading is never touched, so a feed without headings passes through as is.
+    """
+    if not content or not patterns:
+        return content, 0, 0
+    def own_image_at(lines, title):
+        """Index of the image line ending `lines` that belongs to `title`, or None."""
+        tail = len(lines)
+        while tail and not lines[tail - 1].strip():
+            tail -= 1
+        if tail:
+            img = _EXCLUSION_IMAGE_LINE_RE.match(lines[tail - 1])
+            if img and title.lower() in img.group(1).lower():
+                return tail - 1
+        return None
+
+    out = []
+    skipped = []   # lines of the record being dropped
+    dropping = False
+    dropped = 0
+    for line in content.split('\n'):
+        title = _heading_title(line)
+        if title is not None:
+            if dropping:
+                # The dropped record's tail may hold THIS card's image line.
+                idx = own_image_at(skipped, title)
+                if idx is not None:
+                    out.extend(skipped[idx:])
+            skipped = []
+            dropping = any(p.search(title) for p in patterns)
+            if dropping:
+                dropped += 1
+                idx = own_image_at(out, title)
+                if idx is not None:
+                    del out[idx:]
+                continue
+        if dropping:
+            skipped.append(line)
+        else:
+            out.append(line)
+    if not dropped:
+        return content, 0, 0
+    text = '\n'.join(out)
+    return text, dropped, len(content) - len(text)
+
+
 def chunk_is_chrome_only(chunk):
     """True when a chunk carries no date, time, link or detail-URL marker at all.
 
@@ -2123,22 +2207,6 @@ def chunk_is_chrome_only(chunk):
     if _json_dates(chunk):
         return False
     return True
-
-
-def _full_dates(text):
-    dates = []
-    for m in _MONTH_DAY_YEAR_RE.finditer(text):
-        try:
-            dates.append(date(int(m.group(3)), _MONTH_ABBREVS[m.group(1).lower()[:3]], int(m.group(2))))
-        except (ValueError, KeyError):
-            continue
-    for rx, order in ((_ISO_DATE_RE, (1, 2, 3)), (_NUMERIC_DATE_RE, (3, 1, 2))):
-        for m in rx.finditer(text):
-            try:
-                dates.append(date(int(m.group(order[0])), int(m.group(order[1])), int(m.group(order[2]))))
-            except ValueError:
-                continue
-    return dates
 
 
 # A full date that also names its weekday can be checked against itself. When
@@ -2182,12 +2250,168 @@ def _weekday_year_corrections(text):
     return fixes
 
 
+# Date mentions that say nothing about when a chunk's events happen, removed
+# before the beyond-window test (BL30/BL42, 2026-10-12):
+#  - URLs. Slugs and upload paths carry dates the prompt forbids extracting
+#    anyway; Mount Vernon Public Library (w6008) slugs every Crochet Group card
+#    with the series' whole date history (`crochet-club-2026-07-02-...-2027-03-18`),
+#    so 8 all-2027 chunks of cr-131420 read as in-window.
+#  - JSON bookkeeping pairs (`"modified":"..."`, `"created_at":"..."`) and the
+#    WordPress post date (`"date":"...","date_utc"|"date_gmt":"..."`). Every
+#    Tribe REST record carries its own and its venue's/organizer's, so 9
+#    Mar–Jun 2027 chunks of Ridgefield Playhouse cr-130650 read as dated 2018.
+_WINDOW_URL_RE = re.compile(r'\]\([^)\s]*\)|https?:(?://|\\/\\/)[^\s)"\'<>\]]*')
+_WINDOW_WP_POST_DATE_RE = re.compile(
+    r'"date"\s*:\s*"[^"]*"\s*,\s*"date_(?:utc|gmt)"\s*:\s*"[^"]*"')
+_WINDOW_JSON_PAIR_RE = re.compile(r'"([A-Za-z_]+)"\s*:\s*"[^"]*"')
+# A full date this far in the past is history, not a running event: Do the
+# Write Thing's Meetup blurb (cr-130867) still says the group "will begin
+# meeting on September 10, 2017". A dated run that began within this span (an
+# exhibition "Sep 1, 2025 – Jun 30, 2027") still counts as in-window evidence.
+WINDOW_STALE_DATE_DAYS = 730
+_WEEKDAY_BEFORE_RE = re.compile(
+    r'\b(mon(?:day)?|tue(?:s|sday)?|wed(?:nesday)?|thu(?:rs?|rsday)?|fri(?:day)?|'
+    r'sat(?:urday)?|sun(?:day)?)\.?,?\s*$', re.IGNORECASE)
+_YEARLESS_MONTH_DAY_RE = re.compile(r'([a-z]+)\.?\s+(\d{1,2})$', re.IGNORECASE)
+_YEARLESS_SLASH_RE = re.compile(r'(\d{1,2})/(\d{1,2})$')
+# "On view through March 30, 2027": the end of a run that is going on now. Only
+# when no date sits just before the keyword, so "Mar 3, 2027 through Mar 5,
+# 2027" is still a far-future range.
+_RUN_END_BEFORE_RE = re.compile(
+    r'\b(?:through|thru|until|till|ends?|ending|closes?|closing|now|ongoing)\b'
+    r'[\s:,.\-–—]*$', re.IGNORECASE)
+_REPLACED_DATE_BEFORE_RE = re.compile(
+    r'\b(?:rescheduled|postponed|moved|changed)\s+from\s*$', re.IGNORECASE)
+_RANGE_AFTER_RE = re.compile(r'\s*(?:[-–—]|to\b|through\b|thru\b|until\b)', re.IGNORECASE)
+
+
+def _window_text(chunk):
+    """`chunk` without the date noise described at _WINDOW_URL_RE."""
+    text = _WINDOW_URL_RE.sub(' ', chunk)
+    text = _WINDOW_WP_POST_DATE_RE.sub(' ', text)
+    return _WINDOW_JSON_PAIR_RE.sub(
+        lambda m: ' ' if _JSON_BOOKKEEPING_KEY_RE.search(m.group(1)) else m.group(0), text)
+
+
+def _full_date_matches(text):
+    """[(date, start, end)] for every fully-qualified date in `text`."""
+    out = []
+    for m in _MONTH_DAY_YEAR_RE.finditer(text):
+        try:
+            out.append((date(int(m.group(3)), _MONTH_ABBREVS[m.group(1).lower()[:3]],
+                             int(m.group(2))), m.start(), m.end()))
+        except (ValueError, KeyError):
+            continue
+    for rx, order in ((_ISO_DATE_RE, (1, 2, 3)), (_NUMERIC_DATE_RE, (3, 1, 2))):
+        for m in rx.finditer(text):
+            try:
+                out.append((date(int(m.group(order[0])), int(m.group(order[1])),
+                                 int(m.group(order[2]))), m.start(), m.end()))
+            except ValueError:
+                continue
+    return out
+
+
+def _is_run_end(text, start):
+    before = text[max(0, start - 40):start]
+    m = _RUN_END_BEFORE_RE.search(before)
+    return bool(m) and not _DATE_TOKEN_RE.search(before[:m.start()])
+
+
+def _window_dates(text, today, horizon):
+    """The dates that decide a beyond-window verdict, or None when `text` shows
+    something that may be happening inside the window.
+
+    Full dates count as printed (weekday-corrected, _weekday_year_corrections),
+    except ones more than WINDOW_STALE_DATE_DAYS old and dates a card was
+    "rescheduled from" (Ridgefield Playhouse cr-130650 chunk 26: "This event is
+    rescheduled from October 22, 2026" on a March 2027 show). Any other past
+    date counts: it may open a run that is still going.
+
+    A year-less date is pinned by its weekday when it has one: of last, this and
+    next year exactly one can fit (a date's weekday shifts 1-2 days a year).
+    Brooklyn Community Pride Center (cr-131417 chunk 4) prints its 2027 program
+    as "Thu, Mar 04", and LIU (cr-131348 chunk 4) titles cards "Make up day for
+    Monday, May 31". A year-less date with no weekday ("deadline, September 1")
+    keeps the chunk when its next occurrence is inside the horizon or it opens
+    a range ("Sep 26 – Jan 4"); otherwise it is either past or past the horizon
+    and says nothing either way, so it is skipped.
+
+    A date that ends a run ("through March 30, 2027") always keeps the chunk."""
+    full = _full_date_matches(text)
+    spans = [(s, e) for _, s, e in full]
+    values = [d for d, _, _ in full]
+    for printed, corrected in _weekday_year_corrections(text):
+        if printed in values:
+            values[values.index(printed)] = corrected
+    stale = today - timedelta(days=WINDOW_STALE_DATE_DAYS)
+    dates = []
+
+    def add(d, start):
+        if d >= today and _is_run_end(text, start):
+            return False
+        if d < stale:
+            return True
+        if _REPLACED_DATE_BEFORE_RE.search(text, max(0, start - 30), start):
+            return True
+        dates.append(d)
+        return True
+
+    for d, (start, _) in zip(values, spans):
+        if not add(d, start):
+            return None
+    for m in _DATE_TOKEN_RE.finditer(text):
+        start, end = m.span()
+        if any(s < end and start < e for s, e in spans):
+            continue
+        token = m.group(0)
+        md = _YEARLESS_MONTH_DAY_RE.match(token)
+        if md and md.group(1).lower()[:3] in _MONTH_ABBREVS:
+            month, day = _MONTH_ABBREVS[md.group(1).lower()[:3]], int(md.group(2))
+        else:
+            sl = _YEARLESS_SLASH_RE.match(token)
+            if not sl:
+                return None  # a 2-digit-year slash date or a pre-2000 ISO date
+            month, day = int(sl.group(1)), int(sl.group(2))
+        wd = _WEEKDAY_BEFORE_RE.search(text, max(0, start - 12), start)
+        if wd:
+            weekday = _WEEKDAY_INDEX[wd.group(1).lower()[:3]]
+            fits = []
+            for year in (today.year - 1, today.year, today.year + 1):
+                try:
+                    candidate = date(year, month, day)
+                except ValueError:
+                    continue
+                if candidate.weekday() == weekday:
+                    fits.append(candidate)
+            if len(fits) != 1:
+                return None
+            if not add(fits[0], start):
+                return None
+            continue
+        if _is_run_end(text, start) or _RANGE_AFTER_RE.match(text, end):
+            return None
+        upcoming = None
+        for year in (today.year, today.year + 1):
+            try:
+                candidate = date(year, month, day)
+            except ValueError:
+                return None
+            if candidate >= today:
+                upcoming = candidate
+                break
+        if upcoming is None or upcoming <= horizon:
+            return None
+    return dates
+
+
 def chunk_is_beyond_window(chunk, today=None, window_days=None, buffer_days=FAR_FUTURE_BUFFER_DAYS):
-    """True when every dated mention in `chunk` carries a year and all sit past the
-    publish window (+buffer). Requires FAR_FUTURE_MIN_DATES fully-qualified dates
-    and no year-less date tokens, so a calendar that prints "Sat, Sep 26" next to
-    a stray "2027" is never pruned. A date whose printed weekday fits only an
-    adjacent year is read in that year (_weekday_year_corrections).
+    """True when every dated mention in `chunk` sits past the publish window
+    (+buffer), with at least FAR_FUTURE_MIN_DATES dates pinned to a day.
+    _window_dates decides which mentions count; a calendar that prints "Sat,
+    Sep 26" next to a stray "2027" is never pruned while Sep 26 is upcoming.
+
+    URLs and JSON bookkeeping dates are ignored first (_window_text).
 
     JSON-feed dates (epochs / ISO datetimes on scheduling keys) are
     fully-qualified too and join the minimum, so an in-window `startDate` epoch
@@ -2198,19 +2422,15 @@ def chunk_is_beyond_window(chunk, today=None, window_days=None, buffer_days=FAR_
         return False
     today = today or datetime.now().date()
     window_days = constants.FUTURE_WINDOW_DAYS if window_days is None else window_days
-    text_full = _full_dates(chunk)
-    # Every date token must be one of the fully-qualified mentions; month-day
-    # tokens without a year (or slash dates without a year) disqualify.
-    if count_date_tokens(chunk) > len(text_full):
-        return False
-    for printed, corrected in _weekday_year_corrections(chunk):
-        if printed in text_full:
-            text_full[text_full.index(printed)] = corrected
-    full = text_full + _json_dates(chunk)
-    if len(full) < FAR_FUTURE_MIN_DATES:
-        return False
     horizon = today + timedelta(days=window_days + buffer_days)
-    return min(full) > horizon
+    text = _window_text(chunk)
+    dates = _window_dates(text, today, horizon)
+    if dates is None:
+        return False
+    dates += _json_dates(text)
+    if len(dates) < FAR_FUTURE_MIN_DATES:
+        return False
+    return min(dates) > horizon
 
 
 def prune_chunks(chunks, today=None):
@@ -3221,6 +3441,10 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
     # identical content (same SHA-256 hash), reuse its extraction instead of
     # calling Gemini again. Saves significant cost on stale-content sites.
     prior_id = db.find_prior_crawl_with_same_content(cursor, crawl_result_id)
+    if prior_id and fingerprint_invalidated(cursor, prior_id):
+        print(f"    - Fingerprint match on crawl {prior_id} predates the site's "
+              f"fresh_extraction_after; forcing fresh extraction")
+        prior_id = None
     if prior_id and _fingerprint_copy_is_suspect(cursor, prior_id):
         # The cached extraction we'd copy is anomalously low vs the site's
         # history — the fingerprint-freeze failure mode (one unlucky
@@ -3266,7 +3490,7 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
     # Get website_id and the per-site extraction settings for this crawl result
     cursor.execute(
         """SELECT cr.website_id, w.max_batches, w.max_content_chars,
-                  w.force_chunked, w.max_records_per_chunk
+                  w.force_chunked, w.max_records_per_chunk, w.excluded_title_patterns
              FROM crawl_results cr
              LEFT JOIN websites w ON w.id = cr.website_id
             WHERE cr.id = %s""",
@@ -3274,6 +3498,7 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
     )
     result = cursor.fetchone()
     website_id = result[0] if result else None
+    excluded_title_patterns = result[5] if result and len(result) > 5 else None
     prep.website_id = website_id
     settings = resolve_extraction_settings(result, profile_urls or [base_url], max_batches)
     prep.max_batches = settings.max_batches
@@ -3292,6 +3517,15 @@ async def prepare_extraction(cursor, crawl_result_id, website_name, notes="",
     prep.content = content_to_process
     if dup_removed:
         print(f"    - Removed {dup_removed} chars of repeated paragraphs before chunking")
+
+    # Records this site always lists but never as events (recurring specials),
+    # named in websites.excluded_title_patterns; see drop_excluded_records.
+    content_to_process, excluded, excluded_chars = drop_excluded_records(
+        content_to_process, parse_title_exclusions(excluded_title_patterns))
+    prep.content = content_to_process
+    if excluded:
+        print(f"    - Dropped {excluded} record(s) ({excluded_chars} chars) matching "
+              f"excluded_title_patterns before chunking")
 
     # Hard limit on content size to prevent runaway extraction. Structured API
     # sources raise it via their SiteProfile — truncating a payload we built
@@ -3714,6 +3948,35 @@ def _floor_count_confirmed_by_reextraction(cursor, prior_id):
     if best_count >= FINGERPRINT_HEALTHY_LEVEL:
         return False
     return real_extractions >= 2
+
+
+def fingerprint_invalidated(cursor, prior_id):
+    """True when the extraction a fingerprint match would copy predates the
+    site's websites.fresh_extraction_after (BL28).
+
+    The variance guard (_fingerprint_copy_is_suspect) only refuses a cached
+    extraction whose COUNT is anomalously low; it cannot see one listed event
+    the extraction missed. Prospect Park w171 cr-130506 omitted "Haunted
+    Carousel" (e263259), the byte-identical 10-09 re-crawl copied it, and the
+    merge re-archived the event that triage had un-archived by hand. Setting the
+    timestamp (mark_fresh_extraction_needed) when un-archiving an event the
+    cache missed makes the next crawl re-extract. It needs no reset: the fresh
+    extraction is newer than the timestamp, so later matches reuse it.
+    """
+    cursor.execute(
+        """SELECT 1 FROM crawl_results cr
+             JOIN websites w ON w.id = cr.website_id
+            WHERE cr.id = %s AND w.fresh_extraction_after IS NOT NULL
+              AND COALESCE(cr.extracted_at, cr.crawled_at) < w.fresh_extraction_after""",
+        (prior_id,))
+    return cursor.fetchone() is not None
+
+
+def mark_fresh_extraction_needed(cursor, website_id):
+    """Make the site's next crawl re-extract instead of copying a cached
+    extraction (see fingerprint_invalidated). Caller commits."""
+    cursor.execute("UPDATE websites SET fresh_extraction_after = NOW() WHERE id = %s",
+                   (website_id,))
 
 
 def _fingerprint_copy_is_suspect(cursor, prior_id):

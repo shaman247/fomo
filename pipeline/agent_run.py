@@ -56,7 +56,7 @@ def read_results(cursor, ids):
                w.process_images, cr.extracted_content,
                w.force_chunked, w.max_records_per_chunk,
                CHAR_LENGTH(COALESCE(cr.crawled_content, '')),
-               {FAILED_CRAWL_SUPERSEDED_SQL}
+               {FAILED_CRAWL_SUPERSEDED_SQL}, w.excluded_title_patterns
         FROM crawl_results cr
         JOIN websites w ON w.id = cr.website_id
         JOIN crawl_runs r ON r.id = cr.crawl_run_id
@@ -71,6 +71,9 @@ def read_results(cursor, ids):
         # Bind extraction to source identity and interpretation settings as well
         # as content. A notes/venue/settings edit during review requires refresh.
         identity = [row[2], row[3], row[4], row[5], str(row[6]), row[7], row[8], row[10], row[11]]
+        if len(row) > 14 and row[14]:
+            # Only when set, so every other row's hash (and accepted packet) is unchanged.
+            identity.append(row[14])
         rows.append(dict(crawl_result_id=row[0], status=status, website_id=row[2],
                          crawl_run_id=row[3], name=row[4], notes=row[5] or '',
                          run_date=row[6], use_vision=bool(row[8]),
