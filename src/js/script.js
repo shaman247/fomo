@@ -244,6 +244,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 Promise.all([...new Set(initChunks.map(c => this._locationChunk(c)))].map(c =>
                     this._loadDataFile(`${this.config.DATA_DIR}locations.${c}.json`))).then(parts => parts.flat())
             ]);
+            // The last file's JSON.parse ran in this task; process in the next.
+            await DataManager.yieldToMain();
             this.state.organizersById = organizersData || {};
 
             this.state.tagConfig = tagConfig;
@@ -670,18 +672,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 this._setLoadingProgress(45);
 
                 // Modules that need the loaded data, then UI wiring.
+                let mapReady = false;
+                this.state.mapLoadPromise.then(() => { mapReady = true; });
                 this._initDataDependentModules();
+                // The loading screen covers the map and controls until
+                // _showMainUI, and moveend and the controls ignore input while
+                // isInitialLoad is set, so yields before the reveal change
+                // nothing on screen; they keep the page responsive (BL18).
+                await DataManager.yieldToMain();
                 this._setupUIComponents(urlParams);
                 this._setLoadingProgress(65);
 
                 // Wait for the base map tiles to be ready before showing markers
                 // (prevents markers over a blank/ocean background). Glyphs/labels
                 // are intentionally NOT awaited here — see initMap's mapLoadPromise.
-                await this.state.mapLoadPromise;
                 // Artwork is loaded lazily for visible icons by IconManager.
-                this._setLoadingProgress(85);
-
-                this.filterAndDisplayEvents();
+                if (mapReady) {
+                    // Usual network load: the map finished long ago, so the
+                    // first render runs as several shorter tasks.
+                    this._setLoadingProgress(85);
+                    await DataManager.yieldToMain();
+                    await this._filterAndDisplayEventsYielding();
+                } else {
+                    // Usual cache load: the data beat the map. Score the dated
+                    // events while waiting (stopping once the map is ready), and
+                    // render in ONE task, in the map load event's own task: a
+                    // yield there would let the map's first (expensive) frame
+                    // run before the reveal and delay it.
+                    this._prewarmDiscoveryScores(this.state.allEventsFilteredByDate || [], () => mapReady)
+                        .catch(() => {});
+                    await this.state.mapLoadPromise;
+                    this._setLoadingProgress(85);
+                    this.filterAndDisplayEvents();
+                }
                 this._setLoadingProgress(100);
                 this._showMainUI();
 
@@ -828,15 +851,16 @@ document.addEventListener('DOMContentLoaded', () => {
          */
         async _loadDataFile(url) {
             if (this.state.dataFromCache) {
-                const entry = await DataCache.get(url);
+                const entry = await DataCache.read(url);
                 if (entry) return entry.data;
                 console.warn(`DataCache miss for ${url}; fetching from network.`);
                 return (await DataManager.fetchDataHashed(url, undefined, { cache: 'no-cache' })).data;
             }
             // A schema reset must not refill IndexedDB with stale HTTP-cached JSON.
-            const { data, hash } = await DataManager.fetchDataHashed(url, undefined, { cache: 'no-cache' });
+            // The cache stores the response bytes (a cheap copy), not the parsed data.
+            const { data, bytes, hash } = await DataManager.fetchDataHashed(url, undefined, { cache: 'no-cache' });
             this._sessionHashes.set(url, hash);
-            this._cachePutPromises.push(DataCache.put(url, data, hash));
+            this._cachePutPromises.push(DataCache.put(url, bytes, hash));
             return data;
         },
 
@@ -961,13 +985,16 @@ document.addEventListener('DOMContentLoaded', () => {
          */
         async _fetchFreshSnapshot() {
             const files = new Map();
+            const cachedHashes = DataCache.getMeta()?.hashes || {};
             // EVERY file bypasses the 1-hour HTTP data cache: a same-day
             // re-export changes the chunk files but NOT the manifest, so a
             // plain fetch would hash stale HTTP-cache bytes and the refresh
             // would wrongly conclude nothing changed. no-cache still sends
             // conditional requests — unchanged files cost a 304, not a body.
-            const fetchOne = async (url) => {
-                const result = await DataManager.fetchDataHashed(url, 30000, { cache: 'no-cache' });
+            // Files identical to the cached copy are not parsed (data stays
+            // undefined until _applyFreshSnapshot needs it).
+            const fetchOne = async (url, knownHash) => {
+                const result = await DataManager.fetchDataHashed(url, 30000, { cache: 'no-cache' }, knownHash);
                 files.set(url, result);
                 return result.data;
             };
@@ -979,7 +1006,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 urls.push(`${this.config.DATA_DIR}locations.${this._locationChunk(c)}.json`);
                 urls.push(`${this.config.DATA_DIR}events.${c}.desc.json`);
             }
-            await Promise.all([...new Set(urls)].map(u => fetchOne(u)));
+            await Promise.all([...new Set(urls)].map(u => fetchOne(u, cachedHashes[u])));
             return { manifest: manifest || { days: [] }, chunks, files };
         },
 
@@ -993,6 +1020,13 @@ document.addEventListener('DOMContentLoaded', () => {
          */
         async _applyFreshSnapshot(fresh) {
             const cfg = this.config;
+            // Files identical to the cached copy arrived unparsed; parse them
+            // one per task (a single loop would be one multi-second task).
+            for (const file of fresh.files.values()) {
+                if (file.data !== undefined) continue;
+                file.data = DataCache.parseBytes(file.bytes);
+                await new Promise(resolve => setTimeout(resolve, 0));
+            }
             const get = (url) => (fresh.files.get(url) || {}).data;
 
             const tagConfig = get(cfg.TAG_CONFIG_URL) || {};
@@ -1117,15 +1151,14 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         /**
-         * Persist an applied fresh snapshot into the DataCache: one file per
-         * transaction with yields between (the ~9 MB remainder chunk's
-         * structured clone is the expensive part), then the completeness meta.
+         * Persist an applied fresh snapshot into the DataCache: one file's
+         * bytes per transaction with yields between, then the completeness meta.
          * @private
          */
         async _persistFreshSnapshot(fresh) {
             const hashes = {};
             for (const [url, file] of fresh.files) {
-                const ok = await DataCache.put(url, file.data, file.hash);
+                const ok = await DataCache.put(url, file.bytes, file.hash);
                 if (!ok) return; // cache broken/full — snapshot stays incomplete
                 hashes[url] = file.hash;
                 await new Promise(resolve => setTimeout(resolve, 0));
@@ -1768,6 +1801,57 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         filterAndDisplayEvents(options = {}) {
+            // Run every step synchronously; the generator's yields are split
+            // points only _filterAndDisplayEventsYielding pauses at.
+            for (const _step of this._filterAndDisplaySteps(options)) { /* no pause */ }
+        },
+
+        /**
+         * filterAndDisplayEvents for the first render: the same steps in the
+         * same order, with a yield to the main thread at each split point, and
+         * the matching events' discovery scores computed ahead of the marker
+         * render in ~8 ms slices (DiscoveryRanking caches them per event, so
+         * the render then reads cached values). Only init() uses this — later
+         * calls stay synchronous so a render can never interleave with another.
+         * @returns {Promise<void>}
+         * @private
+         */
+        async _filterAndDisplayEventsYielding(options = {}) {
+            for (const step of this._filterAndDisplaySteps(options)) {
+                if (step && step.prewarm) await this._prewarmDiscoveryScores(step.prewarm);
+                await DataManager.yieldToMain();
+            }
+        },
+
+        /**
+         * Compute (and cache) discovery scores for events about to render, in
+         * ~8 ms slices. Rendering reads the cached values (same inputs, same
+         * results); anything not prewarmed is scored during the render as before.
+         * @param {Array<Object>} events
+         * @param {Function} [stop] - checked between slices; true ends early
+         * @private
+         */
+        async _prewarmDiscoveryScores(events, stop) {
+            const locations = this.state.locationsByLatLng;
+            let sliceStart = performance.now();
+            for (let i = 0; i < events.length; i++) {
+                DiscoveryRanking.details(events[i], locations[events[i].locationKey]);
+                if ((i & 63) === 63 && performance.now() - sliceStart >= 8) {
+                    await DataManager.yieldToMain();
+                    if (stop && stop()) return;
+                    sliceStart = performance.now();
+                }
+            }
+        },
+
+        /**
+         * The body of filterAndDisplayEvents as a generator. Each `yield` comes
+         * after a step whose results the following steps read (counts, then
+         * matching/visible sets, then markers, then the panel);
+         * `yield {prewarm}` hands over the events the marker render will score.
+         * @private
+         */
+        *_filterAndDisplaySteps(options = {}) {
             if (!this._selectedDateChunksReady()) {
                 this._waitingForDateChunks = true;
                 return;
@@ -1821,6 +1905,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 FP.mark('fp:fade:byTags');
                 FP.measure('fp:fade:filterByTags', 'fp:fade:start', 'fp:fade:byTags');
             }
+            yield;
 
             // Store the computed lists in the state for use by other functions like search
             this.state.currentlyMatchingEvents = allMatchingEventsFlatList;
@@ -1842,6 +1927,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 FP.mark('fp:fade:viewport');
                 FP.measure('fp:fade:updateVisibleItems', 'fp:fade:grouped', 'fp:fade:viewport');
             }
+            yield { prewarm: allMatchingEventsFlatList };
 
             // Update open popup/bottom sheet content if there is one
             if (openPopupInfo) {
@@ -1858,6 +1944,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 FP.mark('fp:fade:markers');
                 FP.measure('fp:fade:displayOnMap', 'fp:fade:viewport', 'fp:fade:markers');
             }
+            yield;
 
             FilterPanelUI.updateView(allMatchingEventsFlatList);
 

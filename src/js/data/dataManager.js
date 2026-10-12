@@ -67,15 +67,22 @@ const DataManager = (() => {
         return response.text();
     }
 
-    async function _fetchJson(url, timeout, fetchOptions) {
+    /**
+     * Fetch and parse a JSON file. `prepare(text)` (optional, async) runs on
+     * each downloaded body before parsing; its result's fields are merged into
+     * the return value, and `skipParse: true` returns without parsing.
+     */
+    async function _fetchJson(url, timeout, fetchOptions, prepare) {
         // A cached response or an interrupted publish can contain partial JSON.
         // Retry parsing failures once with a full network reload, replacing the
         // HTTP cache entry instead of accepting a 304 for the same broken body.
         for (let attempt = 0; attempt < 2; attempt++) {
             const options = attempt ? { ...fetchOptions, cache: 'reload' } : fetchOptions;
             const text = await _fetchText(url, timeout, options);
+            const extra = prepare ? await prepare(text) : null;
+            if (extra && extra.skipParse) return { data: undefined, text, ...extra };
             try {
-                return { data: JSON.parse(text), text };
+                return { data: JSON.parse(text), text, ...extra };
             } catch (parseError) {
                 if (attempt) {
                     throw new Error(`Invalid JSON in ${url} after retrying the download. Please try again shortly.`);
@@ -105,21 +112,32 @@ const DataManager = (() => {
     }
 
     /**
-     * Like fetchData, but also returns a content hash of the raw response
-     * text so callers (DataCache write-through, background refresh) can detect
-     * unchanged files without re-comparing payloads.
+     * Like fetchData, but also returns the UTF-8 body and its content hash so
+     * callers (DataCache write-through, background refresh) can store the
+     * file cheaply and detect unchanged files without re-comparing payloads.
+     *
+     * The body is hashed (off the main thread where WebCrypto exists) before
+     * it is parsed, so encoding and parsing land in separate tasks. When the
+     * hash equals `knownHash` the body is byte-identical to a file that
+     * already parsed, so parsing is skipped: `data` is undefined and
+     * `unchanged` is true (DataCache.parseBytes(bytes) produces it on demand).
      * @param {string} url - The URL to fetch data from
      * @param {number} timeout - Timeout in milliseconds (default: 10000ms)
      * @param {Object} [fetchOptions] - Extra fetch() options (e.g. {cache: 'no-cache'})
-     * @returns {Promise<{data: Object, hash: string}>}
+     * @param {string} [knownHash] - hash of a cached copy; skips the parse on a match
+     * @returns {Promise<{data: (Object|undefined), bytes: Uint8Array, hash: string, unchanged: boolean}>}
      * @throws {Error} Network, timeout, or parsing errors with user-friendly messages
      */
-    async function fetchDataHashed(url, timeout = 10000, fetchOptions) {
+    async function fetchDataHashed(url, timeout = 10000, fetchOptions, knownHash) {
         try {
             // Distinguish incompatible payloads in the browser HTTP cache as well as IndexedDB.
             const versionedUrl = `${url}${url.includes('?') ? '&' : '?'}schema=${DataCache.schemaVersion}`;
-            const { data, text } = await _fetchJson(versionedUrl, timeout, fetchOptions);
-            return { data, hash: DataCache.hashString(text) };
+            const { data, bytes, hash, skipParse } = await _fetchJson(versionedUrl, timeout, fetchOptions, async (text) => {
+                const bytes = DataCache.encodeText(text);
+                const hash = await DataCache.hashBytes(bytes);
+                return { bytes, hash, skipParse: !!knownHash && hash === knownHash };
+            });
+            return { data, bytes, hash, unchanged: skipParse };
         } catch (error) {
             console.error(`Failed to fetch data from ${url}:`, error);
             throw error;
@@ -1040,6 +1058,7 @@ const DataManager = (() => {
         calculateTagStatsAsync,
         buildTagHierarchyMaps,
         processTagHierarchy,
-        groupEventsByLatLngInDateRange
+        groupEventsByLatLngInDateRange,
+        yieldToMain: _yieldToMain
     };
 })();

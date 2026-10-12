@@ -129,7 +129,7 @@ test('format selections intersect date and required topic membership', () => {
 test('new data schemas get distinct HTTP URLs while preserving revalidation', async () => {
     const requests=[];
     const ctx=vm.createContext({console,AbortController,setTimeout,clearTimeout,
-        DataCache:{schemaVersion:4,hashString:s=>String(s.length)},
+        DataCache:{schemaVersion:4,encodeText:s=>new TextEncoder().encode(s),hashBytes:async b=>String(b.length)},
         fetch:async(url,options)=>{requests.push([url,options.cache]);return {ok:true,text:async()=>'{"formats":{"Social":["Party"]}}'};}});
     vm.runInContext(fs.readFileSync(path.join(__dirname,'../data/dataManager.js'),'utf8')+'\nthis.DM=DataManager;',ctx);
     const result=await ctx.DM.fetchDataHashed('data/tag_hierarchy.json',1000,{cache:'no-cache'});

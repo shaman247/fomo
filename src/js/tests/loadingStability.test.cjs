@@ -77,3 +77,49 @@ test('the next search consumes pending data using the latest input', () => {
     assert.equal(app.state.searchTerm, 'jazz');
     assert.equal(stats().renders, 1);
 });
+
+test('the yielding first render runs the same steps in the same order, scoring matches before markers', async () => {
+    const run = async (yielding) => {
+        const log = [];
+        let yields = 0;
+        const events = [{ id: 1, locationKey: 'a' }, { id: 2, locationKey: 'b' }];
+        const counter = name => ({ updateCounts: () => log.push(`${name}.counts`), matches: () => true });
+        const context = vm.createContext({
+            navigator: { userAgent: '' }, window: {}, Constants: {}, console, setTimeout, performance,
+            document: { addEventListener: (_, fn) => fn(), getElementById: () => null },
+            URLParams: { formatDate: date => date.toISOString().slice(0, 10) },
+            TagSelector: counter('tag'), VenueSelector: counter('venue'),
+            FormatSelector: counter('format'), NeighborhoodSelector: counter('area'),
+            FomoQueries: { currentViewEvents: () => null },
+            FilterManager: {
+                filterEventsByTags: (_, list) => { log.push('filter'); return list; },
+                groupEventsByLocation: list => { log.push('group'); return Object.fromEntries(list.map(e => [e.locationKey, [e]])); }
+            },
+            FilterPanelUI: { getTagStates: () => ({}), updateView: () => log.push('panel') },
+            MarkerController: { findOpenPopup: () => null, displayEventsOnMap: () => log.push('markers') },
+            DiscoveryRanking: { details: (e, place) => log.push(`score${e.id}:${place.id}`) },
+            DataManager: { yieldToMain: async () => { yields++; } }
+        });
+        const source = fs.readFileSync(path.join(__dirname, '../script.js'), 'utf8');
+        vm.runInContext(source.replace('    App.init();', '    globalThis.App = App;'), context);
+        const app = context.App;
+        Object.assign(app.state, {
+            manifest: { days: [] }, loadedChunks: new Set(['remainder']), allEventsFilteredByDate: events,
+            locationsByLatLng: { a: { id: 'A' }, b: { id: 'B' } },
+            datePickerInstance: { selectedDates: [new Date('2026-10-12T12:00:00Z')] }
+        });
+        app.updateVisibleItems = () => log.push('visible');
+        app._applySearchTermFilter = locations => locations;
+        if (yielding) await app._filterAndDisplayEventsYielding();
+        else app.filterAndDisplayEvents();
+        return { log, yields, matching: app.state.currentlyMatchingEvents };
+    };
+    const sync = await run(false), split = await run(true);
+    const steps = ['filter', 'tag.counts', 'venue.counts', 'format.counts', 'area.counts',
+        'group', 'visible', 'markers', 'panel'];
+    assert.deepEqual(sync.log, steps);
+    assert.deepEqual(split.log, [...steps.slice(0, 7), 'score1:A', 'score2:B', ...steps.slice(7)]);
+    assert.equal(sync.yields, 0);
+    assert.equal(split.yields, 3);
+    assert.equal(split.matching.length, 2);
+});

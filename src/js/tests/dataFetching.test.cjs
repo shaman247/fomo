@@ -9,7 +9,11 @@ function setup(responses) {
     const context = vm.createContext({
         AbortController, setTimeout, clearTimeout,
         console: { error() {}, warn() {} },
-        DataCache: { schemaVersion: 4, hashString(text) { hashed.push(text); return 'hash'; } },
+        DataCache: {
+            schemaVersion: 4,
+            encodeText: text => new TextEncoder().encode(text),
+            async hashBytes(bytes) { const text = new TextDecoder().decode(bytes); hashed.push(text); return `h:${text}`; }
+        },
         async fetch(url, options) {
             calls.push({ url, options });
             assert.ok(responses.length, 'unexpected extra request');
@@ -36,14 +40,15 @@ test('a partial JSON response recovers with one network reload', async () => {
     assert.equal(calls[1].options.cache, 'reload');
 });
 
-test('hashed loads hash only the recovered body and preserve schema and options', async () => {
+test('hashed loads return the recovered body and its hash and preserve schema and options', async () => {
     const body = '{"123":"Description"}';
-    const { manager, calls, hashed } = setup([{ body: '<html>Unavailable</html>' }, { body }]);
+    const { manager, calls } = setup([{ body: '<html>Unavailable</html>' }, { body }]);
     const result = await manager.fetchDataHashed('data/events.remainder0.desc.json?v=1', 1000,
         { cache: 'no-cache', credentials: 'same-origin' });
     assert.equal(result.data['123'], 'Description');
-    assert.equal(result.hash, 'hash');
-    assert.deepEqual(hashed, [body]);
+    assert.equal(result.hash, `h:${body}`);
+    assert.equal(new TextDecoder().decode(result.bytes), body);
+    assert.equal(result.unchanged, false);
     assert.equal(calls[0].url, 'data/events.remainder0.desc.json?v=1&schema=4');
     assert.equal(calls[1].url, calls[0].url);
     assert.equal(calls[0].options.cache, 'no-cache');
@@ -52,11 +57,31 @@ test('hashed loads hash only the recovered body and preserve schema and options'
 });
 
 test('persistent malformed JSON reports the file and stops after two requests', async () => {
-    const { manager, calls, hashed } = setup([{ body: '' }, { body: 'broken' }]);
+    const { manager, calls } = setup([{ body: '' }, { body: 'broken' }]);
     await assert.rejects(manager.fetchDataHashed('data/events.remainder2.json'),
         /Invalid JSON in data\/events.remainder2.json\?schema=4 after retrying/);
     assert.equal(calls.length, 2);
-    assert.deepEqual(hashed, []);
+});
+
+test('a body matching the cached hash is not parsed; any other body is', async () => {
+    const body = '[{"id":1}]';
+    const { manager } = setup([{ body }, { body: '[{"id":2}]' }]);
+    const same = await manager.fetchDataHashed('data/events.day0.json', 1000, {}, `h:${body}`);
+    assert.equal(same.unchanged, true);
+    assert.equal(same.data, undefined);
+    assert.equal(new TextDecoder().decode(same.bytes), body);
+    const other = await manager.fetchDataHashed('data/events.day0.json', 1000, {}, `h:${body}`);
+    assert.equal(other.unchanged, false);
+    assert.equal(other.data[0].id, 2);
+});
+
+test('a broken body never matches the cached hash and still reloads once', async () => {
+    const body = '[{"id":1}]';
+    const { manager, calls } = setup([{ body: '[{"id":' }, { body }]);
+    const result = await manager.fetchDataHashed('data/events.day0.json', 1000, {}, `h:${body}`);
+    assert.equal(calls.length, 2);
+    assert.equal(calls[1].options.cache, 'reload');
+    assert.equal(result.unchanged, true);
 });
 
 test('HTTP failures keep their specific error without a JSON retry', async () => {
