@@ -12,6 +12,11 @@ from urllib.parse import urlsplit
 from occurrence_times import standardize_time
 
 UNMAPPED_POLICY = 'reviewed_unmapped_v1'
+# A cross-venue duplicate decision (BL38): the loser's sources keep naming the
+# loser's venue, so the redirect is keyed by THAT venue and points across to the
+# survivor's. It applies only while both events still sit where the decision
+# found them, and only to a source that names the loser's venue exactly.
+LOCATION_BRIDGE_POLICY = 'location_bridge_v1'
 
 
 class IdentityIndex(dict):
@@ -20,6 +25,7 @@ class IdentityIndex(dict):
         super().__init__()
         self.unmapped = {}
         self.unmapped_schedules = {}
+        self.location_bridges = {}
 
 
 def _full_slot(row):
@@ -119,9 +125,13 @@ def record_merge(cursor, keep_id, duplicate_id, *, reviewed_source_ids=()):
                    (duplicate_id,keep_id))
     cursor.execute('''UPDATE event_merge_redirects SET survivor_id=%s,survivor_name=%s
         WHERE survivor_id=%s''', (keep_id, keep['name'], duplicate_id))
-    # A reviewed cross-venue consolidation does not authorize a new source to
-    # bypass the merger's cross-location guard.
-    if not duplicate['location_id'] or duplicate['location_id'] != keep['location_id']:
+    # A reviewed cross-venue consolidation authorizes nothing generic: the
+    # merger's cross-location guard still holds for every other source. It is
+    # recorded as a location bridge, limited to the loser's exact venue.
+    if not duplicate['location_id']:
+        return
+    bridge = duplicate['location_id'] != keep['location_id']
+    if bridge and not keep['location_id']:
         return
     dates = _rows(cursor, '''SELECT start_date,start_time,end_date FROM event_occurrences
         WHERE event_id=%s''', (duplicate_id,))
@@ -155,6 +165,10 @@ def record_merge(cursor, keep_id, duplicate_id, *, reviewed_source_ids=()):
     listing = {(r['website_id'],r['url'].rstrip('/')) for r in _rows(cursor,'SELECT website_id,url FROM website_urls')}
     scopes = [dict(website_id=k[0],url=k[1],name=k[2],location_id=k[3],slots=sorted(v))
               for k,v in identities.items() if v and (k[0],k[1].rstrip('/')) not in listing]
+    if bridge:
+        for scope in scopes:
+            scope.update(policy=LOCATION_BRIDGE_POLICY,
+                         survivor_location_id=keep['location_id'])
     previous = _rows(cursor, 'SELECT source_identities FROM event_merge_redirects '
                      'WHERE duplicate_id=%s AND survivor_id=%s', (duplicate_id,keep_id))
     if previous:
@@ -337,6 +351,18 @@ def load_index(cursor):
             if scope.get('policy') == UNMAPPED_POLICY:
                 _load_unmapped_scope(cursor, index, r, scope, full_schedules[r['survivor_id']])
                 continue
+            if scope.get('policy') == LOCATION_BRIDGE_POLICY:
+                # Both venues must be where the decision found them.
+                if (scope['location_id'] != r['duplicate_location_id']
+                        or scope.get('survivor_location_id') != r['location_id']
+                        or r['location_id'] is None):
+                    continue
+                key = (scope['website_id'],scope['url'],scope['name'],scope['location_id'])
+                allowed = {tuple(s) for s in scope['slots']} & schedules[r['survivor_id']]
+                if allowed:
+                    index.location_bridges.setdefault(key, {}).setdefault(
+                        r['survivor_id'], set()).update(allowed)
+                continue
             if scope.get('policy'):
                 continue
             if scope['location_id'] != r['location_id']:
@@ -357,9 +383,13 @@ def match(index, website_id, name, url, location_id, occurrences, *, full_source
     targets = index.get(key, {}) if location_id else {}
     aliases = getattr(index, 'source_aliases', {}).get(key, {})
     unmapped = getattr(index, 'unmapped', {}).get(key, {})
+    bridges = getattr(index, 'location_bridges', {}).get(key, {}) if location_id else {}
     # Ambiguous identities decline even if only one target covers all dates.
-    if len(set(targets) | set(unmapped) | set(aliases)) != 1:
+    if len(set(targets) | set(unmapped) | set(aliases) | set(bridges)) != 1:
         return None
+    if bridges:
+        target, allowed = next(iter(bridges.items()))
+        return target if incoming <= allowed else None
     if aliases:
         from reviewed_source_aliases import match as match_alias
         source_rows = occurrences if full_source_occurrences is None else full_source_occurrences
@@ -372,3 +402,15 @@ def match(index, website_id, name, url, location_id, occurrences, *, full_source
         return target if _untimed_days(source_rows) in editions else None
     target, allowed = next(iter(targets.items()))
     return target if incoming <= allowed else None
+
+
+def is_location_bridge(index, website_id, name, url, location_id, target):
+    """True when `target` was reached through a cross-venue location bridge.
+
+    The merger exempts exactly that match from its cross-location guard and
+    never re-pins the survivor to the loser's venue.
+    """
+    if target is None or not location_id:
+        return False
+    key = (website_id, url, name_key(name), location_id)
+    return target in getattr(index, 'location_bridges', {}).get(key, {})

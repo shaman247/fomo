@@ -4534,6 +4534,10 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         # A reviewed identity may legitimately target a suppressed row; the
         # URL-twin handoff below never overrides it.
         reviewed_match_id = matched_event_id
+        # A reviewed cross-venue duplicate decision (BL38): this source names
+        # the loser's venue exactly and goes to the survivor at its own venue.
+        reviewed_bridge = reviewed_event_identity.is_location_bridge(
+            reviewed_identity_index, website_id, name, url, location_id, matched_event_id)
         if reviewed_source_aliases.needs_review(
                 reviewed_identity_index, website_id, name, url, matched_event_id):
             # Preserve the unlinked source for explicit review. Repeated merge
@@ -4896,7 +4900,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             _m = cursor.fetchone()
             current_loc_id = _m[0] if _m else None
             if (_m and _m[0] is not None
-                    and not same_place(_m[0], location_id, location_containment)):
+                    and not same_place(_m[0], location_id, location_containment)
+                    and not (reviewed_bridge and matched_event_id == reviewed_match_id)):
                 matched_event_id = None
                 # The reviewed decision no longer owns the eventual match.
                 # A subsequent URL fallback must follow its ordinary metadata
@@ -5164,6 +5169,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 if not current_location_id or (
                     not suppressed_handoff and not dismissed_home_handoff and
                     not (url_relaxed_match and incoming_is_fallback) and
+                    not (reviewed_bridge and matched_event_id == reviewed_match_id) and
                     should_repin_location(current_location_id, location_id,
                                           website_location_ids.get(website_id, ()),
                                           location_containment)
