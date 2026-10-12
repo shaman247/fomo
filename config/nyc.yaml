@@ -51,7 +51,9 @@ frontend:
   # Only these reviewed identities may head the public topic/venue menus.
   # New curated tags need a parent; changing this list is an explicit root decision.
   filter_roots:
-    tag: [Art, Comedy, Community, Dance, Education, Family, Film, Free, Games, Literature, Music, Nightlife, Outdoor, Science, Sports, Theater, Virtual, Wellness]
+    # Age = eligibility (who may attend); Family = intent (designed for kids/
+    # families). Occasion = dated occasions such as Halloween (BL23).
+    tag: [Age, Art, Comedy, Community, Dance, Education, Family, Film, Free, Games, Literature, Music, Nightlife, Occasion, Outdoor, Science, Sports, Theater, Virtual, Wellness]
     venue: [Beverage Venue, Community Center, Cultural Venue, Event Hall, Government, Hospital, Hotel, House of Worship, Meetup Point, Office, Outdoor Venue, School, Shop, Studio, Nightclub, attraction, Fitness & Recreation]
   venue_selector:
     # Browsing labels are separate from stable tag identities and topic aliases.
@@ -122,6 +124,7 @@ frontend:
     - Library
     - Lounge
     - Meetup Point
+    - Cinema
     - Microcinema
     - Mosque
     - Museum
@@ -1675,6 +1678,13 @@ tag_hierarchy:
       Indoor Skydiving: [Sports]
       Competition: [Community]
       Landmarks: [History]
+      # BL23: eligibility/skill never derives Family.
+      All Ages: [Age]
+      Young Adults: [Age]
+      18+: [Age]
+      21+: [Age]
+      Beginner Friendly: [Education]
+      Halloween: [Occasion]
     venue:
       Observation Deck: [Outdoor Venue]
       Indoor Skydiving: [Fitness & Recreation]
@@ -1788,6 +1798,8 @@ venue_taxonomy:
     - Beverage Venue
     Farm:
     - Outdoor Venue
+    Cinema:
+    - Cultural Venue
     Microcinema:
     - Cultural Venue
     Lounge:
@@ -1823,6 +1835,8 @@ venue_taxonomy:
       emoji: 🏃
     - name: Skatepark
       emoji: 🛹
+    - name: Cinema
+      emoji: 🍿
     retire:
     - Venue
     - Event Space
@@ -1846,6 +1860,8 @@ venue_taxonomy:
       Recreation Center:
       - Community Center
       - Fitness & Recreation
+      Cinema:
+      - Cultural Venue
     locations:
     - location_id: 41
       expected_name: Apollo Theater
@@ -4073,6 +4089,60 @@ venue_taxonomy:
       remove: []
       source: https://m.weddingwire.com/biz/oz-farm-saugerties/7520b49553abe5b2
       reason: 82-acre working horse farm whose barn and lawns are rented as an all-inclusive wedding and event venue (in-house catering and bar, up to 1,000 guests); Farm kept for the working estate, Event Hall added for the dedicated rental use.
+    - location_id: 7500
+      expected_name: AMC DINE-IN Shops at Riverside 9
+      add:
+      - Cinema
+      remove: []
+      reason: "BL23 Cinema venue type: Dine-in multiplex movie theater (AMC) at The Shops at Riverside, Hackensack. The other 89 cinemas already held the Cinema keyword (reviewed by name 2026-10-12)."
+    - location_id: 7508
+      expected_name: Skyline Drive-In NYC
+      add:
+      - Cinema
+      remove: []
+      reason: "BL23 Cinema venue type: Open-air drive-in movie theater on the Greenpoint waterfront. The other 89 cinemas already held the Cinema keyword (reviewed by name 2026-10-12)."
+    - location_id: 6884
+      expected_name: Arverne Cinema
+      add:
+      - Cinema
+      remove: []
+      reason: "BL23 Cinema venue type: Outdoor community cinema in Arverne whose programming is film screenings. The other 89 cinemas already held the Cinema keyword (reviewed by name 2026-10-12)."
+    - location_id: 7651
+      expected_name: Hi-Way Drive-In
+      add:
+      - Cinema
+      remove: []
+      reason: "BL23 Cinema venue type: Seasonal four-screen drive-in movie theater in Coxsackie. The other 89 cinemas already held the Cinema keyword (reviewed by name 2026-10-12)."
+    - location_id: 2245
+      expected_name: Rooftop Cinema Club
+      add:
+      - Cinema
+      remove: []
+      reason: "BL23 Cinema venue type: Open-air rooftop cinema showing nightly films with headphones. The other 89 cinemas already held the Cinema keyword (reviewed by name 2026-10-12)."
+    - location_id: 5343
+      expected_name: Showcase Cinema de Lux Cross County
+      add:
+      - Cinema
+      remove: []
+      reason: "BL23 Cinema venue type: Multiplex cinema at Cross County Shopping Center, Yonkers. The other 89 cinemas already held the Cinema keyword (reviewed by name 2026-10-12)."
+    - location_id: 1436
+      expected_name: SVA Theatre
+      add:
+      - Cinema
+      remove: []
+      reason: "BL23 Cinema venue type: Two-screen Chelsea cinema run by SVA for festivals, premieres and screenings. The other 89 cinemas already held the Cinema keyword (reviewed by name 2026-10-12)."
+    - location_id: 3402
+      expected_name: UnionDocs
+      add:
+      - Cinema
+      remove: []
+      reason: "BL23 Cinema venue type: Documentary arts center whose public programming is a screening room. The other 89 cinemas already held the Cinema keyword (reviewed by name 2026-10-12)."
+    - location_id: 5116
+      expected_name: The Cranford Theater
+      add:
+      - Cinema
+      remove: []
+      reason: "BL23 Cinema venue type: Historic downtown movie theater in Cranford, NJ. The other 89 cinemas already held the Cinema keyword (reviewed by name 2026-10-12)."
     descriptions:
     - location_id: 2041
       expected_name: Cloud City

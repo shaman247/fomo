@@ -35,6 +35,10 @@ class FacetDefinitionTests(unittest.TestCase):
             self.assertIn(shared, tf.FORMAT_FAMILY)
         self.assertEqual(tf.format_membership('Talk'), {'Talk', 'Gathering', 'Format'})
         self.assertEqual(tf.format_membership('Tour'), {'Tour', 'Outings', 'Format'})
+        # BL23: Concert/Sports keep the union; the other shared chips are content-only.
+        self.assertEqual(tf.format_membership('Concert'), {'Concert', 'Performance', 'Format'})
+        self.assertEqual(tf.format_membership('Workshop'), {'Participatory', 'Format'})
+        self.assertEqual(tf.UNION_LEAVES | tf.CONTENT_ONLY_LEAVES, tf.SHARED_LEAVES)
         self.assertEqual(tf.format_membership('Other'), set())
         self.assertEqual(tf.format_membership(None), set())
 
@@ -44,12 +48,14 @@ class FacetDefinitionTests(unittest.TestCase):
         self.assertEqual(tf.ancestors('Wine Tasting', parents), {'Food'})
         self.assertEqual(tf.ancestors('Concert', parents), {'Music'})
 
-    def test_format_implied_shared_leaf_adds_no_topic_parents(self):
+    def test_format_implied_union_leaf_adds_no_topic_parents(self):
         parents = topic_parents()
-        self.assertEqual(tf.topic_closure({'Workshop', 'Kids'}, parents, 'Workshop'),
-                         {'Workshop', 'Kids', 'Family'})
-        # Content evidence for the same leaf on another format still derives Education.
-        self.assertIn('Education', tf.topic_closure({'Workshop'}, parents, 'Talk'))
+        self.assertEqual(tf.topic_closure({'Concert', 'Kids'}, parents, 'Concert'),
+                         {'Concert', 'Kids', 'Family'})
+        # Content evidence for the same leaf on another format still derives Music.
+        self.assertIn('Music', tf.topic_closure({'Concert'}, parents, 'Talk'))
+        # A content-only leaf is never format-implied, so it always derives parents.
+        self.assertIn('Education', tf.topic_closure({'Workshop'}, parents, 'Workshop'))
 
     def test_derivation_is_idempotent_and_honours_blocks(self):
         parents = topic_parents()
@@ -68,16 +74,18 @@ class FacetDefinitionTests(unittest.TestCase):
             self.assertEqual(once & tf.FORMAT_EXCLUSIVE,
                              (tf.format_membership(event_type) - set(blocked)) & tf.FORMAT_EXCLUSIVE)
         running = tf.derive_event_tags({'Running', 'Performance', 'Format'}, 'Fitness', parents, ROOTS)
-        self.assertEqual(running, {'Running', 'Sports', 'Fitness', 'Participatory', 'Format'})
+        self.assertEqual(running, {'Running', 'Sports', 'Participatory', 'Format'})
         self.assertIn('Other', tf.derive_event_tags({'Talk'}, 'Talk', parents, ROOTS))
 
     def test_health_helpers(self):
         parents = topic_parents()
-        self.assertEqual(tf.missing_topic_ancestors({'Workshop', 'Format'}, 'Workshop', parents), set())
+        self.assertEqual(tf.missing_topic_ancestors({'Concert', 'Format'}, 'Concert', parents), set())
+        self.assertEqual(tf.missing_topic_ancestors({'Workshop', 'Format'}, 'Workshop', parents), {'Education'})
         self.assertEqual(tf.missing_topic_ancestors({'Running'}, 'Fitness', parents), {'Sports'})
         extra, missing = tf.format_drift({'Performance', 'Format', 'Running'}, 'Fitness')
         self.assertEqual(extra, {'Performance'})
-        self.assertEqual(missing, {'Fitness', 'Participatory'})
+        self.assertEqual(missing, {'Participatory'})
+        self.assertEqual(tf.format_drift({'Sports', 'Running'}, 'Sports')[1], {'Performance', 'Format'})
         found = tf.shadowing_aliases([('musical theater', 'Theater Show'), ('Game', 'Games'),
                                       ('gig', 'Concert')], {'Musical Theater', 'Game', 'Games'})
         self.assertEqual(found, [('Game', 'Games', 'Game', False),
@@ -157,9 +165,13 @@ class WriterTests(unittest.TestCase):
         cur = FakeTagCursor('Fitness', rows={'Fitness', 'Participatory', 'Format'})
         # Historical crawl tags still carry topic-derived Performance/Format.
         db.upsert_event_tags(cur, 1, ['Running', 'Sports', 'Performance', 'Format'], replace=True)
+        # Fitness is a content-only chip: the event_type alone no longer re-adds it.
+        self.assertEqual(cur.tags(), {'Running', 'Sports', 'Participatory', 'Format'})
+        db.upsert_event_tags(cur, 1, ['Running', 'Sports', 'Fitness'], replace=True)
         self.assertEqual(cur.tags(), {'Running', 'Sports', 'Fitness', 'Participatory', 'Format'})
-        db.upsert_event_tags(cur, 1, ['Running', 'Sports'], replace=True)
-        self.assertEqual(cur.tags(), {'Running', 'Sports', 'Fitness', 'Participatory', 'Format'})
+        cur = FakeTagCursor('Concert')
+        db.upsert_event_tags(cur, 1, ['Music'], replace=True)
+        self.assertEqual(cur.tags(), {'Music', 'Concert', 'Performance', 'Format'})
 
     def test_unclassified_event_has_no_format_and_blocks_bind(self):
         cur = FakeTagCursor(None)
@@ -197,24 +209,26 @@ class AliasGuardTests(unittest.TestCase):
 
 
 class BackfillTests(unittest.TestCase):
-    def test_backfill_skips_format_implied_shared_leaf_parents(self):
+    def test_backfill_skips_format_implied_union_leaf_parents(self):
         import backfill_category_tags as backfill
         cursor = MagicMock()
         cursor.fetchall.side_effect = [[
-            {'id': 1, 'name': 'Kids crafts', 'event_type': 'Workshop', 'tags': 'Workshop|||Kids|||Family'},
+            {'id': 1, 'name': 'Kids show', 'event_type': 'Concert', 'tags': 'Concert|||Kids|||Family'},
             {'id': 2, 'name': 'Pottery talk', 'event_type': 'Talk', 'tags': 'Workshop|||Talk'},
             {'id': 3, 'name': 'Horror film', 'event_type': 'Screening', 'tags': 'Horror|||Film'},
         ], [{'event_id': 3, 'name': 'Literature'}]]
         conn = MagicMock()
         conn.cursor.return_value = cursor
-        ancestors = {'workshop': {'Education'}, 'kids': {'Family'}, 'horror': {'Literature', 'Film'}}
+        ancestors = {'concert': {'Music'}, 'workshop': {'Education'}, 'kids': {'Family'},
+                     'horror': {'Literature', 'Film'}}
         with patch.object(backfill, 'validate_hierarchy'), \
                 patch.object(backfill, 'get_tag_hierarchy_for_export'), \
                 patch.object(backfill, 'build_tag_ancestor_map',
-                             return_value=(ancestors, {'education', 'family', 'film'})):
+                             return_value=(ancestors, {'education', 'family', 'film', 'music'})):
             backfill._backfill(conn, apply=True, verbose=False, event_ids=None)
         inserts = [c.args[1] for c in cursor.execute.call_args_list if 'INSERT IGNORE' in c.args[0]]
-        # Only the content Workshop gains Education; the judged Literature block binds.
+        # Only the content-only Workshop gains Education (the union Concert implied by
+        # event_type adds no Music); the judged Literature block binds.
         self.assertEqual([args[0] for args in inserts], [2])
 
 

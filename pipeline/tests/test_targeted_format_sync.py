@@ -21,6 +21,16 @@ class TargetedFormatSyncTests(unittest.TestCase):
         self.assertEqual({row[0] for row in cur.executemany.call_args.args[1]}, {17})
         conn.commit.assert_not_called()
 
+    def test_content_only_shared_leaf_is_not_added_from_event_type(self):
+        cur, conn = MagicMock(), MagicMock()
+        cur.fetchall.side_effect = [[(1, 'Workshop'), (2, 'Concert')], []]
+        ids = {'Workshop': 10, 'Concert': 11, 'Participatory': 20, 'Performance': 21, 'Format': 30}
+        with patch.object(sync, '_tag_id', side_effect=lambda cur, name: ids.get(name, 99)):
+            sync.sync_event_tags(cur, conn, event_ids=[1, 2], commit=False)
+        rows = set(cur.executemany.call_args.args[1])
+        # BL23: the Workshop topic chip is content-only; Concert keeps the union.
+        self.assertEqual(rows, {(1, 20), (1, 30), (2, 11), (2, 21), (2, 30)})
+
     def test_empty_scope_is_noop(self):
         cur, conn = MagicMock(), MagicMock()
         sync.sync_event_tags(cur, conn, event_ids=[])

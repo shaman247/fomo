@@ -17,12 +17,14 @@ Two phases (run both by default):
             category + Format root are (re)applied; stale Format-axis rows are
             cleared first so reclassifications are reflected.
 
-Authoritative vs union: 30 of the 38 leaves are Format-only nodes — their
+Authoritative vs shared: 30 of the 38 leaves are Format-only nodes — their
 membership becomes EXACTLY event_type. The other 8 (Concert, Sports, Reading,
 Workshop, Fitness, Volunteer, Party, Festival) also exist as content-genre nodes
 with their own subtrees, so they are multi-parented (kept under their genre root
 AND added under Format) and their content-applied instances are preserved
-(additive, not wiped) to avoid orphaning the genre subtrees.
+(additive, not wiped) to avoid orphaning the genre subtrees. Only Concert and
+Sports are added from event_type (union); the other six topic chips are
+content-only (BL23), so sync adds just their category + Format root.
 
 The canonical taxonomy + emojis + category names live in pipeline/event_types.py.
 """
@@ -32,6 +34,7 @@ import sys
 sys.path.insert(0, "pipeline")
 from db import create_connection  # noqa: E402
 import event_types as et  # noqa: E402
+from tag_facets import format_membership  # noqa: E402
 
 # Leaves that double as established content-genre nodes (they have content
 # subtrees). Multi-parented and additive — never wiped — so the genre subtrees
@@ -160,8 +163,10 @@ def sync_event_tags(cur, conn, event_ids=None, commit=True):
     )
     blocked = set(cur.fetchall())
     ins = []
+    implied = {t: [leaf_id[t], cat_id[type_cat[t]], root] if t in format_membership(t)
+               else [cat_id[type_cat[t]], root] for t in et.EVENT_TYPES}
     for eid, etype in rows:
-        for tid in (leaf_id[etype], cat_id[type_cat[etype]], root):
+        for tid in implied[etype]:
             if (eid, tid) not in blocked:
                 ins.append((eid, tid))
     # Insert in chunks. mysql-connector's executemany collapses the whole list

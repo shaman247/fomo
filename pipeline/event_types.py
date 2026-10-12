@@ -158,6 +158,8 @@ def category_for(event_type):
 
 # Existing topic identities that also name an event format. Sports is a topic
 # root, so it cannot be detected just by looking for non-Format parents.
+# tag_facets splits them: Concert/Sports chips keep format-only members (union),
+# the other six are content-only topic chips (BL23).
 FORMAT_TOPIC_NAMES = frozenset({
     'Concert', 'Sports', 'Reading', 'Workshop', 'Fitness', 'Volunteer', 'Party', 'Festival',
 })

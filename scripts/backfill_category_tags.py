@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'pipeline'))
 from db import create_connection, build_tag_ancestor_map, get_tag_hierarchy_for_export
 from dblock import write_lock
 from tag_hierarchy_policy import validate_hierarchy
-from tag_facets import SHARED_LEAVES
+from tag_facets import UNION_LEAVES
 
 
 def backfill(apply=False, verbose=False, event_ids=None):
@@ -89,10 +89,10 @@ def _backfill(conn, apply, verbose, event_ids):
         # Derive ancestor tags from existing tags
         ancestors_to_add = set()
         for tag in existing_tags:
-            # A shared leaf present because of event_type (Format sync) does
-            # not imply its topic parents: a kids' craft Workshop is not
-            # thereby Education. Content evidence derived them at extraction.
-            if tag in SHARED_LEAVES and tag == event['event_type']:
+            # A union leaf present because of event_type (Format sync) does
+            # not imply its topic parents. Content-only leaves (Workshop, ...)
+            # are never format-implied, so they derive parents like any topic.
+            if tag in UNION_LEAVES and tag == event['event_type']:
                 continue
             key = tag.lower().replace(' ', '')
             for ancestor in ancestor_map.get(key, set()):

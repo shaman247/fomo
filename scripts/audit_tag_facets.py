@@ -20,8 +20,9 @@ import db
 import tag_facets as tf
 from dblock import write_lock
 
-# Eligibility/skill terms that must not imply family intent (BL23 decision pending).
-ELIGIBILITY = ('All Ages', 'Young Adults', 'Beginner Friendly')
+# Eligibility/skill terms that must not imply family intent. BL23 ruling: they
+# live under Age (Beginner Friendly under Education), and Family needs intent.
+ELIGIBILITY = ('All Ages', 'Young Adults', 'Beginner Friendly', '18+', '21+')
 DELIVERY_ROOT = 'Virtual'
 
 
@@ -86,9 +87,11 @@ def check(state):
     virtual_kids = {c for c in mem_names(state) if DELIVERY_ROOT in tf.ancestors(c, parents)}
     under_blocked_virtual = sorted(e for e in types if DELIVERY_ROOT in blocks.get(e, ())
                                    and mem.get(e, set()) & virtual_kids)
-    family_children = {c for p, c in state['edges'] if p == 'Family'}
+    # Family held beside an eligibility tag with no family-intent descendant
+    # (Kids, Storytime, ...): eligibility, not intent, is what supports it.
+    family_intent = {c for c in mem_names(state) if 'Family' in tf.ancestors(c, parents)} - set(ELIGIBILITY)
     eligibility_only = sorted(e for e in types if 'Family' in mem.get(e, set())
-                              and (mem[e] & family_children) and (mem[e] & family_children) <= set(ELIGIBILITY))
+                              and mem[e] & set(ELIGIBILITY) and not mem[e] & family_intent)
     format_implied_shared = Counter(t for e, t in types.items() if t in tf.SHARED_LEAVES and t in mem.get(e, set()))
     findings = {
         'format_drift_events': len(drift),

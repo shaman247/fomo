@@ -3,9 +3,12 @@
 Format membership (the Format root, its six categories and the 30 exclusive
 type leaves) comes only from `events.event_type`. Topic ancestry and keyword
 inference never reach those nodes. The eight shared names in
-`event_types.FORMAT_TOPIC_NAMES` are also topics: content evidence derives their
-topic parents, but a leaf added only because of `event_type` does not (a kids'
-craft Workshop is not thereby Education). See .claude/notes/backlog-bl15-tags-20261007.md.
+`event_types.FORMAT_TOPIC_NAMES` are also topics. Concert and Sports keep the
+union (BL23): `event_type` adds the leaf, and a leaf added only because of
+`event_type` derives no topic parents. The other six are content-only topic
+chips: `event_type` never adds them, so their members (and parents) come from
+source evidence alone (a kids' craft Workshop is not thereby Education).
+See .claude/notes/backlog-bl15-tags-20261007.md.
 """
 from collections import defaultdict
 
@@ -14,6 +17,10 @@ import event_types as et
 FORMAT_ROOT = et.FORMAT_ROOT_TAG
 FORMAT_CATEGORIES = frozenset(name for name, _ in et.CATEGORY_TAG.values())
 SHARED_LEAVES = et.FORMAT_TOPIC_NAMES
+# Shared names whose topic chip keeps format-only members (same concept).
+UNION_LEAVES = frozenset({'Concert', 'Sports'})
+# Shared names whose topic chip is content-only (BL23 decision 2).
+CONTENT_ONLY_LEAVES = SHARED_LEAVES - UNION_LEAVES
 FORMAT_EXCLUSIVE = frozenset({FORMAT_ROOT} | FORMAT_CATEGORIES
                              | (set(et.EVENT_TYPES) - SHARED_LEAVES))
 # Names that may belong to the Format family at all (exclusive + shared leaves).
@@ -21,11 +28,16 @@ FORMAT_FAMILY = FORMAT_EXCLUSIVE | SHARED_LEAVES
 
 
 def format_membership(event_type):
-    """Exact Format-family names implied by an event_type (empty for Other/None)."""
+    """Exact Format-family names implied by an event_type (empty for Other/None).
+
+    A content-only shared leaf (Workshop, Reading, ...) is not implied: the
+    Format selector filters on event_type, and the topic chip needs evidence.
+    """
     category = et.category_for(event_type)
     if not category:
         return frozenset()
-    return frozenset({event_type, et.CATEGORY_TAG[category][0], FORMAT_ROOT})
+    leaf = set() if event_type in CONTENT_ONLY_LEAVES else {event_type}
+    return frozenset(leaf | {et.CATEGORY_TAG[category][0], FORMAT_ROOT})
 
 
 def topic_edges(edges):
@@ -51,10 +63,13 @@ def ancestors(name, parents):
 
 
 def topic_closure(names, parents, event_type=None):
-    """Names plus topic ancestors; a format-implied shared leaf adds no parents."""
+    """Names plus topic ancestors; a format-implied union leaf adds no parents.
+
+    A content-only leaf is never format-implied, so it always derives parents.
+    """
     result = set(names)
     for name in names:
-        if name in SHARED_LEAVES and name == event_type:
+        if name in UNION_LEAVES and name == event_type:
             continue
         result |= ancestors(name, parents)
     return result

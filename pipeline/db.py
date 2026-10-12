@@ -3213,9 +3213,11 @@ def sync_event_format_tags(cursor, event_id, blocked=None):
     Format-exclusive rows (root, categories, exclusive leaves) not implied by
     event_type are removed, wherever they came from (crawl history, topic
     edges); the implied leaf/category/root are added unless blocked. Shared
-    leaves (Concert, Workshop, ...) are added for the type but never removed,
-    matching scripts/sync_format_tags.py. A merge therefore no longer drops or
-    re-derives the Format mirror between pipeline syncs.
+    leaves are never removed here (content membership); only the union leaves
+    Concert and Sports are added for their type, while Workshop, Reading, ...
+    topic chips stay content-only (BL23), matching scripts/sync_format_tags.py.
+    A merge therefore no longer drops or re-derives the Format mirror between
+    pipeline syncs.
     """
     from tag_facets import FORMAT_EXCLUSIVE, format_membership
     ids = _format_tag_ids(cursor)
