@@ -8,6 +8,7 @@ Logs all changes to the edits table for sync tracking.
 
 import difflib
 import functools
+import html
 import json
 import re
 import sys
@@ -17,7 +18,7 @@ import uuid
 from datetime import date as date_type, datetime, timedelta
 from math import ceil, cos, radians
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 
 import mysql.connector
 
@@ -2763,15 +2764,82 @@ def _event_has_live_occurrence(cursor, event_id, current_date):
     return cursor.fetchone() is not None
 
 
+_MONTH_NAMES_RE = (r'(?:january|february|march|april|may|june|july|august|september'
+                   r'|october|november|december)')
+# Crawl-URL placeholders (crawler.resolve_url_templates) and the value shape
+# each one resolves to.
+_URL_TEMPLATE_TOKEN_RE = re.compile(
+    r'\{\{(date|mdy)(?:[+-]\d+)?\}\}'
+    r'|\{\{(month|next_month|month_num|next_month_num|year|next_month_year)\}\}')
+_URL_TEMPLATE_VALUES = {
+    'date': r'\d{4}-\d{2}-\d{2}',
+    'mdy': r'\d{2}/\d{2}/\d{2}',
+    'month': _MONTH_NAMES_RE, 'next_month': _MONTH_NAMES_RE,
+    'month_num': r'\d{2}', 'next_month_num': r'\d{2}',
+    'year': r'\d{4}', 'next_month_year': r'\d{4}',
+}
+
+
+def _url_template_probe(url):
+    """A URL in the form template patterns compare against."""
+    return unquote(html.unescape(url or '')).strip().rstrip('/')
+
+
+def listing_template_regex(template):
+    """Regex matching every resolved form of a templated crawl URL, or None.
+
+    `{{date}}` / `{{date+92}}` rows never equal their resolved form, so the raw
+    feed endpoint they fetched survived as an event's popup link
+    (`brooklynbridgepark.org/wp-admin/admin-ajax.php?…&start=2026-09-24&end=…`,
+    MTS Productions' Tribe REST feed; BL11 2026-10-09).
+    """
+    if not template or '{{' not in template:
+        return None
+    probe = _url_template_probe(template)
+    parts, last = [], 0
+    for match in _URL_TEMPLATE_TOKEN_RE.finditer(probe):
+        parts.append(re.escape(probe[last:match.start()]))
+        parts.append(_URL_TEMPLATE_VALUES[match.group(1) or match.group(2)])
+        last = match.end()
+    if not parts:
+        return None
+    parts.append(re.escape(probe[last:]))
+    return re.compile(''.join(parts), re.IGNORECASE)
+
+
+class ListingUrlSet(set):
+    """A website's trimmed crawl URLs; membership also covers a resolved
+    date-templated crawl URL (`listing_template_regex`)."""
+
+    def __init__(self, urls=()):
+        super().__init__()
+        self.templates = []
+        for url in urls:
+            trimmed = url.rstrip('/')
+            self.add(trimmed)
+            pattern = listing_template_regex(trimmed)
+            if pattern is not None:
+                self.templates.append(pattern)
+
+    def __contains__(self, url):
+        if set.__contains__(self, url):
+            return True
+        if not self.templates or not isinstance(url, str):
+            return False
+        probe = _url_template_probe(url)
+        return any(pattern.fullmatch(probe) for pattern in self.templates)
+
+
 def source_url_listing_set(cursor, cache, website_id):
     """Return the set of trimmed website_urls for a website (memoized).
     Used to detect when a candidate URL is a generic listing page so we can
-    prefer event-specific detail URLs in event_urls."""
+    prefer event-specific detail URLs in event_urls. A date-templated row also
+    claims its resolved forms (ListingUrlSet)."""
     if website_id is None:
-        return set()
+        return ListingUrlSet()
     if website_id not in cache:
         cursor.execute("SELECT url FROM website_urls WHERE website_id = %s", (website_id,))
-        cache[website_id] = {row[0].rstrip('/') for row in cursor.fetchall()}
+        cache[website_id] = ListingUrlSet(row[0] for row in cursor.fetchall())
     return cache[website_id]
 
 
@@ -2869,7 +2937,9 @@ def _merge_grouped_event_urls(cursor, event_id, raw_data, listing_urls, *, url_e
     source listing to raw_data.urls too; omit it when detail links exist.
     Preserve current detail priority and append new links in source order.
     """
-    listing_urls = {site_profiles.canonicalize_url(u).rstrip('/') for u in listing_urls}
+    listing_urls = ListingUrlSet(
+        [site_profiles.canonicalize_url(u) for u in listing_urls]
+        + [u for u in listing_urls if '{{' in u])
     incoming = [u for u in _grouped_event_urls(raw_data)
                 if u.rstrip('/') not in listing_urls]
     if not incoming:
