@@ -2481,6 +2481,7 @@ def _sibling_listing_veto(name, url_key, website_id, crawl_event_slots, crawl_ev
 # short-link vs long-link spelling of one DICE event, and two listings of one
 # Harlem One Stop concert.
 SAME_CAPTURE_MIN_NAME_RATIO = 0.5  # the 2026-10-11 detector's divergence cut
+SAME_CAPTURE_VARIANT_RATIO = 0.8  # a re-worded copy of the event's own title
 SAME_CAPTURE_MIN_SERIES_WORDS = 2
 
 _TITLE_BREAK_RE = re.compile(
@@ -2547,6 +2548,47 @@ def same_capture_names_related(name_a, name_b, head=''):
                 and _ordered_significant_words(name_b)[:n] == head_words):
             return True
     return False
+
+
+def _name_closeness(norm_a, norm_b):
+    """Order-independent difflib ratio of two normalized names."""
+    return min(difflib.SequenceMatcher(None, norm_a, norm_b).ratio(),
+               difflib.SequenceMatcher(None, norm_b, norm_a).ratio())
+
+
+def same_capture_reserving(name, head, listings, own_names=frozenset()):
+    """Listings of one capture that hold the event named `head` against `name`.
+
+    `listings` = [(ce_id, name, norm_name, url_key)], the other listings of the
+    capture. A listing titled exactly like the event reserves it however the
+    merge orders the two. So does a near-identical variant of the event's
+    title (ratio >= SAME_CAPTURE_VARIANT_RATIO) when `name` is unrelated to it
+    (`same_capture_names_related`), unless an event already
+    carries that listing's exact title (`own_names`, normalized), where it will
+    go instead. Without the second rule the first listing by id owned the
+    event: Talon Bar 110256 "Slander Factory at Talon Bar! … Every Thurs. in
+    Bushwick" kept "Slander Factory Comedy" and lost "… Every Thurs. in
+    Brooklyn" to a duplicate (BL25 repair, 2026-10-12).
+    """
+    head_norm = normalize_name_for_dedup(head or '')
+    norm = normalize_name_for_dedup(name or '')
+    if not head_norm or head_norm == norm:
+        return []
+    incoming_related = None
+    reserving = []
+    for sibling_id, sibling_name, sibling_norm, sibling_key in listings:
+        if not sibling_norm or sibling_norm == norm:
+            continue
+        if sibling_norm != head_norm:
+            if sibling_norm in own_names:
+                continue
+            if incoming_related is None:
+                incoming_related = same_capture_names_related(name, head, head)
+            if (incoming_related
+                    or _name_closeness(sibling_norm, head_norm) < SAME_CAPTURE_VARIANT_RATIO):
+                continue
+        reserving.append((sibling_id, sibling_name, sibling_key))
+    return reserving
 
 
 def _same_capture_conflict(name, url_key, website_id, head, siblings,
@@ -3985,6 +4027,19 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     existing_events_by_location_id = {}  # key: location_id -> list of {id, name}
     existing_events_by_location = {}  # key: normalized location_name -> list of {id, name}
     existing_events_by_website = {}  # key: website_id -> list of {id, name}
+    website_event_names_cache = {}  # website_id -> (index size, {normalized names})
+
+    def _website_event_names(wid):
+        """Normalized names of the website's indexed events (kept current as
+        this merge creates events, by keying the cache on the index size)."""
+        entries = existing_events_by_website.get(wid, ())
+        cached = website_event_names_cache.get(wid)
+        if cached is None or cached[0] != len(entries):
+            cached = (len(entries), frozenset(
+                normalize_name_for_dedup(e['name']) for e in entries if e.get('name')))
+            website_event_names_cache[wid] = cached
+        return cached[1]
+
     dedup_indexes = (existing_events_by_location_id, existing_events_by_coords,
                      existing_events_by_location, existing_events_by_website)
     event_ids_with_future = set()
@@ -4401,13 +4456,12 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             head = _receiving_event_name(existing_id)
             siblings = [s for s in capture_claims.get((crawl_result_id, existing_id), ())
                         if s[0] != ce_id]
-            head_norm = normalize_name_for_dedup(head or '')
-            if head_norm and head_norm != norm_name:
-                # A sibling titled exactly like the event claims it however the
-                # two listings are ordered in this merge.
-                siblings += [(sid, sname, skey) for sid, sname, snorm, skey
-                             in capture_listings.get(crawl_result_id, ())
-                             if sid != ce_id and snorm == head_norm]
+            # A sibling titled exactly like the event, or closer to its title,
+            # claims it however the two listings are ordered in this merge.
+            siblings += same_capture_reserving(
+                name, head,
+                [s for s in capture_listings.get(crawl_result_id, ()) if s[0] != ce_id],
+                _website_event_names(website_id) - {normalize_name_for_dedup(head or '')})
             verdict = _same_capture_conflict(
                 name, ce_url_key, website_id, head, siblings,
                 listing_url_keys, url_key_name_counts) if siblings else None
