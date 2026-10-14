@@ -2255,6 +2255,92 @@ def _dismissed_home_veto(candidate_id, partners, group_sources, url_key, norm_na
     return tuple(homes)
 
 
+# BL52 (2026-10-14). The processor groups same-titled rows even when each has
+# its own permalink: that is right for a series listed once per date
+# (/event/family-night-<date>/), but an extraction that gives distinct sessions
+# the page's bare title fuses them too: Syosset's "Afternoon Book Discussion"
+# (two books), QPL's "Back to Work" (topic sessions), ShapeShifter's six "New
+# York Yoga Club — <date>" cards whose themed flows are separate rows. The fused
+# source then lands on whichever event the name tiers pick, carrying every
+# session's dates and URLs, and the dismissed-pair veto never fires because the
+# winner's name equals the incoming name.
+#
+# The repair records which event each session belongs to: a dismissed partner
+# of the winner holds that session's permalink. So once a source has matched,
+# a session whose permalink a visible dismissed partner owns (and the winner
+# does not) is routed to that partner. Dates are compared by start_date, the
+# grouping map (`url_sessions`, or the older `session_details`) is only a
+# record of which page listed which date, and the occurrences actually merged
+# are still the crawl_event's own rows (a detail crawl may have rewritten them).
+DISMISSED_SESSION_OWNERS_SQL = (
+    "SELECT eu.event_id, eu.url FROM event_urls eu JOIN events e ON e.id = eu.event_id "
+    "WHERE e.suppressed = 0 AND eu.event_id IN ({placeholders})")
+DISMISSED_SESSION_DATES_SQL = (
+    "SELECT DISTINCT event_id, start_date FROM event_occurrences "
+    "WHERE event_id IN ({placeholders})")
+
+
+def source_url_sessions(raw_data, is_listing_key):
+    """{url_key: {start_date}} for a source fused from two or more permalinks.
+
+    `is_listing_key(key)` says whether a normalized key is one of the website's
+    own listing URLs; those say nothing about which session is which. Returns
+    {} unless at least two event-specific permalinks remain.
+    """
+    if isinstance(raw_data, str):
+        try:
+            raw_data = json.loads(raw_data)
+        except (ValueError, TypeError):
+            return {}
+    if not isinstance(raw_data, dict):
+        return {}
+    pairs = []
+    if isinstance(raw_data.get('url_sessions'), dict):
+        for page, occurrences in raw_data['url_sessions'].items():
+            for occ in occurrences if isinstance(occurrences, list) else ():
+                if isinstance(occ, (list, tuple)) and occ and occ[0]:
+                    pairs.append((page, occ[0]))
+    elif isinstance(raw_data.get('session_details'), list):
+        for variant in raw_data['session_details']:
+            for session in (variant.get('sessions') or []) if isinstance(variant, dict) else ():
+                if isinstance(session, dict) and session.get('start_date'):
+                    pairs.append((session.get('url'), session['start_date']))
+    sessions = {}
+    for page, start in pairs:
+        key = normalize_url_for_identity(page) if isinstance(page, str) else ''
+        if key and not is_listing_key(key):
+            sessions.setdefault(key, set()).add(str(start))
+    return sessions if len(sessions) >= 2 else {}
+
+
+def route_dismissed_sessions(target_id, url_dates, owners, owner_dates):
+    """{start_date: home_id} for sessions that belong to a dismissed partner.
+
+    `url_dates` = {url_key: {start_date}} from source_url_sessions. `owners` =
+    {url_key: {event_id}} among the target and its visible dismissed partners.
+    `owner_dates` = {event_id: {start_date}} of those partners.
+
+    A permalink the target holds itself, or that nobody holds (a new session),
+    stays with the target. One partner holding it takes its dates. Several
+    partners holding one page (QPL lists two topic sessions on 005214) split
+    it by the date each already carries; anything still ambiguous stays. A
+    date listed by two pages is moved only when both send it to one home.
+    """
+    votes = {}
+    for key, dates in url_dates.items():
+        holders = owners.get(key, set())
+        for start in dates:
+            if not holders or target_id in holders:
+                home = target_id
+            else:
+                candidates = (holders if len(holders) == 1 else
+                              {h for h in holders if start in owner_dates.get(h, ())})
+                home = next(iter(candidates)) if len(candidates) == 1 else target_id
+            votes.setdefault(start, set()).add(home)
+    return {start: homes.pop() for start, homes in votes.items()
+            if len(homes) == 1 and target_id not in homes}
+
+
 def _dormant_dismissed_home_ok(cursor, home_id, location_id):
     """May a dismissed-pair home outside the dedup window take this source?"""
     if location_id is None:
@@ -2928,6 +3014,21 @@ def _grouped_event_urls(raw_data):
         if value not in urls:
             urls.append(value)
     return urls
+
+
+def _without_url_keys(raw_data, url_keys):
+    """raw_data with the grouped links whose identity key is in `url_keys` removed."""
+    if not url_keys or not raw_data:
+        return raw_data
+    try:
+        data = json.loads(raw_data) if isinstance(raw_data, str) else dict(raw_data)
+    except (ValueError, TypeError):
+        return raw_data
+    if not isinstance(data, dict) or not isinstance(data.get('urls'), list):
+        return raw_data
+    data['urls'] = [u for u in data['urls']
+                    if not (isinstance(u, str) and normalize_url_for_identity(u) in url_keys)]
+    return data
 
 
 def _merge_grouped_event_urls(cursor, event_id, raw_data, listing_urls, *, url_exclusions=None):
@@ -4349,6 +4450,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     dismissed_home_sources = {}  # (event_id, website_id) -> [(url_key, norm_name, loc_id)]
     dismissed_home_skips = 0
     dismissed_home_handoffs = 0
+    dismissed_session_routes = 0
 
     # Explicit human decisions the suppressed URL-twin handoff must respect.
     url_twin_dismissed_pairs = set()
@@ -5092,6 +5194,91 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         if dateless and matched_event_id is None:
             continue
 
+        # BL52: sessions of a fused source whose permalink a dismissed partner
+        # of the winner owns go to that partner (see route_dismissed_sessions).
+        session_homes = {}
+        withheld_url_keys = set()
+        if (matched_event_id and not dateless and website_id is not None
+                and reviewed_unmapped_schedule is None
+                and matched_event_id != reviewed_match_id
+                and dismissed_neighbors.get(matched_event_id)):
+            url_dates = source_url_sessions(
+                raw_data_by_ce.get(ce_id),
+                lambda key: (website_id, key) in listing_url_keys)
+            moved = {}
+            if url_dates:
+                group = sorted({matched_event_id} | dismissed_neighbors[matched_event_id])
+                cursor.execute(DISMISSED_SESSION_OWNERS_SQL.format(
+                    placeholders=','.join(['%s'] * len(group))), tuple(group))
+                owners = {}
+                for owner_id, page in cursor.fetchall():
+                    key = normalize_url_for_identity(page)
+                    if key in url_dates:
+                        owners.setdefault(key, set()).add(owner_id)
+                partners = sorted({e for held in owners.values() for e in held}
+                                  - {matched_event_id})
+                if partners:
+                    cursor.execute(DISMISSED_SESSION_DATES_SQL.format(
+                        placeholders=','.join(['%s'] * len(partners))), tuple(partners))
+                    owner_dates = {}
+                    for owner_id, start in cursor.fetchall():
+                        owner_dates.setdefault(owner_id, set()).add(str(start))
+                    moved = route_dismissed_sessions(
+                        matched_event_id, url_dates, owners, owner_dates)
+            for occ in valid_occurrences:
+                home = moved.get(str(occ[0]))
+                if home is not None:
+                    session_homes.setdefault(home, []).append(occ)
+            if session_homes:
+                kept = [o for o in valid_occurrences if str(o[0]) not in moved]
+                if not kept:
+                    # Every current session belongs elsewhere: the partner
+                    # holding the source's own permalink takes the source
+                    # itself, so the name-tier winner gets nothing.
+                    own_dates = url_dates.get(ce_url_key, set())
+                    matched_event_id = next(
+                        (moved[d] for d in sorted(own_dates) if moved.get(d) in session_homes),
+                        max(session_homes, key=lambda h: len(session_homes[h])))
+                    kept = session_homes.pop(matched_event_id)
+                    # Like the dismissed-pair handoff: the repair placed this
+                    # home's venue, so the source does not re-pin it.
+                    dismissed_home_handoff = True
+                    current_loc_id = None
+                    if location_id is not None:
+                        cursor.execute("SELECT location_id FROM events WHERE id = %s",
+                                       (matched_event_id,))
+                        _m = cursor.fetchone()
+                        current_loc_id = _m[0] if _m else None
+                withheld_url_keys = {
+                    key for key, dates in url_dates.items()
+                    if all(moved.get(d) not in (None, matched_event_id) for d in dates)}
+                valid_occurrences = kept
+            for home_id, home_occurrences in session_homes.items():
+                home_occurrences = _apply_single_occasion_guard(
+                    _receiving_event_name(home_id), name, home_occurrences,
+                    event_dates.get(home_id, set()), event_id=home_id)
+                if home_occurrences:
+                    cursor.execute(
+                        "UPDATE events SET archived = FALSE WHERE id = %s AND archived = TRUE",
+                        (home_id,))
+                overnight_rows = _merge_occurrences_into_event(
+                    cursor, home_id, home_occurrences, crawl_event_id=ce_id)
+                if overnight_rows is not None:
+                    _refresh_occurrence_indexes(
+                        home_id, overnight_rows, event_dates, event_date_ranges,
+                        event_slots, current_date, future_limit_date)
+                cursor.execute(
+                    "INSERT IGNORE INTO event_sources (event_id, crawl_event_id, is_primary) "
+                    "VALUES (%s, %s, FALSE)", (home_id, ce_id))
+                capture_claims.setdefault((crawl_result_id, home_id), []).append(
+                    (ce_id, name, ce_url_key))
+                program_profile_cache.pop(home_id, None)
+                dismissed_session_routes += 1
+                print(f"  Dismissed-pair session routing: source {ce_id} ({name}) -> "
+                      f"{home_id} ({len(home_occurrences)} date(s)); rest -> {matched_event_id}")
+            if withheld_url_keys and normalize_url_for_identity(url) in withheld_url_keys:
+                url = None  # that permalink is a partner's page, not the winner's
+
         if matched_event_id:
             # Merge with existing event
             # Un-archive event if it was previously archived (event found in new crawl).
@@ -5217,7 +5404,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                         )
 
             _merge_grouped_event_urls(
-                cursor, matched_event_id, raw_data_by_ce.get(ce_id),
+                cursor, matched_event_id,
+                _without_url_keys(raw_data_by_ce.get(ce_id), withheld_url_keys),
                 source_url_listing_set(cursor, source_url_lookup_cache, website_id),
                 url_exclusions=url_exclusions)
 
@@ -5331,7 +5519,9 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 if neutral_short and neutral_short != result[3]:
                     backfill_fields.append("short_name = %s")
                     backfill_values.append(neutral_short[:255])
-            first_description = (description and description != NO_DESCRIPTION
+            # A routed source's text covers sessions that now live elsewhere.
+            first_description = (not session_homes
+                                 and description and description != NO_DESCRIPTION
                                  and (not current_desc or current_desc == NO_DESCRIPTION))
             if first_description:
                 backfill_fields.append("description = %s")
@@ -5362,8 +5552,9 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             if reviewed_unmapped_schedule is None:
                 refresh_source_metadata(cursor, matched_event_id, ce_id,
                                         today=current_date, edit_logger=edit_logger)
-                refresh_source_session_details(cursor, matched_event_id, ce_id,
-                                               raw_data_by_ce.get(ce_id))
+                if not session_homes:
+                    refresh_source_session_details(cursor, matched_event_id, ce_id,
+                                                   raw_data_by_ce.get(ce_id))
             # Update tags using majority vote across crawl history. A
             # title-only crawl with no tags still runs it: its [] may be the
             # newest word on an event older crawls tagged with a venue guess.
@@ -5511,6 +5702,9 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     if dismissed_home_skips or dismissed_home_handoffs:
         print(f"  Dismissed-pair veto: {dismissed_home_skips} candidate(s) skipped, "
               f"{dismissed_home_handoffs} source(s) handed to their listing's home")
+    if dismissed_session_routes:
+        print(f"  Dismissed-pair session routing: {dismissed_session_routes} fused source "
+              "session group(s) sent to the partner owning their permalink (BL52)")
     if same_capture_skips:
         print(f"  Same-capture veto: {same_capture_skips} candidate(s) skipped "
               "(a sibling listing of the same capture holds them)")

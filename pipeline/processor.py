@@ -4166,6 +4166,11 @@ def group_event_occurrences(rows, source_url=None, location_refs=None):
     # Event-specific URLs per group (source_url excluded) — the containment
     # branch consults these via urls_compatible.
     group_event_urls = {}
+    # {group_key: {row_url: [occurrence, ...]}}: which dated session came from
+    # which permalink. Grouping keeps same-titled per-date pages together (the
+    # Boat Yard "Family Night" shape), and the merger needs this map to route a
+    # session whose page another event already owns (BL52).
+    group_url_sessions = {}
     # A discrete exhibition run is broad only after several rows are seen.
     # Inspect its complete same-title/venue evidence before the first date can
     # be swallowed by an earlier reception card. Keep this separate from the
@@ -4219,6 +4224,9 @@ def group_event_occurrences(rows, source_url=None, location_refs=None):
         grouped_rows.setdefault(group_key, []).append(row_dict)
         if row_url:
             group_event_urls.setdefault(group_key, set()).add(row_url)
+            sessions = group_url_sessions.setdefault(group_key, {}).setdefault(row_url, [])
+            if occurrence[0] and occurrence not in sessions:
+                sessions.append(list(occurrence))
 
         if group_key not in grouped_events:
             base_event = {k: v for k, v in row_dict.items()
@@ -4280,6 +4288,12 @@ def group_event_occurrences(rows, source_url=None, location_refs=None):
     from session_details import preserve_session_details
     for key, event in grouped_events.items():
         preserve_session_details(event, grouped_rows[key])
+        # Only a group fused from two or more permalinks needs the map. The
+        # run-end cleanup above may have blanked an end_date in the occurrence
+        # list; the merger matches sessions by start_date, which it never edits.
+        url_sessions = {u: s for u, s in group_url_sessions.get(key, {}).items() if s}
+        if len(url_sessions) >= 2:
+            event['url_sessions'] = url_sessions
     return list(grouped_events.values())
 
 
