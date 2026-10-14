@@ -2471,6 +2471,7 @@ venue_taxonomy:
     - location_id: 2042
       expected_name: New Ear
       add:
+      - Art Gallery
       - Music Venue
       remove: []
     - location_id: 2048
@@ -4143,6 +4144,80 @@ venue_taxonomy:
       - Cinema
       remove: []
       reason: "BL23 Cinema venue type: Historic downtown movie theater in Cranford, NJ. The other 89 cinemas already held the Cinema keyword (reviewed by name 2026-10-12)."
+    - location_id: 4633
+      expected_name: Storied
+      add:
+      - Event Hall
+      remove: []
+      source: https://www.mannpublications.com/mannabouttown/2026/01/13/mary-giuliani-launches-storied-presents-a-new-event-series-at-historic-chelsea-venue/
+      reason: 8,000 sq ft landmarked former taxi garage (Vornado-owned) exclusively operated by caterer Mary Giuliani as an event venue for galas, food-festival dinners and its STORIED Presents series; listed on rental marketplaces (Tripleseat, The Vendry) at up to 550 guests. Formerly Chelsea Factory.
+    - location_id: 5970
+      expected_name: 43-22 36th St
+      add:
+      - Dance Studio
+      remove: []
+      source: https://dancemanhattan.com/calendar/event/56
+      reason: Dance Manhattan's Mambo Mongays listing gives "Location 43-22 36th Street, Long Island City"; the series' own Ticket Tailor page (https://www.tickettailor.com/events/mambomongay/2270402) names the venue "CDC Dance Studio, 11101". Dance Studio only; no rental-hall use established.
+    - location_id: 11793
+      expected_name: 112 New Lots Ave
+      add:
+      - attraction
+      remove: []
+      source: https://www.eventbrite.com/e/friendship-matchmaking-event-tickets-1999604825862
+      reason: The only listing (Feminine Fuel meetup) names the venue as the bare address; no tenant, floor or venue use found for 112 New Lots Ave, so it stays a reviewed Other building fallback.
+    - location_id: 11796
+      expected_name: The Place 229
+      add:
+      - attraction
+      remove: []
+      source: https://www.eventbrite.com/e/tea-meets-american-craft-tickets-1999209247677
+      reason: Omotesenke Domonkai tea gatherings (2023, 2026) use "The Place 229" at 229 E 49th St, a five-unit 1860 residential rowhouse (CityRealty); no public description of the space or its ongoing use exists, so it stays a reviewed Other fallback rather than Event Hall.
+    - location_id: 11798
+      expected_name: Da Mikele Illagio
+      add:
+      - Ballroom
+      - Event Hall
+      remove: []
+      source: https://tagvenue.com/us/venues/new-york/25095/da-mikele-illagio
+      reason: Elmhurst catering/banquet venue with the Versailles Ballroom and Adagio Encore Room (up to 500 each), a 100-guest Garden Room and full buyouts, booked for weddings with in-house food and beverage minimums (also on Wedding Spot / The Knot); no official site, so the venue listing is the source. Ballroom inherits Event Hall.
+    - location_id: 11801
+      expected_name: 38-77 11th St
+      add:
+      - attraction
+      remove: []
+      source: https://www.eventbrite.com/e/street-tree-care-in-long-island-city-tickets-2003158977425
+      reason: Used as a street-tree volunteer meeting point and as a promoter's "Secret Warehouse" (Posh lists only "Secret Location"); no tenant or ongoing venue use is established, matching the Covert St warehouse fallbacks.
+    - location_id: 11818
+      expected_name: 48 Wall Street
+      add:
+      - Event Hall
+      - Landmark
+      remove: []
+      source: https://zola.com/wedding-vendors/wedding-venues/48-wall-street
+      reason: The 1927 Bank of New York building's Grand Mezzanine Banking Hall is an all-inclusive rental venue (325 seated / 500 standing) for weddings, galas and corporate events; the building is a 1998 NYC landmark (https://en.wikipedia.org/wiki/48_Wall_Street). Matches the One Hanson Place precedent.
+    - location_id: 11848
+      expected_name: Pines Manor
+      add:
+      - Ballroom
+      - Event Hall
+      remove: []
+      source: https://www.pinesmanor.com/
+      reason: Dedicated Edison banquet venue with ballrooms, two VIP rooms and a conference center for 50-1,000 guests (weddings, galas, corporate events, proms) with on-site catering; matches the Galloping Hill Caterers precedent (Ballroom + Event Hall).
+    - location_id: 11872
+      expected_name: 309 Elizabeth St
+      add:
+      - attraction
+      remove: []
+      source: https://luma.com/86zfbxh8
+      reason: New York Philosophy Club / Transcend With Vīrya meditation session lists only the bare address (309-311 Elizabeth St aka 18-24 Bleecker St), no venue name or floor; Vīrya's own Luma calendar uses other venues. Tenant unknown, so a reviewed Other fallback.
+    - location_id: 11880
+      expected_name: 52/4th
+      add:
+      - Event Hall
+      - Art Gallery
+      remove: []
+      source: https://tagvenue.com/us/venues/new-york/24911/52-4th
+      reason: 2,500 sq ft fourth-floor loft at 52 Walker St rented whole-venue (3-hour minimum, up to 450 standing) for parties, launches, dinners and ticketed music nights, and run as a gallery by Storage Gallery for curated contemporary exhibitions; matches the J Loft / Lofte 23 rental-loft precedent plus gallery use.
     descriptions:
     - location_id: 2041
       expected_name: Cloud City
@@ -4247,6 +4322,10 @@ venue_taxonomy:
         classes, film screenings, weddings, and private gatherings.
       source: https://www.thewalkerloft.com/play
     names:
+    - location_id: 2042
+      expected_name: New Ear
+      name: Fridman Gallery
+      source: https://www.fridmangallery.com/contact
     - location_id: 7543
       expected_name: iBoatNYC
       name: 327 Stagg St
@@ -4290,7 +4369,9 @@ venue_taxonomy:
       - location_id: 4480
         expected_name: 15-39 Covert St
         reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
-          well enough for a narrower category.
+          well enough for a narrower category. Rechecked 2026-10-14 for active event 283359 (Perreo Parrty Halloween
+          Haunted Warehouse) — Posh and RA give only the adjacent number "15-41 Covert St." with no venue name, tenant
+          or floor, and no existing location covers 15-41, so the warehouse fallback is retained.
       - location_id: 7073
         expected_name: 1642 Schlosser St
         reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
@@ -4300,7 +4381,9 @@ venue_taxonomy:
         reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
           well enough for a narrower category. Rechecked 2026-10-07 for active event 273511 — the New York Philosophy
           Club Luma listings name the venue only as "Reign" with no floor, and no business of that name at this
-          address could be verified, so the building fallback is retained.
+          address could be verified, so the building fallback is retained. Rechecked 2026-10-14 for new active event
+          284979 ("The New York Philosophy Club - LES", https://luma.com/1x1uxdw2) — same "Reign" label, no floor, and still no
+          verifiable business of that name at 167 E Broadway; retained.
       - location_id: 8353
         expected_name: 224 Buffalo Ave
         reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
@@ -4349,3 +4432,20 @@ venue_taxonomy:
       - location_id: 6500
         expected_name: Mambroso
         reason: Mambroso is a multi-venue organizer; the specific tenant at this former event address is not established.
+      - location_id: 11793
+        expected_name: 112 New Lots Ave
+        reason: Reviewed 2026-10-14; the only listing (Feminine Fuel meetup on Eventbrite) names the bare address, and no
+          tenant, floor or ongoing venue use could be found.
+      - location_id: 11796
+        expected_name: The Place 229
+        reason: Reviewed 2026-10-14; a named but undocumented space in a five-unit residential rowhouse at 229 E 49th St
+          used for Omotesenke tea gatherings; its ongoing venue use is not established well enough for a narrower
+          category.
+      - location_id: 11801
+        expected_name: 38-77 11th St
+        reason: Reviewed 2026-10-14; a volunteer meeting point and promoter "Secret Warehouse" address with no named
+          tenant or established venue use.
+      - location_id: 11872
+        expected_name: 309 Elizabeth St
+        reason: Reviewed 2026-10-14; the New York Philosophy Club / Vīrya Luma listing gives only the bare address with no
+          venue name or floor, so the tenant is unknown.
