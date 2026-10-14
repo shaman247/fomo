@@ -18,7 +18,7 @@ from event_icons import ROOT, CATALOG, ICON_IDS, input_hash, propose
 from event_icon_assignments import (fetch_events, load_assignments, manual_assignment,
                                     retained_assignment, require_lock, save, hydrate_contexts)
 from event_icon_policy import (fingerprint, metadata, context_hash, input_matches,
-    context_matches, review_baseline, seed_review_baseline, IMPLIED_TAGS)
+    context_matches, review_baseline, seed_review_baseline, review_hold, load_tag_view, IMPLIED_TAGS)
 
 OPPORTUNITY_REVIEW_VERSION = 1
 OPPORTUNITY_CATEGORIES = {'instrument', 'genre', 'dance-style', 'cuisine', 'craft',
@@ -78,7 +78,7 @@ def catalog_revision():
 def review_reason(event, row, revision):
     if not row:
         return 'unreviewed'
-    if row['review_required'] or not input_matches(event, row):
+    if review_hold(row) or not input_matches(event, row):
         return 'changed-or-deferred'
     if row['icon_id'] is not None and row['icon_id'] not in ICON_IDS:
         return 'unknown-icon'
@@ -113,8 +113,8 @@ def fetch_review_events(cursor, event_date=None, created_since=None):
         new_ids = {r[0] for r in cursor.fetchall()}
         events = [e for e in events if e['id'] in new_ids]
     hydrate_contexts(cursor, events)
-    from db import build_tag_ancestor_map, normalize_tag_key
-    ancestors, _ = build_tag_ancestor_map(cursor)
+    from db import normalize_tag_key
+    ancestors = load_tag_view(cursor)['ancestors']
     for event in events:
         implied = set().union(*(ancestors.get(normalize_tag_key(t), set())
                                 for t in event['tags']))
@@ -145,7 +145,7 @@ def refresh_review_state(cursor, apply=False):
                 new = seeded
         if new != old:
             if new['review_required'] != old['review_required']:
-                stats['invalidated'] += 1
+                stats['invalidated' if new['review_required'] else 'restored'] += 1
             if apply:
                 save(cursor, new)
     return dict(stats)

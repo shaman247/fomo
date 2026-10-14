@@ -9,7 +9,8 @@ from collections import Counter
 import json
 from pathlib import Path
 from event_icons import ROOT, ICON_IDS, RULE_VERSION, input_hash, propose
-from event_icon_policy import input_matches, context_matches, context_hash, metadata, review_baseline
+from event_icon_policy import (input_matches, context_matches, context_hash, metadata, review_baseline,
+                               review_hold, load_tag_view, MERGE_CONFLICT_REASON)
 
 COLUMNS = ('event_id','icon_id','origin','rule_version','input_hash','review_required','reason','evidence_json')
 
@@ -82,6 +83,7 @@ def hydrate_contexts(cursor, events):
 
 
 def export_contexts(cursor, rows):
+    load_tag_view(cursor)
     ids = [eid for eid,row in rows.items() if row['icon_id'] and not row['review_required']
            and metadata(row).get('tag_enrichment')]
     return {e['id']: e for e in hydrate_contexts(cursor, fetch_events(cursor, ids))}
@@ -150,9 +152,14 @@ def sync_assignments(cursor, events=None, apply=False):
 def retained_assignment(event, existing=None):
     if not existing:
         return None
-    stale = not input_matches(event, existing)
+    # A content flag is re-derived: a transient change (re-voted tags, reworded
+    # listing text, a merge into a same-activity twin) no longer pins the row
+    # pending once the current event matches the reviewed one again.
+    stale = not input_matches(event, existing) or (
+        existing['origin'] in ('manual', 'agent') and bool(metadata(existing).get('tag_enrichment'))
+        and not context_matches(event, existing))
     unknown = existing['icon_id'] is not None and existing['icon_id'] not in ICON_IDS
-    return dict(existing, review_required=int(bool(existing['review_required']) or stale or unknown))
+    return dict(existing, review_required=int(review_hold(existing) or stale or unknown))
 
 
 def manual_assignment(event, icon_id, reason):
@@ -174,9 +181,11 @@ def merge_manual_decisions(event, assignments):
     if not manual:
         agents=[a for a in assignments if a and a['origin']=='agent']
         if agents:
-            result=dict(agents[0],event_id=event['id'],review_required=1)
+            info=dict(metadata(agents[0]),review_hold='merge')
+            result=dict(agents[0],event_id=event['id'],review_required=1,
+                        evidence_json=json.dumps(info,ensure_ascii=False,sort_keys=True))
             if len({a['icon_id'] for a in agents}) > 1:
-                result.update(icon_id=None,reason='Conflicting agent icon decisions after event merge.')
+                result.update(icon_id=None,reason=MERGE_CONFLICT_REASON)
             return result
     if not manual:
         return None

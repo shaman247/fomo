@@ -107,11 +107,19 @@ class IconPolicyTests(unittest.TestCase):
                 self.assertIsNotNone(review_reason(event, row, catalog_revision()))
                 self.assertIsNone(export_icon(event, row))
 
+    def test_stale_flag_is_rederived_once_the_reviewed_context_returns(self):
+        row = self.reviewed()
+        flagged = dict(row, review_required=1)
+        self.assertEqual(retained_assignment(self.enriched('Games'), flagged), row)
+        self.assertEqual(review_reason(self.enriched('Games'), flagged, catalog_revision()), None)
+        changed = dict(EVENT, name='Go Club')
+        self.assertTrue(retained_assignment(changed, row)['review_required'])
+
     def test_deferred_and_merge_review_flags_are_sticky(self):
         row = self.reviewed()
         merged = merge_manual_decisions(EVENT, [row])
-        for pending in [dict(row, review_required=1), merged,
-                        self.reviewed(icon=None, action='defer')]:
+        conflict = merge_manual_decisions(EVENT, [row, dict(row, icon_id='trivia')])
+        for pending in [merged, conflict, self.reviewed(icon=None, action='defer')]:
             with self.subTest(origin=pending['origin']):
                 event = self.enriched('Games')
                 self.assertTrue(retained_assignment(event, pending)['review_required'])
@@ -235,7 +243,8 @@ class IconPolicyTests(unittest.TestCase):
         rows = {1: row, 2: dict(row, event_id=2, review_required=1),
                 3: dict(row, event_id=3, icon_id=None)}
         with patch('event_icon_assignments.fetch_events', return_value=[thin]) as fetch, \
-             patch('event_icon_assignments.hydrate_contexts', return_value=[copy.deepcopy(EVENT)]) as hydrate:
+             patch('event_icon_assignments.hydrate_contexts', return_value=[copy.deepcopy(EVENT)]) as hydrate, \
+             patch('event_icon_assignments.load_tag_view'):
             contexts = export_contexts('cursor', rows)
         fetch.assert_called_once_with('cursor', [1])
         hydrate.assert_called_once_with('cursor', [thin])
@@ -274,11 +283,42 @@ class IconPolicyTests(unittest.TestCase):
         for event_type, expected_icon in [('Class', 'game-go'), ('Screening', None)]:
             with self.subTest(event_type=event_type):
                 cursor = Cursor(event_type)
-                contexts = export_contexts(cursor, {99: row})
+                with patch('event_icon_assignments.load_tag_view'):
+                    contexts = export_contexts(cursor, {99: row})
                 self.assertEqual(export_icon(contexts[99], row), expected_icon)
                 self.assertEqual(cursor.queries[0][1], (99,))
                 self.assertNotIn('archived', cursor.queries[0][0])
                 self.assertNotIn('event_occurrences', cursor.queries[0][0])
+
+    def test_same_icon_question_survives_listing_churn_but_not_new_meaning(self):
+        import event_icon_policy as policy
+        view = dict(ancestors={'go': {'Board Games', 'Games'}, 'board games': {'Games'}},
+                    roots={'games'}, curated={'Go', 'Board Games', 'Games', 'Chess', 'Free'},
+                    places={'Midtown'})
+        row = self.reviewed()
+        reworded = 'Learn to play the game of Go with boards and stones, all levels.'
+        same = [dict(EVENT, urls=['https://other.example/go'], venue='Branch', address='2 Main',
+                     location_name='Branch', sublocation='Room B', source='Aggregator',
+                     short_name='Go'),
+                dict(EVENT, tags=['Go', 'Free', 'Midtown', 'Beginner Night', 'Participatory']),
+                dict(EVENT, description='2026-10-20 6pm-8pm \u2014 Room B\n' + EVENT['description']),
+                dict(EVENT, description=reworded)]
+        different = [dict(EVENT, name='Chess Night'), dict(EVENT, emoji='\u265f\ufe0f'),
+                     dict(EVENT, event_type='Talk'), dict(EVENT, tags=['Go', 'Chess']),
+                     dict(EVENT, description='A lecture on the history of East Asian art.'),
+                     dict(EVENT, description='No description available.')]
+        with patch.object(policy, '_tag_view', view):
+            for event in same:
+                with self.subTest(same=event):
+                    self.assertTrue(input_matches(event, row) and context_matches(event, row))
+                    self.assertEqual(export_icon(event, dict(row, review_required=1)), None)
+                    self.assertEqual(retained_assignment(event, dict(row, review_required=1)), row)
+            for event in different:
+                with self.subTest(different=event):
+                    self.assertFalse(input_matches(event, row) and context_matches(event, row))
+                    self.assertTrue(retained_assignment(event, row)['review_required'])
+        # Without the hierarchy view, tag differences fall back to exact comparison.
+        self.assertFalse(input_matches(dict(EVENT, tags=['Go', 'Free']), row))
 
     def test_malformed_baselines_cannot_authorize_enrichment_or_crash(self):
         row = self.reviewed(additions=APPROVED)

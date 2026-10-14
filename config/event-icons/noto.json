@@ -8083,6 +8083,16 @@
       "sha256": "bb88ad599df3465566b32e1bf66aeaab99047862feb1467ff3c848afbeaade88"
     },
     {
+      "id": "noto-1f505",
+      "emoji": "🔅",
+      "label": "LOW BRIGHTNESS SYMBOL",
+      "source": "noto/emoji_u1f505.svg",
+      "provider": "noto",
+      "upstream_path": "svg/emoji_u1f505.svg",
+      "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
+      "sha256": "378b8ebba09784da9042963a641cd2da4e694cc4b95d550e403741189f8fdd7b"
+    },
+    {
       "id": "noto-1f506",
       "emoji": "🔆",
       "label": "HIGH BRIGHTNESS SYMBOL",
@@ -11233,6 +11243,16 @@
       "sha256": "a17aa29dc4e9c3b1f5fcfe92002d78f481fd3a7d2f289c50c949b661f7553164"
     },
     {
+      "id": "noto-1f7e4",
+      "emoji": "🟤",
+      "label": "LARGE BROWN CIRCLE",
+      "source": "noto/emoji_u1f7e4.svg",
+      "provider": "noto",
+      "upstream_path": "svg/emoji_u1f7e4.svg",
+      "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
+      "sha256": "89ef77a60ebb128dddd3c872bb38ef509c23f1153f996d47dfd2acff91f9354e"
+    },
+    {
       "id": "noto-1f7e5",
       "emoji": "🟥",
       "label": "LARGE RED SQUARE",
@@ -13661,6 +13681,16 @@
       "upstream_path": "svg/emoji_u1f9d1_200d_1f9af.svg",
       "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
       "sha256": "d1a8126b220f5aa95143220785221fd99e3639853329788ee7f09e183e58ae77"
+    },
+    {
+      "id": "noto-1f9d1-200d-1f9bd",
+      "emoji": "🧑‍🦽",
+      "label": "ADULT MANUAL WHEELCHAIR",
+      "source": "noto/emoji_u1f9d1_200d_1f9bd.svg",
+      "provider": "noto",
+      "upstream_path": "svg/emoji_u1f9d1_200d_1f9bd.svg",
+      "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
+      "sha256": "18613a0f5cdbd807d8b2bc182684c2d21738058d24954473e3abdf894edf14b0"
     },
     {
       "id": "noto-1f9d1-200d-2695",

@@ -54,7 +54,7 @@ class ReviewTests(unittest.TestCase):
                 return [(2,'https://example.com/event')]
         cursor=Cursor(); day=date(2026,9,8)
         with patch('event_icon_review.fetch_events',return_value=[dict(EVENT),dict(EVENT,id=2)]), \
-             patch('db.build_tag_ancestor_map', return_value=({'games': {'Community'}}, set())):
+             patch('event_icon_review.load_tag_view', return_value=dict(ancestors={'games': {'Community'}})):
             rows=fetch_review_events(cursor,day)
         self.assertEqual([e['id'] for e in rows],[2])
         self.assertEqual(cursor.calls[0][1],(day,day))
