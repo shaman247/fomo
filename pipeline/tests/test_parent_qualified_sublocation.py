@@ -33,7 +33,7 @@ class _StubCursor:
     """Feeds build_locations_map a fixed corpus instead of the live DB."""
 
     def __init__(self, locations, alternates, website_locations):
-        self._locations = [(*row, None) for row in locations]  # no ambiguous bare names
+        self._locations = [(*row, None, 0) for row in locations]  # no ambiguous bare names, not closed
         self._alternates = [(*row, 1) for row in alternates]  # portable aliases
         self._website_locations = website_locations
         self._rows = []

@@ -151,11 +151,17 @@ def plan_merge(cursor, duplicate, keeper):
                                values=dict(location_id=keeper, alternate_name=old_name, website_id=None)))
     for row in rows('SELECT * FROM location_match_policies WHERE location_id=%s', (duplicate,)):
         existing = rows('SELECT * FROM location_match_policies WHERE location_id=%s', (keeper,))
+        # `closed` describes the row it was reviewed on; it never moves onto
+        # the keeper, which keeps its own state (or none).
         if existing:
             names = sorted(set(json.loads(row['ambiguous_bare_names']))
                            | set(json.loads(existing[0]['ambiguous_bare_names'])))
             update('location_match_policies', existing[0], dict(ambiguous_bare_names=json.dumps(names)))
             delete('location_match_policies', row)
+        elif row.get('closed') and not json.loads(row['ambiguous_bare_names']):
+            delete('location_match_policies', row)
+        elif row.get('closed'):
+            update('location_match_policies', row, dict(location_id=keeper, closed=0))
         else:
             update('location_match_policies', row, dict(location_id=keeper))
     for row in rows('SELECT * FROM event_venue_overrides WHERE location_id=%s', (duplicate,)):

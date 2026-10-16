@@ -2225,13 +2225,15 @@ def get_all_locations(cursor):
     """
     Get all locations with their alternate names for location matching.
 
-    Returns a list of dicts with: id, name, short_name, address, lat, lng, emoji, alternate_names, website_scoped_names
+    Returns a list of dicts with: id, name, short_name, address, lat, lng, emoji, alternate_names, website_scoped_names, closed
     - alternate_names: list of global alternate names (no website_id)
+    - closed: `location_match_policies.closed` (permanently closed venue)
     - website_scoped_names: dict mapping website_id -> list of alternate names
     """
     # Get all locations
     cursor.execute("""
-        SELECT l.id, l.name, l.short_name, l.address, l.lat, l.lng, l.emoji, p.ambiguous_bare_names
+        SELECT l.id, l.name, l.short_name, l.address, l.lat, l.lng, l.emoji, p.ambiguous_bare_names,
+               COALESCE(p.closed, 0)
         FROM locations l
         LEFT JOIN location_match_policies p ON p.location_id = l.id
         WHERE l.lat IS NOT NULL AND l.lng IS NOT NULL
@@ -2250,7 +2252,9 @@ def get_all_locations(cursor):
             'alternate_names': [],
             'website_scoped_names': {},
             'nonportable_scoped_names': {},
-            'ambiguous_bare_names': json.loads(row[7]) if row[7] else []
+            'ambiguous_bare_names': json.loads(row[7]) if row[7] else [],
+            # Permanently closed: only website-scoped aliases may still reach it.
+            'closed': bool(row[8]),
         }
 
     # Get all alternate names (both global and website-scoped)

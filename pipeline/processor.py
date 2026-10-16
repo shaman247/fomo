@@ -6421,6 +6421,16 @@ def build_locations_map(cursor):
         # and confines the change to the exact tiers — where a hit is a
         # full-string identity, not a guess.
         'short_index_keys': set(),
+        # Ids of permanently closed venues (`location_match_policies.closed`).
+        # They are indexed ONLY in `website_scoped` (and Step 5c never lends
+        # those aliases to other websites): an explicitly scoped alias
+        # is a reviewed per-source decision, but the street address usually has
+        # a successor tenant and the bare name only survives in stale listings,
+        # so no global tier, address tier, brand family or prefix/fuzzy scan
+        # may hand a new crawl_event to them (BL54, The Freehold at 45 S 3rd
+        # St). Reviewed `event_venue_overrides` and `website_locations` links
+        # never consult these tiers and are unaffected.
+        'closed_ids': set(),
     }
 
     locations_data = db.get_all_locations(cursor)
@@ -6448,6 +6458,23 @@ def build_locations_map(cursor):
         if key and len(key) < _MIN_RAW_KEY_LEN:
             short_index_keys.add(key)
 
+    def index_website_scoped(loc, full_info):
+        """Index `loc`'s website-scoped alternate names (curated per source)."""
+        for scoped_id, aliases in loc.get('nonportable_scoped_names', {}).items():
+            for alias in aliases:
+                locations_map['nonportable_scoped_keys'].update(
+                    (scoped_id, key) for key in (alias.lower(), _normalize_location_name(alias)) if key)
+        for website_id, scoped_names in loc.get('website_scoped_names', {}).items():
+            if website_id not in locations_map['website_scoped']:
+                locations_map['website_scoped'][website_id] = {}
+            for alt_name in scoped_names:
+                if alt_name and len(alt_name) >= _MIN_RAW_KEY_LEN:
+                    locations_map['website_scoped'][website_id][alt_name.lower()] = full_info
+                    normalized_alt = _normalize_location_name(alt_name)
+                    if normalized_alt and len(normalized_alt) >= _MIN_NORMALIZED_KEY_LEN:
+                        locations_map['website_scoped'][website_id][normalized_alt] = full_info
+                        note_if_short(normalized_alt)
+
     for loc in locations_data:
         locations_map['ambiguous_bare_names'].update(
             name.strip().lower() for name in loc.get('ambiguous_bare_names', []) if name.strip())
@@ -6460,6 +6487,10 @@ def build_locations_map(cursor):
             'lng': loc.get('lng'),
             'emoji': loc.get('emoji')
         }
+        if loc.get('closed'):
+            locations_map['closed_ids'].add(loc.get('id'))
+            index_website_scoped(loc, full_info)
+            continue
         main_name = loc.get('name', '')
         normalized_main, main_area = _normalize_location_name_parts(main_name)
         area_classes = locations_map['area_classes'].setdefault(loc.get('id'), set())
@@ -6519,20 +6550,7 @@ def build_locations_map(cursor):
                 weak_keys.add(normalized_short)
 
         # Website-scoped alternate names
-        for scoped_id, aliases in loc.get('nonportable_scoped_names', {}).items():
-            for alias in aliases:
-                locations_map['nonportable_scoped_keys'].update(
-                    (scoped_id, key) for key in (alias.lower(), _normalize_location_name(alias)) if key)
-        for website_id, scoped_names in loc.get('website_scoped_names', {}).items():
-            if website_id not in locations_map['website_scoped']:
-                locations_map['website_scoped'][website_id] = {}
-            for alt_name in scoped_names:
-                if alt_name and len(alt_name) >= _MIN_RAW_KEY_LEN:
-                    locations_map['website_scoped'][website_id][alt_name.lower()] = full_info
-                    normalized_alt = _normalize_location_name(alt_name)
-                    if normalized_alt and len(normalized_alt) >= _MIN_NORMALIZED_KEY_LEN:
-                        locations_map['website_scoped'][website_id][normalized_alt] = full_info
-                        note_if_short(normalized_alt)
+        index_website_scoped(loc, full_info)
 
         # Index by street address (e.g., "347 davis ave" from "347 Davis Ave, Staten Island, NY").
         # Use full_info so an address match actually resolves a location_id (not
@@ -6583,6 +6601,8 @@ def build_locations_map(cursor):
     # them; the fuzzy tier picks among the claimants instead (BL31).
     claimants = {}
     for loc in locations_data:
+        if loc.get('closed'):
+            continue
         short_name = loc.get('short_name') or ''
         for key in {short_name.lower(), _normalize_location_name(short_name)}:
             info = locations_map['short_names'].get(key)
@@ -7937,6 +7957,8 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
             ids = {h.get('id') for h in hits}
             if len(ids) > 1:
                 continue  # ambiguous across websites — decline
+            if ids & locations_map.get('closed_ids', set()):
+                continue  # a closed venue's alias stays with its own source
             if not _shares_distinctive_token(
                     key, _normalize_location_name(hits[0].get('name') or '')):
                 continue  # in-site shorthand, not portable venue knowledge

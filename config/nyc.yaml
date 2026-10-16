@@ -4218,6 +4218,69 @@ venue_taxonomy:
       remove: []
       source: https://tagvenue.com/us/venues/new-york/24911/52-4th
       reason: 2,500 sq ft fourth-floor loft at 52 Walker St rented whole-venue (3-hour minimum, up to 450 standing) for parties, launches, dinners and ticketed music nights, and run as a gallery by Storage Gallery for curated contemporary exhibitions; matches the J Loft / Lofte 23 rental-loft precedent plus gallery use.
+    - location_id: 11285
+      expected_name: St. Joseph’s Church in Greenwich Village
+      add:
+      - Church
+      remove: []
+      source: https://stjosephgv.nyc/about
+      reason: Reviewed 2026-10-16 (BL15 venue-ancestor sample); a Roman Catholic parish church tagged only Art Gallery. Art Gallery stays for the McGuire Hall exhibitions; Church supplies its primary identity (inherits House of Worship).
+    - location_id: 11283
+      expected_name: Rutheny Jewelry
+      add:
+      - Shop
+      remove: []
+      reason: Reviewed 2026-10-16 (BL15 venue-ancestor sample); a jewelry studio and shop that also hangs exhibitions, previously tagged only Art Gallery. Shop is its primary use; Art Gallery stays for the exhibitions.
+    - location_id: 11498
+      expected_name: Jack Shainman Gallery (Tribeca)
+      add:
+      - Art Gallery
+      remove: []
+      reason: Reviewed 2026-10-16 (BL15 venue-ancestor sample); the gallery's Tribeca flagship carried only Landmark (for its landmarked building), so it would have surfaced only as a Historic Site. Art Gallery supplies its use.
+    - location_id: 11496
+      expected_name: Printemps New York
+      add:
+      - Shop
+      remove: []
+      reason: Reviewed 2026-10-16 (BL15 venue-ancestor sample); a department-store flagship carried only Landmark (One Wall Street). Shop supplies its use; Landmark stays for the OHNY building tours.
+    - location_id: 12070
+      expected_name: GROWMARK FS Bloomsbury
+      add:
+      - Shop
+      remove:
+      - Farm
+      source: https://fscooperatives.com/growmarkfs/about-us
+      reason: Reviewed 2026-10-16 (BL15 venue-ancestor sample); a GROWMARK FS branch selling seed, plant nutrients, crop protection and propane to farmers, not a farm. Farm would have implied Outdoor Venue; Shop matches its retail farm-supply use.
+    - location_id: 11377
+      expected_name: 1158 Myrtle Ave
+      add:
+      - attraction
+      remove:
+      - Dance Studio
+      source: https://ra.co/events/2535488
+      reason: Reviewed 2026-10-16 (BL15 venue-ancestor sample); the only listing (SAMA and Friends techno party on RA) names the bare address, and an earlier crawl of the same RA event said "TBA". No dance studio or other tenant is established, so Dance Studio (→ Studio) was a guess from "dance parties"; kept as a reviewed Other building fallback.
+    - location_id: 10948
+      expected_name: P.S./M.S. 206 Jose Celso Barbosa
+      add:
+      - School
+      remove:
+      - Community Space
+      source: https://www.nyc.gov/main/events/?permalinkName=access-benefits-at-psms-206-back-to-school-homecoming-2026&id=1246596&sequence=1
+      reason: Reviewed 2026-10-16 (BL15 venue-ancestor sample); a DOE public elementary/middle school tagged only Community Space, which would have implied Community Center. Its back-to-school benefits fair is a school event.
+    - location_id: 11979
+      expected_name: St. Frances de Chantal School
+      add: []
+      remove:
+      - Church
+      source: https://www1.nyc.gov/events/throggs-neck-halloween-parade/1294216/2
+      reason: Reviewed 2026-10-16 (BL15 venue-ancestor sample); the row is the parish school at 2962 Harding Ave (the parade's gathering point), not the church, so Church (→ House of Worship) is removed and School remains.
+    - location_id: 11904
+      expected_name: Curiosity by Nest
+      add: []
+      remove:
+      - Playground
+      source: https://www.njradar.com/events/fresh-from-the-farm-at-nest
+      reason: Reviewed 2026-10-16 (BL15 venue-ancestor sample); a Kearny family cafe with an indoor play area. Playground would have implied Park and Outdoor Venue; Cafe and Restaurant remain.
     descriptions:
     - location_id: 2041
       expected_name: Cloud City
@@ -4321,11 +4384,17 @@ venue_taxonomy:
       description: The Walker Loft is an event and performance venue at 120 Walker Street, 5th Floor, hosting theater,
         classes, film screenings, weddings, and private gatherings.
       source: https://www.thewalkerloft.com/play
+    - location_id: 2042
+      expected_name: New Ear
+      expected_description: Intimate Bowery music venue hosting live performances, DJ sets, and underground events.
+      description: Contemporary art gallery at 169 Bowery, founded in 2013, presenting visual, sound and performance art.
+        With the nonprofit New Ear it runs a concert calendar and the annual New Ear Festival.
+      source: https://fridmangallery.com/
     names:
     - location_id: 2042
       expected_name: New Ear
       name: Fridman Gallery
-      source: https://www.fridmangallery.com/contact
+      source: https://fridmangallery.com/
     - location_id: 7543
       expected_name: iBoatNYC
       name: 327 Stagg St
@@ -4449,3 +4518,7 @@ venue_taxonomy:
         expected_name: 309 Elizabeth St
         reason: Reviewed 2026-10-14; the New York Philosophy Club / Vīrya Luma listing gives only the bare address with no
           venue name or floor, so the tenant is unknown.
+      - location_id: 11377
+        expected_name: 1158 Myrtle Ave
+        reason: Reviewed 2026-10-16; the only listing (SAMA and Friends party on RA) gives the bare address, and no
+          tenant, floor or ongoing venue use could be found.

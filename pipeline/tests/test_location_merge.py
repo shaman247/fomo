@@ -125,6 +125,14 @@ class LocationMergeDatabaseTests(unittest.TestCase):
         self.assertEqual(self.rows('location_match_policies', 'location_id'),
                          [dict(location_id=34, ambiguous_bare_names='["Brand", "Other brand"]')])
 
+    def test_closed_policy_never_moves_onto_the_keeper(self):
+        self.cursor.execute('ALTER TABLE location_match_policies ADD COLUMN closed BOOL NOT NULL DEFAULT 0')
+        self.cursor.execute("INSERT INTO location_match_policies VALUES (12,'[]',1),(56,'[\"Brand\"]',1)")
+        self.conn.commit()
+        merge.merge_locations(self.conn, [(12, 34), (56, 78)])
+        self.assertEqual(self.rows('location_match_policies', 'location_id'),
+                         [dict(location_id=78, ambiguous_bare_names='["Brand"]', closed=0)])
+
     def test_full_merge_preserves_scopes_metadata_and_caches(self):
         result = self.run_merge()
         self.assertFalse(result['dry_run'])

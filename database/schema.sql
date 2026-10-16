@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS locations (
 CREATE TABLE IF NOT EXISTS location_match_policies (
     location_id INT UNSIGNED NOT NULL PRIMARY KEY,
     ambiguous_bare_names JSON NOT NULL COMMENT 'Reviewed source spellings that must not prefix/fuzzy match a branch',
+    closed TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Venue permanently closed: new crawl_events never resolve to it by address, name, alias, short name, prefix or fuzzy match. Website-scoped alternate names, website links and event_venue_overrides still apply',
     FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
