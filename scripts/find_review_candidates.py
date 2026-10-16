@@ -167,6 +167,45 @@ def _name_destination_postfilter(cursor, event_ids):
     return keep
 
 
+# --- pattern 13 exemption ----------------------------------------------------
+# A Screening at a location carrying the reviewed venue-scope "Cinema" type
+# (BL23, 2026-10-12). Matched by tag name + scope so a fork's ids don't matter.
+_CINEMA_SCREENING_SQL = """(
+                COALESCE(e.event_type, '') = 'Screening'
+                AND EXISTS (SELECT 1 FROM location_tags lt
+                            JOIN tags t ON t.id = lt.tag_id
+                            WHERE lt.location_id = e.location_id
+                              AND t.name = 'Cinema' AND t.scope = 'venue')
+              )"""
+
+# --- pattern 42 title gate ---------------------------------------------------
+# Plain alternations (no backslashes) so tests can compile them in Python too.
+# A title with a program word is a library program, not a room booking.
+ROOM_BOOKING_PROGRAM_WORDS = (
+    "story ?time|craft|class|workshop|lecture|talk|film|movies?|concert|music|yoga"
+    "|chess|lego|games?|bingo|knit|crochet|paint|drawing|writing|reading|esl|tour"
+    "|show|performance|festival|fair|sale|celebration|seminar|webinar|computer|tech"
+    "|tutor|homework|kids|children|toddler|baby|family|cinema|screening|meditation"
+    "|dance|zumba|fitness|exercise|cooking|garden|science|stem|coding|discussion"
+    "|presentation|author|poetry|open mic|trivia|social|support group|caregiver"
+    "|candidates|election|trustees|friends of|halloween|holiday|anniversary|ages?"
+    "|grades?|with|meet the|book (club|group)|photo")
+# The library's own public board meeting is kept (reviewers kept 4 of 5).
+ROOM_BOOKING_PUBLIC_MEETING = "^(library )?board meeting$"
+# An outside organization's name. "Club" counts only for civic/service clubs:
+# hobby clubs (Cookbook, Fiber Arts, Zine, History) are library programs that
+# reviewers kept. "Commission" is gone: both reviewed municipal commissions
+# were kept.
+ROOM_BOOKING_ORG_WORDS = (
+    "foundation|association|society|league"
+    "|(wom[ae]n.?s|men.?s|rotary|lions|kiwanis|exchange|civic|athletic|booster"
+    "|parents|newcomers) club"
+    "|council|committee|auxiliary|district|chapter|guild|alliance|coalition"
+    "|federation|union|lodge|post|troop|pta|pto|hoa|inc|llc|quilters|meeting"
+    "|event|rehearsal|booking|reserved|reservation|group|board|school|church"
+    "|ministry|ministries|organization|org|network|party")
+
+
 # Each pattern: id, name, and SQL WHERE clause (applied to events e)
 # JOINs are specified separately for patterns that need them
 PATTERNS = [
@@ -340,12 +379,19 @@ PATTERNS = [
         """,
     },
     {
+        # BL26 tail (2026-10-16): a film's run at a cinema is a showtime list, not
+        # a promotion, so Screening rows at a reviewed Cinema venue are exempt.
+        # Measured over reviewed history: 1,500 such #13 rows, 3 suppressed (a
+        # private-theatre rental and two one-offs); the rest of #13 is 1,724
+        # suppressed of 12,150 reviewed. On the 2026-10-16 hide pass they were 8
+        # of 49 #13 hits, all kept. Other patterns still see them.
         'id': 13,
         'name': 'High-occurrence (30+ occurrences or 60+ day span)',
         'query': """
             SELECT e.id FROM events e
             LEFT JOIN event_occurrences eo ON e.id = eo.event_id
             WHERE e.archived = 0 AND e.reviewed = 0
+              AND NOT """ + _CINEMA_SCREENING_SQL + """
             GROUP BY e.id
             HAVING COUNT(eo.id) >= 30
               OR DATEDIFF(MAX(eo.start_date), MIN(eo.start_date)) >= 60
@@ -1076,10 +1122,14 @@ PATTERNS = [
         # or only "No description available." / contact details. Processor rule
         # `org_room_booking` drops the civic-club subset by name; arbitrary org
         # names need a human. Title gate: an org word (Foundation, League,
-        # Club, Commission, Meeting, Event, ...) or a single word, and no program
-        # word. Measured over all events: catches all 6 BL26 bookings; reviewed
-        # history 27 suppressed vs 2 kept (a "Library Board Meeting" and a BPL
-        # outreach table).
+        # civic Club, Meeting, Event, ...) or a single word, and no program
+        # word (ROOM_BOOKING_* above). Measured over all events: catches all 6
+        # BL26 bookings. Reviewed history on 2026-10-16: the 10-12 gate had
+        # drifted to 32 suppressed vs 12 kept (hobby clubs, two municipal
+        # commissions, two library board meetings, a book group); the narrowed
+        # gate is 31 vs 2 (a BPL outreach table and "RetroVerse"), i.e. 2 of the
+        # 3,609 kept library-site rows. "Friends of the Library" meetings stay
+        # out on purpose: reviewers split them 5 suppressed / 5 kept.
         'id': 42,
         'name': 'Library meeting-room booking (bare org name, no body)',
         'query': r"""
@@ -1096,12 +1146,14 @@ PATTERNS = [
                     AND e.description REGEXP '^[^.]{0,40}\\b(contact|call|email|e-mail)\\b')
                 OR LOWER(TRIM(e.description)) = LOWER(TRIM(e.name))
               )
-              AND e.name NOT REGEXP '(\\b(story ?time|craft|class|workshop|lecture|talk|film|movies?|concert|music|yoga|chess|lego|games?|bingo|knit|crochet|paint|drawing|writing|reading|esl|tour|show|performance|festival|fair|sale|celebration|seminar|webinar|computer|tech|tutor|homework|kids|children|toddler|baby|family|cinema|screening|meditation|dance|zumba|fitness|exercise|cooking|garden|science|stem|coding|discussion|presentation|author|poetry|open mic|trivia|social|support group|caregiver|candidates|election|trustees|friends of|halloween|holiday|anniversary|ages?|grades?|with|meet the|book club|photo)\\b|[:|])'
+              AND e.name NOT REGEXP '(\\b(__PROGRAM__)\\b|[:|]|__PUBLIC__)'
               AND (
-                e.name REGEXP '\\b(foundation|association|society|league|club|council|commission|committee|auxiliary|district|chapter|guild|alliance|coalition|federation|union|lodge|post|troop|pta|pto|hoa|inc|llc|quilters|meeting|event|rehearsal|booking|reserved|reservation|group|board|school|church|ministry|ministries|organization|org|network|party)\\b'
+                e.name REGEXP '\\b(__ORG__)\\b'
                 OR e.name NOT REGEXP '[[:space:]]'
               )
-        """,
+        """.replace('__PROGRAM__', ROOM_BOOKING_PROGRAM_WORDS)
+           .replace('__PUBLIC__', ROOM_BOOKING_PUBLIC_MEETING)
+           .replace('__ORG__', ROOM_BOOKING_ORG_WORDS),
     },
 ]
 

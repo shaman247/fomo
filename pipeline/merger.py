@@ -1466,6 +1466,28 @@ def _placeholder_lineup_differs(name1, name2, _norm1=None, _norm2=None):
     return bool(words1) and bool(words2) and not (words1 & words2)
 
 
+# A venue that duplicates a calendar card for a new event and never renames it
+# publishes "Copy of <original title>" (Gladys Books & Wine w994: "Copy of I DO
+# the Bending Live Podcast Recording!" is an Oct 31 Halloween party, the
+# original an Oct 30 podcast taping; BL47, e284959). The title is a placeholder,
+# so name similarity says nothing; a different date says it is another event.
+_COPIED_CARD_RE = re.compile(r'^\s*copy\s+of\s+\S', re.IGNORECASE)
+
+
+def copied_card_differs(name1, name2, dates1, dates2):
+    """Exactly one title is a "Copy of …" card and the two share no start date.
+
+    `dates1` / `dates2` are the start dates (ISO strings or dates) of each side.
+    Two "Copy of X" titles, or a copy listed on the original's own date, carry
+    no verdict; nor does a side without dates.
+    """
+    if bool(_COPIED_CARD_RE.match(name1 or '')) == bool(_COPIED_CARD_RE.match(name2 or '')):
+        return False
+    starts1 = {str(d) for d in dates1 or () if d}
+    starts2 = {str(d) for d in dates2 or () if d}
+    return bool(starts1) and bool(starts2) and not (starts1 & starts2)
+
+
 _PAIR_DISCRIMINATORS = (
     _attendance_modes_differ,
     _trailing_dates_differ,
@@ -2726,6 +2748,62 @@ def _lineup_only_title(name):
     return len(items) >= 3 and all(len(item.split()) <= 4 for item in items)
 
 
+# A spaced dash or pipe closes a title segment: "Arthritis Exercise - Virtual
+# Program - Zoom" is the class, then its format, then its platform. A dash
+# inside brackets is a range, not a break ("Storycraft (Kindergarten - Grade 5)").
+_TITLE_SEGMENT_SEP_RE = re.compile(r'\s+[-–—|]\s+')
+_BRACKET_DEPTH = {'(': 1, '[': 1, '{': 1, ')': -1, ']': -1, '}': -1}
+
+
+def _title_segments(name):
+    """`name` split at its top-level spaced dashes and pipes."""
+    name = (name or '').strip()
+    segments, start, depth, pos = [], 0, 0, 0
+    while pos < len(name):
+        sep = _TITLE_SEGMENT_SEP_RE.match(name, pos) if depth == 0 else None
+        if sep:
+            segments.append(name[start:pos])
+            start = pos = sep.end()
+            continue
+        depth = max(0, depth + _BRACKET_DEPTH.get(name[pos], 0))
+        pos += 1
+    segments.append(name[start:])
+    return [seg.strip() for seg in segments if seg.strip()]
+
+
+def _strip_shared_trailing_segments(name_a, name_b):
+    """Drop the trailing " - …" segments two titles have in common.
+
+    A library calendar suffixes every class with its format and branch
+    ("… - Virtual Program - Zoom", "… - Dix Hills"). Those segments describe
+    how or where a program runs, not which program it is, yet a 23-character
+    shared suffix lifted "Arthritis Exercise" vs "CardioFit" past the
+    same-capture ratio (BL46, Half Hollow Hills w3880, e290122). Segments are
+    compared normalized and popped from the end while both titles keep at
+    least one segment of their own. Returns (core_a, core_b, suffix) with the
+    shared segments normalized; the suffix is empty when nothing is shared.
+    """
+    segs_a, segs_b = _title_segments(name_a), _title_segments(name_b)
+    shared = []
+    while len(segs_a) > 1 and len(segs_b) > 1:
+        tail = normalize_name_for_dedup(segs_a[-1])
+        if not tail or tail != normalize_name_for_dedup(segs_b[-1]):
+            break
+        shared.insert(0, tail)
+        segs_a.pop()
+        segs_b.pop()
+    return ' - '.join(segs_a), ' - '.join(segs_b), shared
+
+
+def _strip_trailing_segments(name, suffix):
+    """`name` without the normalized trailing `suffix` segments, if it ends so."""
+    segs = _title_segments(name)
+    if (suffix and len(segs) > len(suffix)
+            and [normalize_name_for_dedup(s) for s in segs[-len(suffix):]] == suffix):
+        return ' - '.join(segs[:-len(suffix)])
+    return name
+
+
 def same_capture_names_related(name_a, name_b, head=''):
     """May two listings of ONE capture, at different permalinks, be one event?
 
@@ -2738,7 +2816,9 @@ def same_capture_names_related(name_a, name_b, head=''):
     on "Sunday Platform"). The head rule is what keeps a shared one-word brand
     ("Ritmos: …", "SOS26: …") or a shared program prefix that is not the event
     ("Child's Play: Legally Blonde Jr." / "Child's Play - Holiday Camp") from
-    passing as a series.
+    passing as a series. Trailing " - …" segments both titles share (a format
+    or branch tail, "… - Virtual Program - Zoom") are set aside first, so the
+    verdict rests on the program names in front of them (BL46).
     """
     norm_a = normalize_name_for_dedup(name_a or '')
     norm_b = normalize_name_for_dedup(name_b or '')
@@ -2750,6 +2830,27 @@ def same_capture_names_related(name_a, name_b, head=''):
         return False
     if _lineup_only_title(name_a) or _lineup_only_title(name_b):
         return True
+    # A shared format/branch tail (" - Virtual Program - Zoom", BL46) carries
+    # no verdict either: judge the titles by what remains in front of it, and
+    # read the event's own name the same way. The lineup test above stays on
+    # the full titles: a stripped core like "Jean d'Armes, Lord Fascinator,
+    # Laura Lynn" (RA "<lineup> - Dead Letter No.9" nights) or "Fania's World
+    # of Flavors, Smells, and Colors" is a title, not a bare performer list.
+    core_a, core_b, suffix = _strip_shared_trailing_segments(name_a, name_b)
+    if suffix:
+        # Unless the shared tail IS the event: "<DJ> - Friends In High Places"
+        # nights of a series named "Friends In High Places" (the trailing twin
+        # of the head rule below, with the same two-word floor).
+        head_words = _ordered_significant_words(head or '')
+        if (len(head_words) >= SAME_CAPTURE_MIN_SERIES_WORDS
+                and head_words == _ordered_significant_words(' '.join(suffix))):
+            return True
+        name_a, name_b = core_a, core_b
+        head = _strip_trailing_segments(head, suffix)
+        norm_a = normalize_name_for_dedup(name_a)
+        norm_b = normalize_name_for_dedup(name_b)
+        if not norm_a or not norm_b or norm_a == norm_b:
+            return True
     # SequenceMatcher is not symmetric ("potluck halloween" vs "jacobdior
     # presents halloween" scores 0.53 one way, 0.49 the other); the lower score
     # keeps the verdict independent of merge order.
@@ -4672,6 +4773,10 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         incoming_program_profile = program_profile(tags, valid_occurrences)
 
         def _program_veto(existing):
+            # "Copy of <title>" on another date is another event (BL47).
+            if copied_card_differs(name, existing['name'], crawl_event_dates,
+                                   event_dates.get(existing['id'], ())):
+                return True
             if (incoming_program_profile is None
                     and companion_parent_side(name, existing['name']) is None):
                 return False
