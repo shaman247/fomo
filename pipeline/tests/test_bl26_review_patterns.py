@@ -1,7 +1,8 @@
-"""BL26 tail (2026-10-16): find_review_candidates #13 cinema exemption and the
-narrowed #42 library meeting-room title gate.
+"""BL26 tail (2026-10-16): find_review_candidates #13 cinema exemption, the
+narrowed #42 library meeting-room title gate, and #43-#45 (bare childcare-amenity
+titles, book donation drop-off windows, routine daily animal feedings).
 
-Names are real reviewed rows (see the #42 comment for the measurement). The
+Names are real reviewed or crawled rows (see each pattern's comment). The
 title-gate tests compile the pattern's own alternations in Python; the query
 tests run the real SQL on connection-local TEMPORARY tables that shadow the
 production names (FOMO_TEST_TEMP_DB=1), so no production row is read or changed.
@@ -66,6 +67,104 @@ class HighOccurrenceCinemaExemptionTests(unittest.TestCase):
         self.assertIn("t.name = 'Cinema' AND t.scope = 'venue'", query)
 
 
+def rx(pattern_text):
+    """Compile a pattern constant the way MariaDB applies it (case-insensitive PCRE)."""
+    return re.compile(pattern_text, re.I)
+
+
+def childcare_flagged(name):
+    return bool(rx(frc.CHILDCARE_AMENITY_NAME).search(name))
+
+
+def book_donation_flagged(name, description=''):
+    return bool(rx(frc.BOOK_DONATION_NAME).search(name)
+                and not rx(frc.BOOK_DONATION_NAME_VETO).search(name)
+                and (rx(frc.BOOK_DONATION_STRONG_NAME).search(name)
+                     or rx(frc.BOOK_DONATION_DESC).search(description)))
+
+
+def feeding_flagged(name, description):
+    return bool(rx(frc.ANIMAL_FEEDING_NAME).search(name)
+                and rx(frc.ANIMAL_FEEDING_DESC).search(description))
+
+
+class ChildcareAmenityTests(unittest.TestCase):
+    """#43: bare amenity titles that the processor's description gate lets through."""
+
+    def test_amenity_titles_are_flagged(self):
+        for name in ('Nursery Care', 'Nursery', 'Child Care', 'Childcare', 'Nursery and Childcare',
+                     'Nursery-Preschool Care', 'Nursery - Childcare'):
+            with self.subTest(name=name):
+                self.assertTrue(childcare_flagged(name))
+
+    def test_programs_named_after_childcare_are_not(self):
+        for name in ('The Nursery: HAAi All Day Long', 'Babysitting 101 Training Course',
+                     'Nursery Rhyme Time', 'Citywide Nursery Gardening',
+                     'Red Sprouts DSA Childcare Training 8/1', 'Learn to Babysit',
+                     'Preschool Storytime', 'Native Nursery Fall Plant Giveaway'):
+            with self.subTest(name=name):
+                self.assertFalse(childcare_flagged(name))
+
+    def test_name_gate_matches_the_processor_rule(self):
+        import processor
+        for name in ('Nursery Care', 'Child Care', 'Nursery-Preschool Care', 'Nursery Rhyme Time',
+                     'The Nursery: Diva Diva', 'Babysitting Workshop'):
+            with self.subTest(name=name):
+                self.assertEqual(childcare_flagged(name),
+                                 bool(processor._CHILDCARE_AMENITY_NAME_RE.match(name)))
+
+
+class BookDonationWindowTests(unittest.TestCase):
+    """#44: book/media donation drop-off windows (real reviewed and crawled rows)."""
+
+    def test_donation_windows_are_flagged(self):
+        cases = (
+            ('Book Sale Collection', "The Friends of the Library collect like-new children's, "
+                                     "teen and adult books for their upcoming sale."),
+            ('Book Donation Day', 'Support the library by bringing your gently used books to the '
+                                  'Friends Book Shop.'),
+            ('Book Donation Day: Friends of the Township of Ocean Library',
+             'Friends of the Township of Ocean Library accept donations of unwanted books, DVDs and vinyl.'),
+            ('The Friends of the Plumsted Library Book Donation/Drop-Off', ''),
+            ('Book Drop', 'Help us spread the joy of reading by donating new or gently used books.'),
+        )
+        for name, description in cases:
+            with self.subTest(name=name):
+                self.assertTrue(book_donation_flagged(name, description))
+
+    def test_book_programs_are_not(self):
+        cases = (
+            ('Celebration of the TECO-NY Book Donation to Queens College Library',
+             'A celebration of the donation of 366 boxes of books to the library.'),
+            ('Reading Rhythms "Books-giving" Book Swap and Donation Drive in Midtown', ''),
+            ("Books a Poppin' (Drop-in)", 'Drop-in storytime. No registration required.'),
+            ('Henry Wessel: Photographs and Books. From the Collection of Jack Gray', ''),
+            ('Inspired by Winnie-the-Pooh: Books from Our General Collections', ''),
+            ('Teens Bedazzle a Book Cover Drop-in!', 'Bring your favorite book to the library.'),
+            ('Friends of the Library Used Book Sale', 'Thousands of gently used books at bargain prices.'),
+        )
+        for name, description in cases:
+            with self.subTest(name=name):
+                self.assertFalse(book_donation_flagged(name, description))
+
+
+class AnimalFeedingTests(unittest.TestCase):
+    """#45 (BL11 zoo operations): bare "<animal> Feeding" with daily/keeper framing."""
+
+    def test_daily_feedings_are_flagged(self):
+        for name in ('Sea Lion Feeding', 'Penguin Feeding', 'Bee-Eater Feeding', 'Daily Otter Feeding'):
+            with self.subTest(name=name):
+                self.assertTrue(feeding_flagged(name, 'Observe the daily feeding with zookeepers.'))
+
+    def test_programs_mentioning_feeding_are_not(self):
+        for name in ('Food Fun with Feeding Westchester', 'Feeding Your Family Workshop',
+                     'Drop In: Tarantula Feeding!', 'Formula Feeding 411: Parents Share Their Stories',
+                     'Still Standing, Still Feeding - A Love Wins x NYC Pride Fundraiser'):
+            with self.subTest(name=name):
+                self.assertFalse(feeding_flagged(name, 'A scheduled daily program with keepers.'))
+        self.assertFalse(feeding_flagged('Penguin Feeding', 'No description available.'))
+
+
 @unittest.skipUnless(os.environ.get('FOMO_TEST_TEMP_DB') == '1',
                      'Opt in to connection-local MariaDB tests with FOMO_TEST_TEMP_DB=1')
 class PatternQueryTests(unittest.TestCase):
@@ -123,6 +222,34 @@ class PatternQueryTests(unittest.TestCase):
         self.add(5, 'Hafa Event', 2, dates=2)                                 # repeats: a program
         self.add(6, 'Rotary Club', 2, description='Rotary meets to plan the fall coat drive.')
         self.assertEqual(self.run_pattern(42), {1, 4})
+
+    def test_pattern_22_hold_forms_on_a_calendar_that_leaked_a_hold(self):
+        # BL11: NYC Resistor's unseparated Hold forms; another site's
+        # "Hold Steady" stays out because that site never leaked a HOLD: row.
+        self.add(1, 'HOLD: mri project', 1)
+        self.cur.execute('UPDATE events SET suppressed = 1, reviewed = 1 WHERE id = 1')
+        self.add(2, 'Hold Interactive Show', 1)
+        self.add(3, 'HOLD OLIVIA: Intro to Sewing Machines How to make a Tote bag', 1)
+        self.add(4, 'Synthesizer Night @ NYC Resistor', 1)
+        self.add(5, 'Hold Steady Live', 2)
+        self.add(6, 'Holding Space: Grief Circle', 1)
+        self.assertEqual(self.run_pattern(22), {2, 3})
+
+    def test_patterns_43_to_45_run_as_sql(self):
+        self.add(1, 'Nursery Care', 1)
+        self.add(2, 'Nursery Rhyme Time', 2)
+        self.add(3, 'Book Sale Collection', 2,
+                 description='The Friends of the Library collect like-new books for their upcoming sale.')
+        self.add(4, 'Book Donation/Drop-Off', 2)
+        self.add(5, 'Celebration of the Book Donation', 2,
+                 description='The library accepts donations of gently used books.')
+        self.add(6, "Books a Poppin' (Drop-in)", 2, description='Bring gently used books.')
+        self.add(7, 'Sea Lion Feeding', 3, description='Observe the daily feeding session.')
+        self.add(8, 'Drop In: Tarantula Feeding!', 3, description='Watch the daily feeding.')
+        self.add(9, 'Bee-Eater Feeding', 3)
+        self.assertEqual(self.run_pattern(43), {1})
+        self.assertEqual(self.run_pattern(44), {3, 4})
+        self.assertEqual(self.run_pattern(45), {7})
 
 
 if __name__ == '__main__':

@@ -1777,17 +1777,84 @@ _BOOTH_MARKETING_DESC_RE = re.compile(
 # vocabulary — any other word vetoes the rule (this is what keeps
 # "Babysitting 101 Training Course" and Public Records' "The Nursery: <DJ>"
 # club series alive) — and the description must frame the care as provided
-# during/while parents attend something else.
+# during/while parents attend something else, be blank, or (for a bare
+# nursery/childcare title) not describe a course; see `_is_childcare_amenity`.
 _CHILDCARE_AMENITY_NAME_RE = re.compile(
     r'^(?=.*\b(?:nursery|child\s*care|babysitting)\b)'
     r'(?:(?:nursery|child\s*care|preschool|babysitting|care|and)\b[\s/&-]*)+$',
     re.IGNORECASE)
 _CHILDCARE_DURING_DESC_RE = re.compile(
-    r'\bduring\b[^.;!?]{0,60}\b(?:worship|services?|mass|church|meetings?)\b|'
+    r'\bduring\b[^.;!?]{0,60}\b(?:worship|services?|mass|church|meetings?|'
+    r'performances?|shows?|concerts?|events?|programming|festival)\b|'
     r'\bwhile\s+(?:you|parents?|caregivers?|adults?|families)\b[^.;!?]{0,40}'
     r'\b(?:attend|participate|worship)\b|'
     r'\b(?:parents?|families|caregivers?)\s+(?:can\s+|may\s+)?attend(?:ing)?\b',
     re.IGNORECASE)
+# (BL26 tail, 2026-10-16) The during-framing gate missed the bare listings these
+# calendars mostly publish: "Child Care" / "Nursery" with no body at all, and
+# "Nursery Care" bodies that only say "during morning hours". A title made of
+# nothing but nursery/childcare words is the amenity on its own, so the rule
+# also fires on a blank description, or on such a bare title whatever the body
+# says — unless the body describes a course/training (a "Childcare" title over
+# a provider-certification class would otherwise go). Babysitting is left out
+# of the title-alone arm: a bare "Babysitting" is as often the Red Cross course.
+# Measured over all crawl_events (2026-10-16): the name gate matches 300 rows on
+# 7 sites, every one an amenity listing (church nurseries, Hudson Valley
+# Shakespeare's festival childcare); the old gate dropped 236, this drops 300.
+_CHILDCARE_BARE_TITLE_RE = re.compile(
+    r'^(?=.*\b(?:nursery|child\s*care)\b)'
+    r'(?:(?:nursery|child\s*care|preschool|care|and)\b[\s/&-]*)+$',
+    re.IGNORECASE)
+_CHILDCARE_COURSE_DESC_RE = re.compile(
+    r'\b(?:course|class(?:es)?|training|certif\w*|workshop|seminar|lessons?|'
+    r'info(?:rmation(?:al)?)?\s+session|subsid\w*|licens\w*)\b',
+    re.IGNORECASE)
+
+
+def _is_childcare_amenity(name, description):
+    """Nursery/childcare offered alongside the venue's real programming."""
+    name = name.strip()
+    if not _CHILDCARE_AMENITY_NAME_RE.match(name):
+        return False
+    if _description_is_blank(description) or _CHILDCARE_DURING_DESC_RE.search(description):
+        return True
+    return bool(_CHILDCARE_BARE_TITLE_RE.match(name)
+                and not _CHILDCARE_COURSE_DESC_RE.search(description))
+
+
+# (BL26 tail, 2026-10-16) A library Friends group's book/media donation
+# drop-off window ("Book Sale Collection", "Book Donation Day", "The Friends of
+# the Plumsted Library Book Donation/Drop-Off"): a time to hand over boxes, not
+# an occasion. The title names books plus a collection word (a "Drop-in" is a
+# program, so "drop" never counts when "in" follows); then either the title
+# itself says donation/drop-off, or the body talks about accepting gently-used
+# / unwanted books. Program words in the title veto it (a donation
+# celebration, a book swap/donation drive, a talk on a collection, an exhibit
+# of books "From the Collection of …"). Mirrors find_review_candidates.py #44.
+# Measured over all crawl_events (2026-10-16): 28 rows / 16 distinct listings
+# on 6 sites, all donation windows (6 already dropped as "Book Donations
+# Accepted" by non_event_name); the only name-gate row without either signal
+# is a Grolier Club exhibit, kept.
+_BOOK_DONATION_NAME_RE = re.compile(
+    r'\bbooks?\b.*\b(?:donations?|collection|drop[\s-]?off|drop)\b(?![\s-]*ins?\b)'
+    r'|\b(?:donations?|collection|drop[\s-]?off)\b.*\bbooks?\b',
+    re.IGNORECASE)
+_BOOK_DONATION_NAME_VETO_RE = re.compile(
+    r'\b(?:celebrat\w*|talks?|tours?|swaps?|readings?|signings?|launch|exhibit\w*'
+    r'|storytime|workshops?|clubs?|part(?:y|ies)|concerts?|festivals?)\b',
+    re.IGNORECASE)
+_BOOK_DONATION_STRONG_NAME_RE = re.compile(r'\b(?:donations?|drop[\s-]?off)\b', re.IGNORECASE)
+_BOOK_DONATION_DESC_RE = re.compile(
+    r'\b(?:accept\w*|collect\w*|bring\w*|drop(?:ping)?[\s-]?off|donat\w*)\b[^.!?]{0,80}'
+    r'\b(?:gently[\s-]used|like[\s-]new|unwanted|used books|book donations|donations of)\b',
+    re.IGNORECASE)
+
+
+def _is_book_donation_window(name, description):
+    if not _BOOK_DONATION_NAME_RE.search(name) or _BOOK_DONATION_NAME_VETO_RE.search(name):
+        return False
+    return bool(_BOOK_DONATION_STRONG_NAME_RE.search(name)
+                or _BOOK_DONATION_DESC_RE.search(description or ''))
 
 # Congregate-meal menu listings: a senior/older-adult center's daily lunch menu
 # leaked one row per dish ("BBQ Pulled Pork", "Roasted Chicken Legs"), where the
@@ -3627,6 +3694,14 @@ _JUNK_RULES = (
     # students", e207565).
     _JunkRule('student_orientation_desc', _ORIENTATION_NAME_RE, desc=_STUDENT_AUDIENCE_DESC_RE,
               vetoes=((_ORIENTATION_PUBLIC_VETO_RE, 'both'),)),
+    # Childcare amenity (BL26): a title of nothing but nursery/childcare words,
+    # plus a blank body, during-another-activity framing, or (bare title) no
+    # course language. See `_is_childcare_amenity`.
+    _JunkRule('childcare_amenity', pred=_pred(_is_childcare_amenity)),
+    # Book/media donation drop-off window (BL26): the title says donation /
+    # drop-off, or the body says gently-used books are accepted. See
+    # `_is_book_donation_window`.
+    _JunkRule('book_donation_window', pred=_pred(_is_book_donation_window)),
     # --- rules below need a description to read ---
     # "On this Day:" archival post narrating a past anniversary, not a gathering.
     _JunkRule('archival_on_this_day', _ARCHIVAL_ON_THIS_DAY_NAME_RE, how='match',
@@ -3670,8 +3745,6 @@ _JUNK_RULES = (
               pred=lambda n, d, loc, sub: bool(_PRIVATE_BOOKING_DESC_RE.search(d)
                                                and _NOT_PUBLIC_DESC_RE.search(d))),
     _JunkRule('info_booth', _BOOTH_NAME_RE, desc=_BOOTH_MARKETING_DESC_RE),
-    _JunkRule('childcare_amenity', _CHILDCARE_AMENITY_NAME_RE, how='match', strip_name=True,
-              desc=_CHILDCARE_DURING_DESC_RE),
     _JunkRule('congregate_meal', desc=_CONGREGATE_MEAL_DESC_RE,
               vetoes=((_MEAL_ATTENDABLE_NAME_RE, 'name'), (_MEAL_REAL_EVENT_DESC_RE, 'desc'))),
     _JunkRule('attraction_listing', desc_mode='present',
@@ -3730,7 +3803,7 @@ def is_obvious_non_event(name, description=None, location=None, sublocation=None
     Covers closures, calls for submissions/grants, venue rentals, season-pass
     listings, cinema showtime placeholders, SEO spam, fundraising campaigns,
     submission-call contests, festival info-booth listings, childcare-amenity
-    listings, senior-center congregate-meal menus, registration-window
+    listings, book-donation drop-off windows, senior-center congregate-meal menus, registration-window
     announcements, academic/registrar calendar milestones (add/drop deadlines,
     term start dates, exam periods), take-home/grab-and-go kit distributions,
     program-deadline notices, room-booking-calendar shapes (private bookings,
@@ -3747,9 +3820,10 @@ def is_obvious_non_event(name, description=None, location=None, sublocation=None
     belongs in scripts/find_review_candidates.py for human review.
 
     Most patterns match on the name alone; a few ambiguous categories
-    (contests, booths, childcare amenities, congregate meals) also require
-    corroborating description language and never fire when the description is
-    missing. `location` is optional and read by exactly one rule -- the serial
+    (contests, booths, congregate meals) also require corroborating
+    description language and never fire when the description is missing.
+    Childcare amenities are the reverse: a bare nursery/childcare title fires
+    unless the body describes a course. `location` is optional and read by exactly one rule -- the serial
     placeholder rule, which needs it to tell an unannounced run number from the
     same run number once its start venue is published. Omitting it reads as
     "no venue", which is what an absent location means.

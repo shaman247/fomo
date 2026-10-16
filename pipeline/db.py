@@ -1496,8 +1496,13 @@ def _archive_event_ids(cursor, ids, edit_logger=None):
     return archived_count
 
 
+def _mention_key(text):
+    """Lowercase alphanumeric words joined by single spaces, padded for whole-word search."""
+    return ' ' + ' '.join(re.findall(r'[0-9a-z]+', (text or '').lower())) + ' '
+
+
 def archive_outdated_events(cursor, connection, website_id, temps_built=False,
-                            edit_logger=None):
+                            edit_logger=None, dry_run=False, absence_content=None):
     """
     Archive events that are no longer found in recent crawls from ANY of their source websites.
 
@@ -1549,6 +1554,19 @@ def archive_outdated_events(cursor, connection, website_id, temps_built=False,
         per-website archival loop the caller builds them once via
         build_archival_temps() and passes temps_built=True so the hundreds of
         calls share one snapshot.
+
+        dry_run=True selects the same candidates and returns them as
+        (len(candidates), all_candidates) without changing anything, for
+        read-only replays.
+
+        absence_content: the stored content of this website's latest crawl
+        when that crawl extracted ZERO events (the BL13 empty-latest path).
+        A candidate with a current/future date whose name the content still
+        prints (whole words, case/punctuation-insensitive) is held: the page
+        mentions it, so the empty result is an extraction miss rather than
+        absence (Westchester County Historical Society w4793's homepage still
+        prints "250th Anniversary History Hunt" while its last two crawls
+        extracted nothing). Past-only candidates are unaffected.
     """
     if not temps_built:
         build_archival_temps(cursor)
@@ -1785,7 +1803,20 @@ def archive_outdated_events(cursor, connection, website_id, temps_built=False,
     """, archive_params)
 
     events_to_archive = cursor.fetchall()
+    if absence_content is not None:
+        page = _mention_key(absence_content)
+        held = [row for row in events_to_archive
+                if row[2] and _mention_key(row[1]).strip()
+                and _mention_key(row[1]) in page]
+        for event_id, name, next_occ in held:
+            print(f"    Held {event_id} ({name}): the empty latest crawl still prints its name")
+        held_ids = {row[0] for row in held}
+        events_to_archive = [row for row in events_to_archive if row[0] not in held_ids]
     upcoming_events = [(event_id, name, next_occ) for event_id, name, next_occ in events_to_archive if next_occ]
+    if dry_run:
+        if not temps_built:
+            drop_archival_temps(cursor)
+        return len(events_to_archive), list(events_to_archive)
 
     # Perform the actual archiving by filtering on the id set the SELECT already
     # materialized, instead of re-evaluating the heavy correlated-subquery
@@ -1807,6 +1838,100 @@ def archive_outdated_events(cursor, connection, website_id, temps_built=False,
         drop_archival_temps(cursor)
 
     return archived_count, upcoming_events
+
+
+def get_empty_latest_crawl_websites(cursor, website_ids=None):
+    """Websites whose latest SITE crawl finished cleanly and listed nothing.
+
+    The merge tail archives per website, and it used to reach a website only
+    through the crawl_events this merge linked from its latest crawl. A crawl
+    that legitimately lists ZERO events has no crawl_events, so that website
+    was never reached and the events only its older crawls carried stayed on
+    the map indefinitely (BL13: DUMBO Archway & Plaza w3966's 32 events, five
+    AMC houses, Filthy Diamond). `archive_outdated_events` already treats a
+    complete empty calendar as absence (NULL source horizon); this finds the
+    websites to hand it, so the same guards decide (>= 2 finished site crawls
+    since the event was last seen, 14-day grace, start_too_future, IG-only /
+    rotating / picnob exemptions, latest attempt finished).
+
+    Only clean empties qualify, because an empty crawl that is really a
+    failure is exactly the archival hazard (memory: a Cloudflare challenge
+    stored as a successful 0-event crawl). The website's latest site-surface
+    attempt (MAX(id), any status) must be:
+    - status 'processed' with processed_at set (failed / pending / extracted /
+      incomplete captures never qualify; the crawler stores js_code
+      FOMO-CRAWL-INCOMPLETE captures, partial multi-URL crawls and unbeaten
+      challenges as 'failed', BL29);
+    - free of any error_message (a processed row that carries one, e.g. a
+      timed-out retry or "Bot challenge ... not cleared", is not clean);
+    - holding zero crawl_events;
+    and the website must be enabled and still source at least one
+    non-archived event (otherwise there is nothing to evaluate; this keeps the
+    ~930 empty-latest sites from each costing an archival query per merge).
+    The caller additionally screens the stored content
+    (`merger._clean_empty_capture`) for challenge, soft-404 and incomplete
+    markers before using a row.
+
+    `website_ids` restricts the scope (None = every enabled website). Picnob
+    bundles are a different surface and never qualify here.
+
+    Returns [(website_id, crawl_result_id, crawled_content)].
+    """
+    # Three narrow steps (one combined statement took ~50s; these take ~5s).
+    scope = ''
+    params = []
+    if website_ids is not None:
+        ids = sorted({w for w in website_ids if w is not None})
+        if not ids:
+            return []
+        scope = f"AND crl.website_id IN ({','.join(['%s'] * len(ids))})"
+        params = ids
+    cursor.execute(f"""
+        SELECT crl.website_id, MAX(crl.id)
+        FROM crawl_results crl
+        WHERE crl.website_id IS NOT NULL
+          AND NOT {_picnob_surface_sql('crl')}
+          {scope}
+        GROUP BY crl.website_id
+    """, params)
+    latest_ids = [row[1] for row in cursor.fetchall()]
+    empty = []
+    for i in range(0, len(latest_ids), 1000):
+        chunk = latest_ids[i:i + 1000]
+        cursor.execute(f"""
+            SELECT cr.website_id, cr.id
+            FROM crawl_results cr
+            JOIN websites w ON w.id = cr.website_id
+            WHERE cr.id IN ({','.join(['%s'] * len(chunk))})
+              AND (w.disabled = FALSE OR w.disabled IS NULL)
+              AND cr.status = 'processed'
+              AND cr.processed_at IS NOT NULL
+              AND COALESCE(cr.error_message, '') = ''
+              AND NOT EXISTS (SELECT 1 FROM crawl_events ce0
+                              WHERE ce0.crawl_result_id = cr.id)
+        """, chunk)
+        empty.extend(cursor.fetchall())
+    if not empty:
+        return []
+    result_by_site = dict(empty)
+    sites = sorted(result_by_site)
+    cursor.execute(f"""
+        SELECT DISTINCT crs.website_id
+        FROM crawl_results crs
+        JOIN crawl_events ces ON ces.crawl_result_id = crs.id
+        JOIN event_sources ess ON ess.crawl_event_id = ces.id
+        JOIN events e ON e.id = ess.event_id
+        WHERE crs.website_id IN ({','.join(['%s'] * len(sites))})
+          AND e.archived = FALSE
+    """, sites)
+    live_sites = sorted(row[0] for row in cursor.fetchall())
+    rows = []
+    for website_id in live_sites:
+        cursor.execute("SELECT crawled_content FROM crawl_results WHERE id = %s",
+                       (result_by_site[website_id],))
+        found = cursor.fetchone()
+        rows.append((website_id, result_by_site[website_id], found[0] if found else None))
+    return rows
 
 
 def archive_dead_source_events(cursor, connection, temps_built=False, edit_logger=None):

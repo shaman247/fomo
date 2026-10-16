@@ -1821,9 +1821,76 @@ def _match_dateless_crawl_event(name, location_id, lat, lng, location_name,
     return None
 
 
+_LEADING_COUNT_RE = re.compile(r'^\s*\d{1,3}\s+(?=[^\W\d_])')
+_COUNT_TRAILING_DATE_RE = re.compile(
+    r'\s*[(\[]?\s*(?:\d{4}-\d{1,2}-\d{1,2}|\d{1,2}/\d{1,2}(?:/\d{2,4})?)\s*[)\]]?\s*$')
+
+
+def _singular(word):
+    if len(word) > 4 and word.endswith('sses'):
+        return word[:-2]
+    if len(word) > 4 and word.endswith(('xes', 'ches', 'shes', 'zes')):
+        return word[:-2]
+    if len(word) > 4 and word.endswith('ies'):
+        return word[:-3] + 'y'
+    if len(word) > 3 and word.endswith('s') and not word.endswith(('ss', 'us', 'is')):
+        return word[:-1]
+    return word
+
+
+def leading_count_name_key(name):
+    """(key, had_count) for comparing roll-up titles that differ only by a count (BL25).
+
+    Roll-up listings print how many items sit behind one date-filter URL, and
+    the count changes between crawls: NYC-DSA w591's
+    `canvass.socialists.nyc/?date=[...]` rows went "1 Candidate Canvass
+    (2026-10-22)" -> "2 Candidate Canvasses (2026-10-22)" and "1 Candidate
+    Canvass (2026-10-31)" -> "3 Candidate Canvasses", forking a new event
+    each time (merged by hand 2026-10-16: 268913->291358, 273944->291372).
+
+    The key drops a leading count ("3 "), a trailing date suffix
+    ("(2026-10-31)", "10/31") and plural endings, then normalizes. It is only
+    used by the URL-identity tiers, which already demand the same website, the
+    same event-specific URL and a shared date, and only when at least one of
+    the two titles carries a leading count (see `leading_count_variants`).
+    """
+    if not name:
+        return '', False
+    text = name.strip()
+    had_count = bool(_LEADING_COUNT_RE.match(text))
+    if had_count:
+        text = _LEADING_COUNT_RE.sub('', text, count=1)
+    without_date = _COUNT_TRAILING_DATE_RE.sub('', text)
+    if without_date.strip():
+        text = without_date
+    words = normalize_name_for_dedup(text).split()
+    return ' '.join(_singular(w) for w in words), had_count
+
+
+def leading_count_variants(name_a, name_b):
+    """True when two different titles are the same roll-up apart from its count."""
+    key_a, count_a = leading_count_name_key(name_a)
+    key_b, count_b = leading_count_name_key(name_b)
+    return bool(key_a) and key_a == key_b and (count_a or count_b)
+
+
+def url_count_free_name_counts(url_key_names):
+    """{(website, url_key): distinct titles once leading counts are folded}.
+
+    `url_key_names` maps (website, url_key) -> set of normalized names. A
+    titles set that only differs by count ("1 candidate canvass 2026 10 22",
+    "2 candidate canvasses 2026 10 22") counts once, so a roll-up URL that has
+    been retitled three times is still recognised as one event's URL.
+    """
+    counts = {}
+    for key, names in url_key_names.items():
+        counts[key] = len({leading_count_name_key(n)[0] or n for n in names})
+    return counts
+
+
 def _match_by_url_identity(name, url, website_id, location_id, crawl_event_slots,
                            existing_by_url, url_name_counts, listing_url_keys,
-                           location_coords):
+                           location_coords, count_free_name_counts=None):
     """Match a crawl_event to an existing event by SHARED URL — the tier that is
     deliberately exempt from the cross-location guard.
 
@@ -1848,6 +1915,11 @@ def _match_by_url_identity(name, url, website_id, location_id, crawl_event_slots
     - the two locations must be the same, unknown, or within
       URL_IDENTITY_MAX_KM of each other.
 
+    Roll-up titles that differ only by a leading count ("1 Candidate Canvass
+    (2026-10-22)" / "2 Candidate Canvasses (2026-10-22)", see
+    `leading_count_name_key`) count as the same name here, with the distinct-
+    name limit applied to the count-folded titles (`count_free_name_counts`).
+
     When several events qualify, a visible candidate wins over a suppressed
     twin. Within each group, one sitting at the crawl_event's OWN location
     wins over a merely-nearby one (a cinema whose two branch rows both ended up
@@ -1863,7 +1935,10 @@ def _match_by_url_identity(name, url, website_id, location_id, crawl_event_slots
     index_key = (website_id, url_key)
     if index_key in listing_url_keys:
         return None
-    if url_name_counts.get(index_key, 0) > URL_IDENTITY_MAX_DISTINCT_NAMES:
+    exact_ok = url_name_counts.get(index_key, 0) <= URL_IDENTITY_MAX_DISTINCT_NAMES
+    count_ok = (count_free_name_counts is not None
+                and count_free_name_counts.get(index_key, 0) <= URL_IDENTITY_MAX_DISTINCT_NAMES)
+    if not (exact_ok or count_ok):
         return None
 
     norm_name = normalize_name_for_dedup(name)
@@ -1872,8 +1947,11 @@ def _match_by_url_identity(name, url, website_id, location_id, crawl_event_slots
 
     best = None  # (suppressed, 0 if same location_id else 1, event_id)
     for existing in existing_by_url.get(index_key, []):
-        if (normalize_name_for_dedup(existing['name']) != norm_name
-                or _screening_versions_differ(name, existing['name'])
+        same_name = normalize_name_for_dedup(existing['name']) == norm_name
+        if not ((same_name and exact_ok)
+                or (count_ok and leading_count_variants(name, existing['name']))):
+            continue
+        if (_screening_versions_differ(name, existing['name'])
                 or _numbered_levels_differ(name, existing['name'])):
             continue
         if not (crawl_event_slots & existing['slots']):
@@ -1955,7 +2033,7 @@ def retitle_names_compatible(new_name, old_name):
 def _match_by_url_identity_relaxed(name, url, website_id, location_id, crawl_event_slots,
                                    existing_by_url, url_name_counts, listing_url_keys,
                                    location_coords, *, incoming_is_fallback=False,
-                                   capture_names=frozenset()):
+                                   capture_names=frozenset(), count_free_name_counts=None):
     """The URL tier for a listing that lost a field the strict tier insists on (BL25).
 
     Same publisher and same event-specific URL as `_match_by_url_identity`,
@@ -1990,7 +2068,10 @@ def _match_by_url_identity_relaxed(name, url, website_id, location_id, crawl_eve
     if index_key in listing_url_keys:
         return None
     names_at_url = url_name_counts.get(index_key, 0)
-    if names_at_url > URL_IDENTITY_MAX_DISTINCT_NAMES:
+    exact_ok = names_at_url <= URL_IDENTITY_MAX_DISTINCT_NAMES
+    count_ok = (count_free_name_counts is not None
+                and count_free_name_counts.get(index_key, 0) <= URL_IDENTITY_MAX_DISTINCT_NAMES)
+    if not (exact_ok or count_ok):
         return None
     norm_name = normalize_name_for_dedup(name)
     if not norm_name:
@@ -2002,7 +2083,12 @@ def _match_by_url_identity_relaxed(name, url, website_id, location_id, crawl_eve
     for existing in existing_by_url.get(index_key, []):
         if existing.get('suppressed'):
             continue
-        same_name = normalize_name_for_dedup(existing['name']) == norm_name
+        # A roll-up whose leading count changed is the same name (BL25).
+        count_variant = count_ok and leading_count_variants(name, existing['name'])
+        same_name = ((exact_ok and normalize_name_for_dedup(existing['name']) == norm_name)
+                     or count_variant)
+        if not same_name and not exact_ok:
+            continue
         if (_screening_versions_differ(name, existing['name'])
                 or _numbered_levels_differ(name, existing['name'])):
             continue
@@ -2095,6 +2181,90 @@ def _visible_url_twin(suppressed_id, name, url, website_id, crawl_event_id,
             continue
         twins.add(twin_id)
     return twins.pop() if len(twins) == 1 else None
+
+
+REDIRECT_MAX_HOPS = 5
+
+
+def resolve_redirect_survivor(duplicate_id, redirect_survivors, max_hops=REDIRECT_MAX_HOPS):
+    """Follow `event_merge_redirects` from a duplicate to the end of its chain.
+
+    A survivor can itself be merged away later (A -> B, then B -> C), so the
+    live row is the last link. Returns (survivor_id, hops) with hops the ids
+    walked in order (survivor last), or (None, hops) for a row with no
+    redirect, a cycle, or a chain longer than `max_hops` (fail closed).
+    """
+    hops = []
+    current = duplicate_id
+    seen = {duplicate_id}
+    while current in redirect_survivors:
+        if len(hops) >= max_hops:
+            return None, hops
+        nxt = redirect_survivors[current]
+        if nxt is None or nxt in seen:
+            return None, hops
+        seen.add(nxt)
+        hops.append(nxt)
+        current = nxt
+    return (hops[-1] if hops else None), hops
+
+
+def redirect_route_target(duplicate_id, redirect_survivors, survivor_state, dismissed_pairs,
+                          reviewed_owner_ids, location_id, same_place_fn,
+                          *, dateless=False, dates_overlap=None):
+    """The visible survivor a source matched to a redirected duplicate should go to (BL14).
+
+    The match tiers prefer visible candidates, but a hidden dedupe loser that
+    is the only name/venue/date match still wins, and before 2026-10-16 the
+    duplicate decision recorded in `event_merge_redirects` was read only by
+    the URL-twin handoff (`_visible_url_twin`, which needs both rows to hold
+    the source's own event URL). Renamed survivors ("Knit, Purl, or Crochet
+    Blankets of Love" for "Craft Circle: Knitting and Crocheting"), listing
+    URLs and survivors without the URL kept feeding the hidden row, so the
+    survivor starved: 19 sources on 17 duplicates in the 10 days to
+    2026-10-07, 186 sources on 74 duplicates in the 10 days to 2026-10-16.
+
+    The source follows the redirect chain to its live end when all of these
+    hold, and otherwise stays where it is (the previous behaviour):
+
+    - the duplicate is not a reviewed source-identity owner
+      (`event_source_identities`: editorial ownership stays binding);
+    - no pair along the chain is in `dedupe_dismissed_pairs`;
+    - the survivor is not suppressed; when archived, it must still have a
+      date in the merge window that overlaps the source's (a survivor that
+      starved and was archived while still listed is revived; a finished
+      one-off is not handed next week's recurring listing, e.g. "Giants v
+      Cardinals Watch Party" for the weekly NFL Sunday watch party). A
+      dateless source never revives an archived survivor;
+    - the survivor sits at the source's venue (same place, or containment)
+      when both venues are known: a cross-venue duplicate decision does not
+      authorize bypassing the cross-location guard (BL38; reviewed location
+      bridges are matched earlier, by `reviewed_event_identity`).
+
+    `survivor_state(id)` returns {'suppressed', 'archived', 'location_id',
+    'in_window'} or None. Returns the survivor id, or None.
+    """
+    if duplicate_id in reviewed_owner_ids:
+        return None
+    survivor, hops = resolve_redirect_survivor(duplicate_id, redirect_survivors)
+    if survivor is None:
+        return None
+    chain = [duplicate_id] + hops
+    for a, b in zip(chain, chain[1:]):
+        if (min(a, b), max(a, b)) in dismissed_pairs:
+            return None
+    state = survivor_state(survivor)
+    if not state or state.get('suppressed'):
+        return None
+    if state.get('archived'):
+        if dateless or not state.get('in_window') or dates_overlap is None \
+                or not dates_overlap(survivor):
+            return None
+    survivor_loc = state.get('location_id')
+    if (location_id is not None and survivor_loc is not None
+            and not same_place_fn(survivor_loc, location_id)):
+        return None
+    return survivor
 
 
 # ── Dismissed-pair source-home veto ───────────────────────────────────────────
@@ -4280,6 +4450,149 @@ def _merge_edit_logger(cursor, connection, context, **details):
                       editor_info=json.dumps({**context, **details}, sort_keys=True))
 
 
+def _clean_empty_capture(content):
+    """True when a 0-event crawl's stored content is a real (empty) page.
+
+    The crawler already fails unbeaten bot challenges, soft 404s and js_code
+    FOMO-CRAWL-INCOMPLETE captures; this re-checks the stored body with the
+    same detectors before an empty crawl is allowed to count as absence
+    evidence, because a challenge stored as a successful 0-event crawl is the
+    archival hazard this path must never reopen (memory:
+    cf_challenge_stored_as_success). Fails closed: no content, or detectors
+    that cannot be loaded, mean "not clean".
+    """
+    if not content or not content.strip():
+        return False
+    try:
+        import crawler
+    except Exception:
+        return False
+    try:
+        return not (crawler._is_bot_challenge(content)
+                    or crawler._is_soft_404(content)
+                    or crawler._jscode_incomplete_reason(content))
+    except Exception:
+        return False
+
+
+def _empty_latest_archival_websites(cursor, website_ids=None):
+    """Websites to archive against because their latest crawl is a clean EMPTY one.
+
+    See db.get_empty_latest_crawl_websites (selection) and _clean_empty_capture
+    (content screen). `website_ids` is the merge's own scope (None = all).
+    Returns {website_id: stored content of that empty crawl}; the content is
+    passed to db.archive_outdated_events as `absence_content`.
+    """
+    found = {}
+    for website_id, crawl_result_id, content in db.get_empty_latest_crawl_websites(
+            cursor, website_ids):
+        if _clean_empty_capture(content):
+            found[website_id] = content
+        else:
+            print(f"  Empty latest crawl cr{crawl_result_id} (w{website_id}) not used as "
+                  "absence evidence: challenge / soft-404 / incomplete content")
+    return found
+
+
+def _run_archival_tail(cursor, connection, website_ids, audit_context, empty_contents=None):
+    """Superseded-date pruning and archival for the websites this merge reached,
+    then the global disabled-source and sourceless sweeps.
+
+    `empty_contents` maps the websites reached through a clean empty latest
+    crawl to that crawl's content (see _empty_latest_archival_websites)."""
+    empty_contents = empty_contents or {}
+    total_archived = 0
+    total_upcoming_flagged = 0
+
+    # Precompute the archival helper temp tables ONCE for the whole loop so
+    # each per-website archive query is a ~1s indexed lookup rather than a
+    # ~35s scan (this loop was the dominant cost of Step 6 — 47min on a full
+    # run). See db.build_archival_temps for the correctness argument.
+    db.build_archival_temps(cursor)
+    try:
+        # Dates only a superseded crawl of the same website ever listed
+        # (a source switch, a retimed series). See db.prune_superseded_dates.
+        pruned, pruned_rows = _retry_on_deadlock(
+            db.prune_superseded_dates, cursor, connection, website_ids, temps_built=True,
+            edit_logger=_merge_edit_logger(
+                cursor, connection, audit_context,
+                archival_reason='superseded_source_dates'))
+        if pruned:
+            print(f"  Removed {pruned} future date(s) no current crawl supports "
+                  f"on {len({r[0] for r in pruned_rows})} event(s)")
+        for website_id in website_ids:
+            archived_count, upcoming_events = _retry_on_deadlock(
+                db.archive_outdated_events, cursor, connection, website_id, temps_built=True,
+                edit_logger=_merge_edit_logger(
+                    cursor, connection, audit_context,
+                    archival_reason=('missing_from_empty_latest_crawl'
+                                     if website_id in empty_contents
+                                     else 'missing_from_latest_sources'),
+                    trigger_website_id=website_id),
+                absence_content=empty_contents.get(website_id))
+            if archived_count > 0:
+                # Get website name for logging
+                cursor.execute("SELECT name FROM websites WHERE id = %s", (website_id,))
+                result = cursor.fetchone()
+                website_name = result[0] if result else f"ID {website_id}"
+                print(f"  Archived {archived_count} outdated event(s) from {website_name}")
+                total_archived += archived_count
+
+                # Include ongoing spans as well as future-starting events.
+                if upcoming_events:
+                    print(f"    ⚠️  WARNING: {len(upcoming_events)} current/upcoming event(s) archived (may indicate crawl failure):")
+                    for event_id, name, next_occ in upcoming_events:
+                        print(f"        - Event {event_id}: {name} (occurrence starts: {next_occ})")
+                    total_upcoming_flagged += len(upcoming_events)
+
+        # Events whose every source website is now disabled are unreachable
+        # from the per-website loop above (a disabled website is never
+        # crawled, so no iteration ever runs for it). Sweep them once per
+        # merge, globally: even automatic runs freeze website_ids to the
+        # sites they crawled, excluding these disabled sources. The helper
+        # checks all contributing sources and the future-event grace;
+        # filtering by either crawl scope or events.website_id is unsafe.
+        # See db.archive_dead_source_events.
+        dead_archived, dead_upcoming = _retry_on_deadlock(
+            db.archive_dead_source_events, cursor, connection, temps_built=True,
+            edit_logger=_merge_edit_logger(
+                cursor, connection, audit_context,
+                archival_reason='all_sources_disabled'))
+        if dead_archived > 0:
+            print(f"  Archived {dead_archived} event(s) whose source websites are all disabled")
+            total_archived += dead_archived
+            if dead_upcoming:
+                print(f"    ⚠️  WARNING: {len(dead_upcoming)} current/upcoming event(s) among them:")
+                for event_id, name, next_occ in dead_upcoming:
+                    print(f"        - Event {event_id}: {name} (occurrence starts: {next_occ})")
+                total_upcoming_flagged += len(dead_upcoming)
+
+        # Visible events with NO event_sources rows (a crawl_events purge
+        # cascades them away) are unreachable from both passes above.
+        # See db.archive_sourceless_events.
+        sourceless_archived, sourceless_upcoming = _retry_on_deadlock(
+            db.archive_sourceless_events, cursor, connection,
+            website_ids=website_ids, temps_built=True,
+            edit_logger=_merge_edit_logger(
+                cursor, connection, audit_context,
+                archival_reason='no_sources'))
+        if sourceless_archived > 0:
+            print(f"  Archived {sourceless_archived} event(s) that no crawl sources")
+            total_archived += sourceless_archived
+            if sourceless_upcoming:
+                print(f"    ⚠️  WARNING: {len(sourceless_upcoming)} current/upcoming event(s) among them:")
+                for event_id, name, next_occ in sourceless_upcoming:
+                    print(f"        - Event {event_id}: {name} (occurrence starts: {next_occ})")
+                total_upcoming_flagged += len(sourceless_upcoming)
+    finally:
+        db.drop_archival_temps(cursor)
+
+    if total_archived > 0:
+        print(f"  Total archived: {total_archived}")
+    if total_upcoming_flagged > 0:
+        print(f"  ⚠️  Total current/upcoming events archived: {total_upcoming_flagged} (review recommended)")
+
+
 def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     """
     Merge new crawl_events into the final events table with deduplication.
@@ -4306,6 +4619,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         Tuple of (new_events_count, merged_count)
     """
     current_date, future_limit_date = get_active_date_window()
+    # The caller's scope, kept apart from the archival website list built at the end.
+    merge_scope = list(website_ids) if website_ids else None
 
     # ── Setup ──
     # Initialize edit logger if available
@@ -4376,6 +4691,13 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     print(f"  Found {len(new_crawl_events)} unprocessed crawl_events")
 
     if not new_crawl_events:
+        # Nothing to link, but a website whose latest crawl is a clean empty
+        # listing still has to be judged (BL13): its crawl has no crawl_events,
+        # so a merge scoped to it always lands here.
+        empty_contents = _empty_latest_archival_websites(cursor, merge_scope)
+        if empty_contents:
+            _run_archival_tail(cursor, connection, sorted(empty_contents), audit_context,
+                               empty_contents=empty_contents)
         return 0, 0
 
     # ── Build lookup indexes for deduplication ──
@@ -4539,6 +4861,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 'suppressed': bool(suppressed),
             })
     url_key_name_counts = {k: len(v) for k, v in url_key_names.items()}
+    url_count_free_counts = url_count_free_name_counts(url_key_names)
 
     # Dismissed pairs, loaded once, for the source-home veto (see
     # _dismissed_home_veto). Sources are read lazily per (event, website), and
@@ -4551,6 +4874,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     dismissed_home_sources = {}  # (event_id, website_id) -> [(url_key, norm_name, loc_id)]
     dismissed_home_skips = 0
     dismissed_home_handoffs = 0
+    redirect_routes = 0
+    redirect_survivor_states = {}  # survivor id -> state dict (lazy, see redirect_route_target)
     dismissed_session_routes = 0
 
     # Explicit human decisions the suppressed URL-twin handoff must respect.
@@ -5195,7 +5520,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             matched_event_id = _match_by_url_identity(
                 name, url, website_id, location_id, crawl_event_slots,
                 existing_events_by_url, url_key_name_counts, listing_url_keys,
-                location_coords,
+                location_coords, count_free_name_counts=url_count_free_counts,
             )
             if matched_event_id is not None and (_dismissed_home(matched_event_id)
                                                  or _same_capture(matched_event_id)):
@@ -5209,6 +5534,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                     location_coords, incoming_is_fallback=incoming_is_fallback,
                     capture_names={entry[2] for entry in
                                    capture_listings.get(crawl_result_id, ())},
+                    count_free_name_counts=url_count_free_counts,
                 )
                 if relaxed_id is not None and not (_dismissed_home(relaxed_id)
                                                    or _same_capture(relaxed_id)):
@@ -5243,6 +5569,50 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 current_loc_id = None
                 if location_id is not None:
                     cursor.execute("SELECT location_id FROM events WHERE id = %s", (matched_event_id,))
+                    _m = cursor.fetchone()
+                    current_loc_id = _m[0] if _m else None
+
+        # Redirected-duplicate routing (BL14): a match still sitting on a
+        # hidden dedupe loser follows its `event_merge_redirects` decision to
+        # the visible survivor (see redirect_route_target). Like the URL-twin
+        # handoff, the survivor's venue is the one the dedupe decision kept,
+        # so it is never re-pinned below.
+        redirect_handoff = False
+        if (matched_event_id is not None
+                and matched_event_id != reviewed_match_id
+                and matched_event_id in suppressed_event_ids
+                and matched_event_id in url_twin_redirect_survivors):
+
+            def _survivor_state(survivor_id):
+                if survivor_id not in redirect_survivor_states:
+                    cursor.execute("SELECT suppressed, archived, location_id, name "
+                                   "FROM events WHERE id = %s", (survivor_id,))
+                    row = cursor.fetchone()
+                    redirect_survivor_states[survivor_id] = None if not row else {
+                        'suppressed': bool(row[0]), 'archived': bool(row[1]),
+                        'location_id': row[2], 'name': row[3],
+                        'in_window': survivor_id in event_ids_with_future}
+                return redirect_survivor_states[survivor_id]
+
+            survivor_id = redirect_route_target(
+                matched_event_id, url_twin_redirect_survivors, _survivor_state,
+                url_twin_dismissed_pairs, url_twin_reviewed_owners, location_id,
+                lambda a, b: same_place(a, b, location_containment),
+                dateless=dateless, dates_overlap=_dates_overlap)
+            if (survivor_id is not None
+                    and not _program_veto({'id': survivor_id,
+                                           'name': _receiving_event_name(survivor_id)})
+                    and not _dismissed_home(survivor_id)
+                    and not _same_capture(survivor_id)):
+                print(f"  Redirected duplicate {matched_event_id} -> survivor {survivor_id}: "
+                      f"source {ce_id} ({name})")
+                matched_event_id = survivor_id
+                redirect_handoff = True
+                redirect_routes += 1
+                current_loc_id = None
+                if location_id is not None:
+                    cursor.execute("SELECT location_id FROM events WHERE id = %s",
+                                   (matched_event_id,))
                     _m = cursor.fetchone()
                     current_loc_id = _m[0] if _m else None
 
@@ -5531,6 +5901,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 current_location_id = current_loc_id
                 if not current_location_id or (
                     not suppressed_handoff and not dismissed_home_handoff and
+                    not redirect_handoff and
                     not (url_relaxed_match and incoming_is_fallback) and
                     not (reviewed_bridge and matched_event_id == reviewed_match_id) and
                     should_repin_location(current_location_id, location_id,
@@ -5792,6 +6163,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                     names_at_key = url_key_names.setdefault(index_key, set())
                     names_at_key.add(norm_name)
                     url_key_name_counts[index_key] = len(names_at_key)
+                    url_count_free_counts[index_key] = len(
+                        {leading_count_name_key(n)[0] or n for n in names_at_key})
                     existing_events_by_url.setdefault(index_key, []).append({
                         'id': new_event_id,
                         'name': name,
@@ -5804,6 +6177,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
 
     _retry_on_deadlock(connection.commit)
     print(f"  Added {new_events_count} new events, merged {merged_count} duplicates")
+    if redirect_routes:
+        print(f"  Redirected duplicates: {redirect_routes} source(s) routed to their survivor")
     if dismissed_home_skips or dismissed_home_handoffs:
         print(f"  Dismissed-pair veto: {dismissed_home_skips} candidate(s) skipped, "
               f"{dismissed_home_handoffs} source(s) handed to their listing's home")
@@ -5838,7 +6213,9 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     # Archive outdated events after merging
     # Only archive for websites where we processed crawl_events from their LATEST
     # crawl result. This prevents mass-archiving when processing a backlog of old
-    # crawl_events from historical crawls.
+    # crawl_events from historical crawls. Websites whose latest crawl finished
+    # cleanly with ZERO events are reached too (BL13; see
+    # _empty_latest_archival_websites): they have no crawl_events to link.
     if new_crawl_events:
         crawl_event_ids = [row[0] for row in new_crawl_events]
         placeholders = ','.join(['%s'] * len(crawl_event_ids))
@@ -5858,93 +6235,13 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
 
         website_ids = [row[0] for row in cursor.fetchall()
                        if row[0] not in identity_review_websites]
-        total_archived = 0
-        total_upcoming_flagged = 0
-
-        # Precompute the archival helper temp tables ONCE for the whole loop so
-        # each per-website archive query is a ~1s indexed lookup rather than a
-        # ~35s scan (this loop was the dominant cost of Step 6 — 47min on a full
-        # run). See db.build_archival_temps for the correctness argument.
-        db.build_archival_temps(cursor)
-        try:
-            # Dates only a superseded crawl of the same website ever listed
-            # (a source switch, a retimed series). See db.prune_superseded_dates.
-            pruned, pruned_rows = _retry_on_deadlock(
-                db.prune_superseded_dates, cursor, connection, website_ids, temps_built=True,
-                edit_logger=_merge_edit_logger(
-                    cursor, connection, audit_context,
-                    archival_reason='superseded_source_dates'))
-            if pruned:
-                print(f"  Removed {pruned} future date(s) no current crawl supports "
-                      f"on {len({r[0] for r in pruned_rows})} event(s)")
-            for website_id in website_ids:
-                archived_count, upcoming_events = _retry_on_deadlock(
-                    db.archive_outdated_events, cursor, connection, website_id, temps_built=True,
-                    edit_logger=_merge_edit_logger(
-                        cursor, connection, audit_context,
-                        archival_reason='missing_from_latest_sources',
-                        trigger_website_id=website_id))
-                if archived_count > 0:
-                    # Get website name for logging
-                    cursor.execute("SELECT name FROM websites WHERE id = %s", (website_id,))
-                    result = cursor.fetchone()
-                    website_name = result[0] if result else f"ID {website_id}"
-                    print(f"  Archived {archived_count} outdated event(s) from {website_name}")
-                    total_archived += archived_count
-
-                    # Include ongoing spans as well as future-starting events.
-                    if upcoming_events:
-                        print(f"    ⚠️  WARNING: {len(upcoming_events)} current/upcoming event(s) archived (may indicate crawl failure):")
-                        for event_id, name, next_occ in upcoming_events:
-                            print(f"        - Event {event_id}: {name} (occurrence starts: {next_occ})")
-                        total_upcoming_flagged += len(upcoming_events)
-
-            # Events whose every source website is now disabled are unreachable
-            # from the per-website loop above (a disabled website is never
-            # crawled, so no iteration ever runs for it). Sweep them once per
-            # merge, globally: even automatic runs freeze website_ids to the
-            # sites they crawled, excluding these disabled sources. The helper
-            # checks all contributing sources and the future-event grace;
-            # filtering by either crawl scope or events.website_id is unsafe.
-            # See db.archive_dead_source_events.
-            dead_archived, dead_upcoming = _retry_on_deadlock(
-                db.archive_dead_source_events, cursor, connection, temps_built=True,
-                edit_logger=_merge_edit_logger(
-                    cursor, connection, audit_context,
-                    archival_reason='all_sources_disabled'))
-            if dead_archived > 0:
-                print(f"  Archived {dead_archived} event(s) whose source websites are all disabled")
-                total_archived += dead_archived
-                if dead_upcoming:
-                    print(f"    ⚠️  WARNING: {len(dead_upcoming)} current/upcoming event(s) among them:")
-                    for event_id, name, next_occ in dead_upcoming:
-                        print(f"        - Event {event_id}: {name} (occurrence starts: {next_occ})")
-                    total_upcoming_flagged += len(dead_upcoming)
-
-            # Visible events with NO event_sources rows (a crawl_events purge
-            # cascades them away) are unreachable from both passes above.
-            # See db.archive_sourceless_events.
-            sourceless_archived, sourceless_upcoming = _retry_on_deadlock(
-                db.archive_sourceless_events, cursor, connection,
-                website_ids=website_ids, temps_built=True,
-                edit_logger=_merge_edit_logger(
-                    cursor, connection, audit_context,
-                    archival_reason='no_sources'))
-            if sourceless_archived > 0:
-                print(f"  Archived {sourceless_archived} event(s) that no crawl sources")
-                total_archived += sourceless_archived
-                if sourceless_upcoming:
-                    print(f"    ⚠️  WARNING: {len(sourceless_upcoming)} current/upcoming event(s) among them:")
-                    for event_id, name, next_occ in sourceless_upcoming:
-                        print(f"        - Event {event_id}: {name} (occurrence starts: {next_occ})")
-                    total_upcoming_flagged += len(sourceless_upcoming)
-        finally:
-            db.drop_archival_temps(cursor)
-
-        if total_archived > 0:
-            print(f"  Total archived: {total_archived}")
-        if total_upcoming_flagged > 0:
-            print(f"  ⚠️  Total current/upcoming events archived: {total_upcoming_flagged} (review recommended)")
+        empty_contents = {
+            w: content
+            for w, content in _empty_latest_archival_websites(cursor, merge_scope).items()
+            if w not in website_ids and w not in identity_review_websites}
+        website_ids += sorted(empty_contents)
+        _run_archival_tail(cursor, connection, website_ids, audit_context,
+                           empty_contents=empty_contents)
 
         # ── Stamp merged_at on the crawl_results whose events went through this merge ──
         # Pure observability: lets `status='processed' AND merged_at IS NULL` flag

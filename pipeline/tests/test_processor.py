@@ -652,10 +652,12 @@ class TestIsObviousNonEvent(unittest.TestCase):
             "Nursery Sundays returns for the season with an all-day set from "
             "London-based producer and DJ HAAi."))
 
-    def test_nursery_care_without_during_framing_kept(self):
-        # e53674 — amenity-shaped name but no during-another-activity signal
-        # in the description: fail open, leave for human review.
-        self.assertFalse(is_obvious_non_event(
+    def test_bare_nursery_care_title_dropped_without_during_framing(self):
+        # e53674 (Grace Church w1419) — no during-another-activity signal, but
+        # a title of nothing except nursery/childcare words is the amenity on
+        # its own (BL26 tail 2026-10-16: 300 of 300 such crawl rows were
+        # amenity listings). Was fail-open before.
+        self.assertTrue(is_obvious_non_event(
             "Nursery Care",
             "Childcare services provided for families during the morning."))
 
@@ -665,8 +667,10 @@ class TestIsObviousNonEvent(unittest.TestCase):
         self.assertFalse(is_obvious_non_event(
             "Children's Library Card Art Contest (PreK-Grade 5)", None))
         self.assertFalse(is_obvious_non_event("L’Alliance Booths", ""))
-        self.assertFalse(is_obvious_non_event("Nursery-Preschool Care", None))
-        self.assertFalse(is_obvious_non_event("Nursery Care", ""))
+        # Childcare amenities are the exception since 2026-10-16 (BL26): a
+        # bare "Nursery Care" / "Child Care" listing usually has no body.
+        self.assertTrue(is_obvious_non_event("Nursery-Preschool Care", None))
+        self.assertTrue(is_obvious_non_event("Nursery Care", ""))
 
     def test_casting_call_dropped(self):
         # e165536 — a casting/recruitment call, not an attendable public event.

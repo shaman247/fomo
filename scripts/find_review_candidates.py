@@ -206,6 +206,46 @@ ROOM_BOOKING_ORG_WORDS = (
     "|ministry|ministries|organization|org|network|party")
 
 
+# --- patterns 43-45 ------------------------------------------------------------
+# Written once in Python regex syntax (MariaDB REGEXP is PCRE and, on these
+# columns, case-insensitive) so tests compile the same strings; `_sql_regex`
+# makes them SQL string literals.
+def _sql_regex(rx):
+    return "'" + rx.replace('\\', '\\\\').replace("'", "\\'") + "'"
+
+
+# Pattern 43: the whole title is childcare-amenity vocabulary. Same name gate as
+# processor `childcare_amenity` (`_CHILDCARE_AMENITY_NAME_RE`). Since 2026-10-16
+# that rule also drops bare titles and blank bodies, so this pattern is mainly a
+# backstop for events created before then (and bare "Babysitting", which the
+# processor keeps unless the body is blank or says "during …").
+CHILDCARE_AMENITY_NAME = (
+    r"^\s*(?=.*\b(nursery|child\s*care|babysitting)\b)"
+    r"((nursery|child\s*care|preschool|babysitting|care|and)\b[\s/&-]*)+$")
+
+# Pattern 44: a book/media donation drop-off window ("Book Sale Collection",
+# "Book Donation Day", "Friends ... Book Donation/Drop-Off"). The title names
+# books plus a collection word; the body must describe accepting donations
+# unless the title itself says donation/drop-off. Program words veto
+# (a "Book Donation" celebration, a book swap, "Books a Poppin' (Drop-in)").
+BOOK_DONATION_NAME = (
+    r"\bbooks?\b.*\b(donations?|collection|drop[\s-]?off|drop)\b(?![\s-]*ins?\b)"
+    r"|\b(donations?|collection|drop[\s-]?off)\b.*\bbooks?\b")
+BOOK_DONATION_NAME_VETO = (
+    r"\b(celebrat\w*|talks?|tours?|swaps?|readings?|signings?|launch|exhibit\w*"
+    r"|storytime|workshops?)\b")
+BOOK_DONATION_STRONG_NAME = r"\b(donations?|drop[\s-]?off)\b"
+BOOK_DONATION_DESC = (
+    r"\b(accept\w*|collect\w*|bring\w*|drop(ping)?[\s-]?off|donat\w*)\b[^.!?]{0,80}"
+    r"\b(gently[\s-]used|like[\s-]new|unwanted|used books|book donations|donations of)\b")
+
+# Pattern 45: a zoo/aquarium's routine daily feeding ("Sea Lion Feeding",
+# "Penguin Feeding", "Daily Otter Feeding"): the bare title is "<animal>
+# Feeding" and the body calls it daily/scheduled or keeper-led.
+ANIMAL_FEEDING_NAME = r"^\s*(daily\s+)?[a-z'’ -]{2,30}\sfeedings?\s*$"
+ANIMAL_FEEDING_DESC = r"\b(daily|scheduled|keepers?|zookeepers?)\b"
+
+
 # Each pattern: id, name, and SQL WHERE clause (applied to events e)
 # JOINs are specified separately for patterns that need them
 PATTERNS = [
@@ -531,6 +571,18 @@ PATTERNS = [
                 e.name REGEXP '^(HOLD|Hold):'
                 OR e.name REGEXP '^(HOLD|Hold) for '
                 OR e.name REGEXP '^(HOLD|Hold) ?- '
+                -- BL11: a calendar that has already leaked a suppressed
+                -- "HOLD:" booking uses every Hold form for bookings ("Hold
+                -- Interactive Show", "HOLD OLIVIA: ..."), which the
+                -- processor's separator rule misses. Measured 2026-10-16: NYC
+                -- Resistor's 39 "Hold..." events are all bookings (29 reviewed
+                -- suppressed, 0 kept); its confirmed parties are published
+                -- as separate un-prefixed listings. No other site qualifies.
+                OR (e.name REGEXP '^[[:space:]]*hold[[:>:]]'
+                    AND EXISTS (SELECT 1 FROM events h
+                                WHERE h.website_id = e.website_id AND h.id <> e.id
+                                  AND h.suppressed = 1
+                                  AND h.name REGEXP BINARY '^[[:space:]]*(HOLD|Hold|hold)[[:space:]]*[-:]'))
                 OR e.name LIKE 'Copy of %'
                 OR e.name REGEXP '^[Tt]est$'
                 OR e.name REGEXP '^[Tt]est [Ee]vent$'
@@ -1154,6 +1206,50 @@ PATTERNS = [
         """.replace('__PROGRAM__', ROOM_BOOKING_PROGRAM_WORDS)
            .replace('__PUBLIC__', ROOM_BOOKING_PUBLIC_MEETING)
            .replace('__ORG__', ROOM_BOOKING_ORG_WORDS),
+    },
+    {
+        # BL26 tail: childcare offered during services/performances, titled
+        # with nothing but amenity words (CHILDCARE_AMENITY_NAME above).
+        # Measured 2026-10-16: reviewed history 8 suppressed vs 1 kept (an
+        # archived 'Nursery and Childcare'); all 23 matching events and all 300
+        # matching crawl rows (7 church/festival sites) are amenity listings.
+        'id': 43,
+        'name': 'Childcare amenity listing (bare "Nursery Care" title)',
+        'query': f"""
+            SELECT DISTINCT e.id FROM events e
+            WHERE e.archived = 0 AND e.reviewed = 0
+              AND e.name REGEXP {_sql_regex(CHILDCARE_AMENITY_NAME)}
+        """,
+    },
+    {
+        # BL26 tail: a book/media donation drop-off window, not an event
+        # (BOOK_DONATION_* above). Measured 2026-10-16: 12 events match, all
+        # donation windows; reviewed history 3 suppressed vs 0 kept; 15 of 15
+        # crawl rows passing the description arm are donation windows.
+        'id': 44,
+        'name': 'Book donation drop-off window',
+        'query': f"""
+            SELECT DISTINCT e.id FROM events e
+            WHERE e.archived = 0 AND e.reviewed = 0
+              AND e.name REGEXP {_sql_regex(BOOK_DONATION_NAME)}
+              AND e.name NOT REGEXP {_sql_regex(BOOK_DONATION_NAME_VETO)}
+              AND (e.name REGEXP {_sql_regex(BOOK_DONATION_STRONG_NAME)}
+                   OR COALESCE(e.description, '') REGEXP {_sql_regex(BOOK_DONATION_DESC)})
+        """,
+    },
+    {
+        # BL11 "zoo operations": a zoo/aquarium's routine daily feeding
+        # (ANIMAL_FEEDING_* above). Measured 2026-10-16: reviewed history 39
+        # suppressed vs 2 kept (Bronx Zoo w813 Penguin/Sea Lion Feeding); a
+        # nature center's "Drop In: Tarantula Feeding!" (kept) does not match.
+        'id': 45,
+        'name': 'Routine daily animal feeding (zoo operations)',
+        'query': f"""
+            SELECT DISTINCT e.id FROM events e
+            WHERE e.archived = 0 AND e.reviewed = 0
+              AND e.name REGEXP {_sql_regex(ANIMAL_FEEDING_NAME)}
+              AND COALESCE(e.description, '') REGEXP {_sql_regex(ANIMAL_FEEDING_DESC)}
+        """,
     },
 ]
 

@@ -294,7 +294,10 @@ Events are split into per-day chunks so the frontend can load just today's event
 Each merge prints a unique `Merge audit ID`. Its edit-log entries share that ID
 in JSON `edits.editor_info`; full pipeline runs also include `crawl_run_id`.
 Archival transitions record `archived` from `0` to `1`, with
-`archival_reason=missing_from_latest_sources` and `trigger_website_id`, or
+`archival_reason=missing_from_latest_sources` and `trigger_website_id`
+(`missing_from_empty_latest_crawl` when that website's latest crawl finished
+cleanly with zero events; the same guards apply, and an event whose name the
+empty crawl's content still prints is held), or
 `archival_reason=all_sources_disabled` for the global disabled-source sweep, or
 `archival_reason=no_sources` for visible events with no `event_sources` rows.
 Future dates removed because only a superseded crawl of the same website listed
