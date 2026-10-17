@@ -54,7 +54,7 @@ frontend:
     # Age = eligibility (who may attend); Family = intent (designed for kids/
     # families). Occasion = dated occasions such as Halloween (BL23).
     tag: [Age, Art, Comedy, Community, Dance, Education, Family, Film, Free, Games, Literature, Music, Nightlife, Occasion, Outdoor, Science, Sports, Theater, Virtual, Wellness]
-    venue: [Beverage Venue, Community Center, Cultural Venue, Event Hall, Government, Hospital, Hotel, House of Worship, Meetup Point, Office, Outdoor Venue, School, Shop, Studio, Nightclub, attraction, Fitness & Recreation]
+    venue: [Beverage Venue, Community Center, Cultural Venue, Event Hall, Government, Health Center, Hotel, House of Worship, Meetup Point, Office, Outdoor Venue, School, Shop, Studio, Nightclub, attraction, Fitness & Recreation]
   venue_selector:
     # Browsing labels are separate from stable tag identities and topic aliases.
     labels:
@@ -630,7 +630,6 @@ geotags:
   - "Fort Greene"
   - "Fort Hamilton"
   - "Fort Lee"
-  - "Hampton, NJ"
   - "Upper Manhattan"
   - "Mercer County"
   - "Fort Montgomery"
@@ -1406,7 +1405,6 @@ geographic_hierarchy:
     - Somerville
     - Watchung
     Hunterdon County:
-    - Hampton, NJ
     - Lambertville
     - Flemington
     Mercer County:
@@ -1736,8 +1734,9 @@ venue_taxonomy:
     - University
     Arts Organization:
     - Cultural Center
-    Health Center:
-    - Hospital
+    Health Center: []
+    Hospital:
+    - Health Center
     Ballroom: [Event Hall]
     Convention Center: [Event Hall]
     Sports Field:
@@ -4281,6 +4280,51 @@ venue_taxonomy:
       - Playground
       source: https://www.njradar.com/events/fresh-from-the-farm-at-nest
       reason: Reviewed 2026-10-16 (BL15 venue-ancestor sample); a Kearny family cafe with an indoor play area. Playground would have implied Park and Outdoor Venue; Cafe and Restaurant remain.
+    - location_id: 8476
+      expected_name: "MSK Ralph Lauren Center"
+      add: []
+      remove:
+      - Hospital
+      reason: Reviewed 2026-10-16 (Health Center/Hospital ruling); an outpatient cancer screening and treatment center, not a hospital. Hospital now sits under Health Center, so a stored Hospital row made it match the Hospital filter.
+    - location_id: 8626
+      expected_name: "Family Health Center of Harlem"
+      add: []
+      remove:
+      - Hospital
+      source: https://institute.org/
+      reason: Reviewed 2026-10-16 (Health Center/Hospital ruling); a community health center (primary, behavioral and dental care), not a hospital. Hospital now sits under Health Center, so a stored Hospital row made it match the Hospital filter.
+    - location_id: 11366
+      expected_name: "Urban Health Plan Simpson Pavilion"
+      add: []
+      remove:
+      - Hospital
+      reason: Reviewed 2026-10-16 (Health Center/Hospital ruling); a community health center building, not a hospital. Hospital now sits under Health Center, so a stored Hospital row made it match the Hospital filter.
+    - location_id: 11688
+      expected_name: "Norwegian Christian Home & Health Center"
+      add: []
+      remove:
+      - Hospital
+      reason: Reviewed 2026-10-16 (Health Center/Hospital ruling); an elder-care home and health center, not a hospital. Hospital now sits under Health Center, so a stored Hospital row made it match the Hospital filter.
+    - location_id: 11772
+      expected_name: "Shen Shen Tang"
+      add: []
+      remove:
+      - Hospital
+      reason: Reviewed 2026-10-16 (Health Center/Hospital ruling); an acupuncture and Chinese herbal medicine practice, not a hospital. Hospital now sits under Health Center, so a stored Hospital row made it match the Hospital filter.
+    - location_id: 11873
+      expected_name: "Greenwich House Center for Healing"
+      add: []
+      remove:
+      - Hospital
+      reason: Reviewed 2026-10-16 (Health Center/Hospital ruling); an outpatient substance use and mental health treatment center, not a hospital. Hospital now sits under Health Center, so a stored Hospital row made it match the Hospital filter.
+    - location_id: 5622
+      expected_name: "Bedford Stuyvesant Family Health Center"
+      add:
+      - Health Center
+      remove:
+      - Hospital
+      source: https://www.bsfhc.org
+      reason: Reviewed 2026-10-16 (Health Center/Hospital ruling); a Federally Qualified Health Center (outpatient primary and specialty care), not a hospital; it was tagged Hospital only. Hospital now sits under Health Center, so a stored Hospital row made it match the Hospital filter.
     descriptions:
     - location_id: 2041
       expected_name: Cloud City

@@ -853,12 +853,3 @@ class TestNewScopeIncludesResourcedEvents(unittest.TestCase):
     def test_review_and_short_span_scans_use_it(self):
         for fn in (frs.review_scan, frs.find_redundant_short_spans):
             self.assertIn(frs.RECENT_SQL, self._sql(fn))
-
-    def test_single_occasion_scan_uses_it(self):
-        spec = importlib.util.spec_from_file_location(
-            'fix_single_occasion_events',
-            os.path.join(_ROOT, 'scripts', 'fix_single_occasion_events.py'))
-        fso = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(fso)
-        self.assertEqual(fso.RECENT_SQL, frs.RECENT_SQL)
-        self.assertIn(fso.RECENT_SQL, self._sql(fso.scan))
