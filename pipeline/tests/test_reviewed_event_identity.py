@@ -140,8 +140,24 @@ class ReviewedIdentitySQLTests(unittest.TestCase):
         self.assertEqual(self.cur.fetchall(),[(100,)])
         self.assertEqual(self.result(),1)
     def test_cross_venue_reconsideration_revokes_the_old_target(self):
+        # Since BL38 the new cross-venue decision replaces the old target with
+        # a location bridge keyed by the loser's venue, never both.
         self.merge()
         self.cur.execute("INSERT INTO events(id,name,website_id,location_id) VALUES (3,'Corrected Venue Program',7,20)")
+        with patch('event_icon_assignments.merge_assignments'):merge_pair(self.cur,3,2)
+        index=identity.load_index(self.cur)
+        args=(7,'Adult Craft',ReviewedIdentityTests.URL,10)
+        self.assertEqual(identity.match(index,*args,[('2026-10-03','3pm',None)]),3)
+        self.assertTrue(identity.is_location_bridge(index,*args,3))
+        self.assertIsNone(self.result('Adult Craft: Spooky Light'))
+        self.cur.execute('SELECT survivor_id,source_identities FROM event_merge_redirects WHERE duplicate_id=2')
+        (survivor,scopes),=self.cur.fetchall()
+        self.assertEqual(survivor,3)
+        self.assertEqual({(s['policy'],s['location_id'],s['survivor_location_id'])
+                          for s in json.loads(scopes)},{(identity.LOCATION_BRIDGE_POLICY,10,20)})
+    def test_reconsideration_without_a_replacement_rule_leaves_no_redirect(self):
+        self.merge()
+        self.cur.execute("INSERT INTO events(id,name,website_id,location_id) VALUES (3,'Unmapped Program',7,NULL)")
         with patch('event_icon_assignments.merge_assignments'):merge_pair(self.cur,3,2)
         self.assertIsNone(self.result())
         self.cur.execute('SELECT COUNT(*) FROM event_merge_redirects WHERE duplicate_id=2')
