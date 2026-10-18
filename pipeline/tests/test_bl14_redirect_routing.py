@@ -67,7 +67,8 @@ class RedirectRoutingMergeTests(unittest.TestCase):
             elif 'FROM dedupe_dismissed_pairs' in query:
                 rows = list(dismissed)
             elif 'FROM event_merge_redirects' in query:
-                rows = list(redirects)
+                # (duplicate_id, survivor_id[, source_identities JSON])
+                rows = [tuple(r) + (None,) * (3 - len(r)) for r in redirects]
             elif 'SELECT DISTINCT event_id FROM event_source_identities' in query:
                 rows = [(eid,) for eid in reviewed_owners]
             elif 'SELECT id, name, emoji, lat, lng FROM locations' in query:

@@ -59,6 +59,20 @@ def class_show_identity_mismatch(left, right):
     return bool(a and b and a.isdisjoint(b))
 
 
+_COPIED_CARD = re.compile(r'^\s*copy\s+of\s+\S', re.I)
+
+
+def copied_card_mismatch(left, right):
+    """A "Copy of <title>" card is its own listing, never a date of <title>.
+
+    Venues duplicate a calendar card and forget to rename it (Gladys w994,
+    BL47). Exactly one side being a copy keeps the two apart; two copies
+    are judged like any other pair. Mirrors merger.copied_card_differs, which
+    never saw the copy because in-crawl grouping had already folded it in.
+    """
+    return bool(_COPIED_CARD.match(left or '')) != bool(_COPIED_CARD.match(right or ''))
+
+
 def conversation_subject_mismatch(left, right):
     """A generic conversation label cannot merge unrelated named speakers.
 

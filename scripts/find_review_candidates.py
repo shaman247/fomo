@@ -245,6 +245,41 @@ BOOK_DONATION_DESC = (
 ANIMAL_FEEDING_NAME = r"^\s*(daily\s+)?[a-z'’ -]{2,30}\sfeedings?\s*$"
 ANIMAL_FEEDING_DESC = r"\b(daily|scheduled|keepers?|zookeepers?)\b"
 
+# Pattern 46: a benefits / health-insurance / legal / tax / tech help desk named
+# by its service alone ("Medicaid Sign-Up Help", "Patient Navigator", "Free
+# Citizenship Application Assistance", "Ask A Tech", "Tax Exemption Assistance",
+# "Social Worker Office Hours"). #40's name arm lists only homework/tech/job/
+# enrollment desks and its body arm needs one-on-one wording, so these titles
+# slipped through on a short or empty body. Talks ABOUT the same topics
+# ("Navigating Medicare", "SHIP Open Enrollment Presentation", "Medicare Scams")
+# and volunteer listings are vetoed. Deliberately absent, measured 2026-10-18:
+# "legal clinic" (reviewers kept 4 of 5: elected-official office hours, LGBT
+# Bar walk-in clinic), "resume & career help" (BPL drop-ins: 8 suppressed vs
+# 4 kept), bare "tax preparation" (a kept borough-hall program and a workshop).
+SERVICE_DESK_TOPIC_NAME = (
+    r"\b("
+    r"(medicaid|medicare|snap|heap|hiicap|health ?care|health insurance|insurance|benefits?"
+    r"|citizenship|immigration|energy|tax exemption|property tax|social work)"
+    r" (application )?(sign[- ]?up )?(help|assistance)"
+    r"|(medicaid|medicare|snap|hiicap|health ?care|health insurance|benefits?|citizenship"
+    r"|immigration|social work(er)?) (navigators?|counsel[a-z]*|consultations?|appointments?"
+    r"|walk[- ]in hours)"
+    r"|(patient|healthcare|health insurance|snap|benefits|ny state of health|digital) navigators?"
+    r"|navigators? (on[- ]?site|assistance|appointments?|available)"
+    r"|enrollment appointments?|hiicap|career counsel(ing|ors?)|legal (help|assistance|advice)"
+    r"|housing clinic|ask an? tech|tech tutor"
+    r"|(apple|android|iphone|smartphone|cell ?phone|phone|tablet|device|computer|laptop|ipad"
+    r"|e-?reader) help"
+    r"|tax[- ]aide|tax (help|assistance)|notary( public)? (services?|available|hours|day)"
+    r"|free notary|idnyc (enrollment|renewals?|appointments?|sign[- ]?ups?)"
+    r"|social workers? (office hours|appointments?|available|walk[- ]in hours|hours|on[- ]?site)"
+    r")\b")
+SERVICE_DESK_TOPIC_NAME_VETO = (
+    r"\b(presentation|seminar|workshop|webinar|talk|lecture|class|course|101|navigating"
+    r"|scams?|volunteers?|training|info(rmation)? session|panel|explained|basics of"
+    r"|fundraiser|benefit concert|tutoring for|symposium|updates?)\b")
+SERVICE_DESK_TOPIC_DESC_VETO = r"\b(volunteers? (needed|will|to)|you will help|become a)\b"
+
 
 # Each pattern: id, name, and SQL WHERE clause (applied to events e)
 # JOINs are specified separately for patterns that need them
@@ -1249,6 +1284,24 @@ PATTERNS = [
             WHERE e.archived = 0 AND e.reviewed = 0
               AND e.name REGEXP {_sql_regex(ANIMAL_FEEDING_NAME)}
               AND COALESCE(e.description, '') REGEXP {_sql_regex(ANIMAL_FEEDING_DESC)}
+        """,
+    },
+    {
+        # BL26 (2026-10-18 hide pass: Nassau tax exemption help, Medicaid
+        # sign-up help): service desks named by their service, any body
+        # (SERVICE_DESK_TOPIC_* above). Measured 2026-10-18 over all events:
+        # reviewed history 81 suppressed vs 3 kept (all 3 archived, each a
+        # shape reviewers suppressed elsewhere: BPL "Ask A Tech", BCCLS "Social
+        # Worker Office Hours", BPL "Free In-Person Tax Help (By Appointment)");
+        # 24 unreviewed live hits, all desks or appointment-only consultations.
+        'id': 46,
+        'name': 'Benefits / legal / tax / tech help desk named by its service',
+        'query': f"""
+            SELECT DISTINCT e.id FROM events e
+            WHERE e.archived = 0 AND e.reviewed = 0
+              AND e.name REGEXP {_sql_regex(SERVICE_DESK_TOPIC_NAME)}
+              AND e.name NOT REGEXP {_sql_regex(SERVICE_DESK_TOPIC_NAME_VETO)}
+              AND COALESCE(e.description, '') NOT REGEXP {_sql_regex(SERVICE_DESK_TOPIC_DESC_VETO)}
         """,
     },
 ]

@@ -1416,6 +1416,28 @@ def count_date_tokens(text):
     return len(_DATE_TOKEN_RE.findall(text or ''))
 
 
+def count_listed_dates(text):
+    """count_date_tokens for the occurrence budget: a URL counts as one date at
+    most, however many its slug carries.
+
+    Mount Vernon Public Library (w6008) slugs every Crochet Group card with the
+    series' whole date history (`crochet-club-2026-07-02-...-2027-03-18`), so
+    each card read as ~50 dates although it prints one. The budget then cut
+    cr-131420's tail into 9 pieces of 4 cards (4-5K chars each), 3 of which held
+    1-2 visible dates and so could not be pruned as beyond-window either
+    (BL30/BL42 follow-up, 2026-10-18). A URL that carries a date still counts
+    once: a feed whose cards are dated only in their links demands one
+    occurrence per card.
+    """
+    if not text:
+        return 0
+    urls = _WINDOW_URL_RE.findall(text)
+    if not urls:
+        return count_date_tokens(text)
+    return (count_date_tokens(_WINDOW_URL_RE.sub(' ', text))
+            + sum(1 for url in urls if _DATE_TOKEN_RE.search(url)))
+
+
 def _is_card_detail_heading(lines, idx):
     """True when heading `lines[idx]` continues a card instead of starting one:
     a time-only heading, or a date heading directly under its card's title.
@@ -1432,7 +1454,8 @@ def _is_card_detail_heading(lines, idx):
 
 
 def cap_occurrences_per_chunk(chunks, budget=OCCURRENCE_BUDGET_PER_CHUNK):
-    """Subdivide any chunk whose text enumerates more than `budget` dates.
+    """Subdivide any chunk whose text enumerates more than `budget` dates
+    (count_listed_dates: a URL counts once, however many dates its slug holds).
 
     The same post-pass shape as `cap_records_per_chunk` — splits ONLY at heading
     lines, so it cannot sever a record, and no piece ever exceeds max_chars. The
@@ -1464,7 +1487,7 @@ def cap_occurrences_per_chunk(chunks, budget=OCCURRENCE_BUDGET_PER_CHUNK):
 
     out = []
     for chunk in chunks:
-        if count_date_tokens(chunk) <= budget:
+        if count_listed_dates(chunk) <= budget:
             out.append(chunk)
             continue
 
@@ -1486,7 +1509,7 @@ def cap_occurrences_per_chunk(chunks, budget=OCCURRENCE_BUDGET_PER_CHUNK):
         pieces, cur_start, cur_dates = [], 0, 0
         for i in range(len(starts)):
             body = '\n'.join(lines[bounds[i]:bounds[i + 1]])
-            n = count_date_tokens(body)
+            n = count_listed_dates(body)
             # Cut BEFORE this record when it would blow the budget — but never
             # emit an empty piece, so the first record of a piece always lands.
             if cur_start < starts[i] and cur_dates + n > budget:
@@ -1881,7 +1904,7 @@ def chunk_for_extraction(content, max_records_per_chunk=None, log=None,
 
     dense = cap_occurrences_per_chunk(chunks)
     if len(dense) != len(chunks):
-        worst = max(count_date_tokens(c) for c in chunks)
+        worst = max(count_listed_dates(c) for c in chunks)
         log(f"Date-dense page ({worst} dates in one chunk, budget "
             f"{OCCURRENCE_BUDGET_PER_CHUNK}); subdivided {len(chunks)} "
             f"chunks into {len(dense)}")

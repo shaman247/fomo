@@ -38,7 +38,7 @@ import occurrence_provenance
 from tag_canonicalization import resolve_tag_name
 import crawler
 import site_profiles
-from event_name_guards import conversation_subject_mismatch, game_program_variant_mismatch, library_program_variant_mismatch, named_sub_event_mismatch, participatory_program_variant_mismatch
+from event_name_guards import conversation_subject_mismatch, copied_card_mismatch, game_program_variant_mismatch, library_program_variant_mismatch, named_sub_event_mismatch, participatory_program_variant_mismatch
 from event_name_guards import class_show_identity_mismatch
 from remaining_name_identity import remaining_name_identity_mismatch
 from festival_member_identity import (explicit_festival_member_mismatch,
@@ -1604,7 +1604,16 @@ _SERVICE_DESK_NAME_RE = re.compile(
     r'\bresume\s+(?:help|review|clinic|assistance)\b|'
     r'\b(?:health\s+)?insurance\s+enrollment\b|'
     r'\b(?:medicare|medicaid|ship|hiicap|snap|benefits?)\s+(?:counsel\w*|assistance|enrollment|'
-    r'q\s*(?:and|&)\s*a)\b',
+    r'q\s*(?:and|&)\s*a)\b|'
+    # BL26 2026-10-18: tax-exemption / citizenship / legal / health-navigator desks
+    # ("Nassau County Department of Assessment Tax Exemption Assistance", "Free
+    # Immigration Consultation Day", "Healthcare Navigator Assistance", "Ask A Tech").
+    # Measured over all events with a one-on-one body: +9 suppressed, 0 kept.
+    r'\b(?:tax\s+exemption|property\s+tax|tax|citizenship|immigration|legal|energy|social\s+work|'
+    r'health\s*care|health\s+insurance)\s+(?:application\s+)?(?:help|assistance|navigators?|'
+    r'consultations?|counsel\w*)\b|'
+    r'\b(?:patient|healthcare|health\s+insurance|snap|benefits)\s+navigators?\b|'
+    r'\bask\s+an?\s+tech\b|\bcareer\s+counsel\w*\b',
     re.IGNORECASE)
 _ONE_ON_ONE_DESC_RE = re.compile(
     r'\b(?:one[- ]on[- ]one|1[- ]on[- ]1|one[- ]to[- ]one|'
@@ -4199,7 +4208,8 @@ def group_event_occurrences(rows, source_url=None, location_refs=None):
                     or remaining_name_identity_mismatch(event_name, existing.get('name', ''))
                     or explicit_festival_member_mismatch(event_name, existing.get('name', ''))
                     or festival_sibling_program_mismatch(event_name, existing.get('name', ''))
-                    or conversation_subject_mismatch(event_name, existing.get('name', ''))):
+                    or conversation_subject_mismatch(event_name, existing.get('name', ''))
+                    or copied_card_mismatch(event_name, existing.get('name', ''))):
                 continue
             if event_name == existing_key or normalized_event == normalized_existing:
                 # A per-date event URL must not keep a ROOM of the resolved

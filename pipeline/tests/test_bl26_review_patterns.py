@@ -165,6 +165,54 @@ class AnimalFeedingTests(unittest.TestCase):
         self.assertFalse(feeding_flagged('Penguin Feeding', 'No description available.'))
 
 
+def service_desk_flagged(name, description=''):
+    """Python mirror of #46."""
+    return bool(rx(frc.SERVICE_DESK_TOPIC_NAME).search(name)
+                and not rx(frc.SERVICE_DESK_TOPIC_NAME_VETO).search(name)
+                and not rx(frc.SERVICE_DESK_TOPIC_DESC_VETO).search(description))
+
+
+class ServiceDeskByTopicTests(unittest.TestCase):
+    """#46 (2026-10-18): desks named by their service; real suppressed or unreviewed rows."""
+
+    def test_service_desks_are_flagged(self):
+        for name in ('Nassau County Department of Assessment Tax Exemption Assistance',
+                     'Medicaid Sign-Up Help', 'HWCLI Medicare and Medicaid Help',
+                     'Medicare-Patient Navigator', 'Patient Navigator',
+                     'Free Citizenship Application Assistance', 'Free Immigration Consultation Day',
+                     'Home Energy Assistance Program (HEAP)', 'Social Work Assistance',
+                     'Social Worker Office Hours', 'Healthcare Navigators with HWCLI',
+                     'SNAP Navigator On-Site', 'Access Health CT Enrollment Appointment',
+                     'Health Insurance Information and Counseling (HIICAP)', 'Career Counselor - Dix Hills',
+                     'Community Legal Help Project', 'Housing Clinic', 'Ask A Tech', 'Apple/Android Help',
+                     'Drop-In Tech Tutor', 'Get Tax Help from AARP Foundation Tax-Aide',
+                     'Ask A Tech: By Appointment (Park Slope)'):
+            with self.subTest(name=name):
+                self.assertTrue(service_desk_flagged(name))
+
+    def test_talks_classes_and_volunteer_shifts_are_not(self):
+        for name in ('Navigating Medicare', '2026 SHIP Open Enrollment Presentation',
+                     'Medicare: The Latest Scams During the Annual Enrollment Period',
+                     'SHIP (State Health Insurance Assistance Program) Presentation',
+                     'Computer Class-Digital Navigator', 'Virtual Housing Assistance Workshop',
+                     'Neighbors & Numbers: Tax Clinic Workshop', 'Literacy Suffolk Volunteer Tutor Training',
+                     'Community Resource & Benefits Navigator Volunteer',
+                     'Bookkeeping Basics, Tax Preparation & Access to Capital (IRS) & SBA Services',
+                     'Free Legal Clinic for Tenants', 'Drop-In Resume & Career Help (Central Library)',
+                     'Master’s Sparring Technique Clinic', 'Help Students with their Homework',
+                     'Medicare + Medicaid Founder and Funders Dinner', 'Friendship Bracelets',
+                     'Senior Symposium-Medicare Updates with Eric Hausman (HIICAP)',
+                     'Laser Engrave a Pumpkin (by appointment)',
+                     'Project Independence Socials - Brain Games with TONH Social Worker and Nurse'):
+            with self.subTest(name=name):
+                self.assertFalse(service_desk_flagged(name))
+        self.assertFalse(service_desk_flagged(
+            'Help with Computer Basics', 'Connect community members with basic computer skills. '
+            'You will help them learn to use a mouse.'))
+        self.assertFalse(service_desk_flagged(
+            'Phone Help', 'Become a tech mentor for older adults.'))
+
+
 @unittest.skipUnless(os.environ.get('FOMO_TEST_TEMP_DB') == '1',
                      'Opt in to connection-local MariaDB tests with FOMO_TEST_TEMP_DB=1')
 class PatternQueryTests(unittest.TestCase):
@@ -250,6 +298,16 @@ class PatternQueryTests(unittest.TestCase):
         self.assertEqual(self.run_pattern(43), {1})
         self.assertEqual(self.run_pattern(44), {3, 4})
         self.assertEqual(self.run_pattern(45), {7})
+
+    def test_pattern_46_runs_as_sql(self):
+        self.add(1, 'Medicaid Sign-Up Help', 1, description='Free, walk-in assistance.')
+        self.add(2, 'Patient Navigator', 1, description=None)
+        self.add(3, 'Navigating Medicare', 1, description='SHIP explains Medicare Advantage.')
+        self.add(4, 'Phone Help', 2, description='Volunteers needed to help seniors with phones.')
+        self.add(5, "Senior Friday Drop-In Tech Help", 2)
+        self.add(6, 'Ask A Tech', 2)
+        self.cur.execute('UPDATE events SET reviewed = 1 WHERE id = 6')
+        self.assertEqual(self.run_pattern(46), {1, 2})
 
 
 if __name__ == '__main__':

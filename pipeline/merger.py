@@ -2012,7 +2012,8 @@ def retitle_names_compatible(new_name, old_name):
     reception, each sitting on a URL the older event had picked up by an
     earlier fusion. Those shapes are refused here.
     """
-    if not same_capture_names_related(new_name, old_name) or is_false_positive(new_name, old_name):
+    if (not same_capture_names_related(new_name, old_name, program_affixes=False)
+            or is_false_positive(new_name, old_name)):
         return False
     quoted_new = {normalize_name_for_dedup(q) for q in _QUOTED_SEGMENT_RE.findall(new_name or '')}
     quoted_old = {normalize_name_for_dedup(q) for q in _QUOTED_SEGMENT_RE.findall(old_name or '')}
@@ -2209,9 +2210,40 @@ def resolve_redirect_survivor(duplicate_id, redirect_survivors, max_hops=REDIREC
     return (hops[-1] if hops else None), hops
 
 
+def redirect_location_bridges(rows):
+    """duplicate id -> {(loser_location_id, survivor_location_id): (websites, names)}.
+
+    `rows` = [(duplicate_id, source_identities JSON)] from
+    `event_merge_redirects`; only `location_bridge_v1` scopes count (the
+    cross-venue decisions `reviewed_event_identity.record_merge` writes).
+    `websites` are the publishers the decision reviewed and `names` their
+    titles (`reviewed_event_identity.name_key`). Malformed JSON is skipped.
+    """
+    bridges = {}
+    for duplicate_id, payload in rows:
+        try:
+            scopes = json.loads(payload or '[]')
+        except (TypeError, ValueError):
+            continue
+        for scope in scopes if isinstance(scopes, list) else ():
+            if not isinstance(scope, dict) or scope.get('policy') != \
+                    reviewed_event_identity.LOCATION_BRIDGE_POLICY:
+                continue
+            venues = (scope.get('location_id'), scope.get('survivor_location_id'))
+            if None in venues or scope.get('website_id') is None:
+                continue
+            websites, names = bridges.setdefault(duplicate_id, {}).setdefault(
+                venues, (set(), set()))
+            websites.add(scope['website_id'])
+            if scope.get('name'):
+                names.add(reviewed_event_identity.name_key(scope['name']))
+    return bridges
+
+
 def redirect_route_target(duplicate_id, redirect_survivors, survivor_state, dismissed_pairs,
                           reviewed_owner_ids, location_id, same_place_fn,
-                          *, dateless=False, dates_overlap=None):
+                          *, dateless=False, dates_overlap=None,
+                          website_id=None, name=None, location_bridges=None):
     """The visible survivor a source matched to a redirected duplicate should go to (BL14).
 
     The match tiers prefer visible candidates, but a hidden dedupe loser that
@@ -2238,8 +2270,18 @@ def redirect_route_target(duplicate_id, redirect_survivors, survivor_state, dism
       dateless source never revives an archived survivor;
     - the survivor sits at the source's venue (same place, or containment)
       when both venues are known: a cross-venue duplicate decision does not
-      authorize bypassing the cross-location guard (BL38; reviewed location
-      bridges are matched earlier, by `reviewed_event_identity`).
+      authorize bypassing the cross-location guard (BL38). The one exception
+      is a direct (one-hop) location bridge (`location_bridges`): the source
+      names the loser's venue exactly, the loser still sits there, the
+      survivor still sits at the venue the decision kept, and the source is
+      from a publisher the decision reviewed or carries one of its reviewed
+      titles exactly. `reviewed_event_identity` matches a bridge only for the
+      reviewed URL + slots, so a new date or a fresh per-occurrence URL fell
+      through to the hidden loser (nyc.gov w1 ce 1587376 "Bodyweight Circuit
+      Training" on suppressed 206764 instead of 209115, 2026-10-16; the
+      review had seen the NYC Parks w2 copies). An unreviewed publisher under
+      another title stays put: "Halloween In Greenwich Village. Stand Up
+      Show" sits on a loser merged into the Village Halloween Parade.
 
     `survivor_state(id)` returns {'suppressed', 'archived', 'location_id',
     'in_window'} or None. Returns the survivor id, or None.
@@ -2263,7 +2305,13 @@ def redirect_route_target(duplicate_id, redirect_survivors, survivor_state, dism
     survivor_loc = state.get('location_id')
     if (location_id is not None and survivor_loc is not None
             and not same_place_fn(survivor_loc, location_id)):
-        return None
+        scope = (location_bridges or {}).get(duplicate_id, {}).get(
+            (location_id, survivor_loc)) if len(hops) == 1 else None
+        duplicate_state = survivor_state(duplicate_id) if scope else None
+        if not (duplicate_state and duplicate_state.get('location_id') == location_id
+                and (website_id in scope[0]
+                     or reviewed_event_identity.name_key(name) in scope[1])):
+            return None
     return survivor
 
 
@@ -2974,7 +3022,78 @@ def _strip_trailing_segments(name, suffix):
     return name
 
 
-def same_capture_names_related(name_a, name_b, head=''):
+# A listing's scheduling status is not part of its name: Sachem w6013 posts the
+# moved session of "Mutt-i-Grees Club: Nocturnal Critters" as "Nocturnal
+# Critters - RESCHEDULED TO 10/29". Set aside as a trailing segment, bracket or
+# leading "STATUS:" mark, never when nothing else would remain.
+_STATUS_WORDS_RX = (r'(?:re-?scheduled|postponed|cancell?ed|sold[\s-]*out|new\s+date'
+                    r'|date\s+change[ds]?|moved)')
+_TRAILING_STATUS_RE = re.compile(
+    r'(?:\s+[-–—|]\s+|\s*[(\[])\s*' + _STATUS_WORDS_RX + r'\b[^()\[\]]*[)\]]?\s*$',
+    re.IGNORECASE)
+_LEADING_STATUS_RE = re.compile(
+    r'^\s*[(\[]?\s*' + _STATUS_WORDS_RX + r'\s*[)\]]?\s*[:!–—-]+\s*', re.IGNORECASE)
+
+
+def _strip_status_marks(name):
+    """`name` without a trailing or leading scheduling-status mark."""
+    name = (name or '').strip()
+    stripped = _LEADING_STATUS_RE.sub('', _TRAILING_STATUS_RE.sub('', name)).strip()
+    return stripped if normalize_name_for_dedup(stripped) else name
+
+
+def _colon_segments(name):
+    """`name` split at its top-level "Head: rest" colons (`_split_on_subtitle_colon`)."""
+    segments = []
+    rest = (name or '').strip()
+    while True:
+        split = _split_on_subtitle_colon(rest)
+        if not split:
+            break
+        segments.append(split[0])
+        rest = split[1]
+    segments.append(rest)
+    return segments
+
+
+def _strip_shared_leading_colon_heads(name_a, name_b):
+    """Drop the leading "Head:" segments two titles have in common.
+
+    "OHNY Weekend: BAT Clay Studio at Brooklyn Army Terminal" and "OHNY
+    Weekend: BioBAT at …" are two sites of one festival. Like a shared format
+    tail (BL46), the shared festival or program head lifts the ratio without
+    saying which program a listing is (BL25, 2026-10-17: five OHNY events held
+    12 sibling sites). Returns (core_a, core_b, head) with `head` the
+    normalized shared segments, empty when nothing is shared; each title keeps
+    at least one segment of its own.
+    """
+    segs_a, segs_b = _colon_segments(name_a), _colon_segments(name_b)
+    shared = []
+    while len(segs_a) > 1 and len(segs_b) > 1:
+        lead = normalize_name_for_dedup(segs_a[0])
+        if not lead or lead != normalize_name_for_dedup(segs_b[0]):
+            break
+        shared.append(lead)
+        segs_a.pop(0)
+        segs_b.pop(0)
+    return ': '.join(segs_a), ': '.join(segs_b), ' '.join(shared)
+
+
+_AT_VENUE_RE = re.compile(r'^(?P<program>.+?)\s+(?:at|@)\s+(?:the\s+)?(?P<venue>.+)$',
+                          re.IGNORECASE)
+
+
+def _at_venue_parts(name):
+    """(program, venue) of "<program> at <venue>", normalized; None otherwise."""
+    m = _AT_VENUE_RE.match((name or '').strip())
+    if not m:
+        return None
+    program = normalize_name_for_dedup(m.group('program'))
+    venue = normalize_name_for_dedup(m.group('venue'))
+    return (program, venue) if program and venue else None
+
+
+def same_capture_names_related(name_a, name_b, head='', *, program_affixes=True):
     """May two listings of ONE capture, at different permalinks, be one event?
 
     True when the titles are the same or near-same (normalized ratio >= 0.5),
@@ -2989,7 +3108,17 @@ def same_capture_names_related(name_a, name_b, head=''):
     passing as a series. Trailing " - …" segments both titles share (a format
     or branch tail, "… - Virtual Program - Zoom") are set aside first, so the
     verdict rests on the program names in front of them (BL46).
+
+    With `program_affixes` (the same-capture veto; a same-URL retitle check
+    passes False) three more affixes carry no verdict (BL25, 2026-10-18): a
+    scheduling-status mark ("… - RESCHEDULED TO 10/29"), a shared leading
+    "Head:" that is not the event's own name ("OHNY Weekend: …"), and a shared
+    " at <venue>" tail ("Yoga at Pier 35" / "Zumba at Pier 35"). A title that
+    is nothing but the other's venue ("Brooklyn Army Terminal" beside "BioBAT
+    at Brooklyn Army Terminal") names the building, not that program.
     """
+    if program_affixes:
+        name_a, name_b = _strip_status_marks(name_a), _strip_status_marks(name_b)
     norm_a = normalize_name_for_dedup(name_a or '')
     norm_b = normalize_name_for_dedup(name_b or '')
     if not norm_a or not norm_b or norm_a == norm_b:
@@ -3021,6 +3150,26 @@ def same_capture_names_related(name_a, name_b, head=''):
         norm_b = normalize_name_for_dedup(name_b)
         if not norm_a or not norm_b or norm_a == norm_b:
             return True
+    full_a, full_b = name_a, name_b
+    if program_affixes:
+        # A shared leading "Head:" that IS the event's name stays: those are
+        # nights of one series ("The Invasion: <host> Invades" on "The
+        # Invasion"), judged on the full titles as before.
+        core_a, core_b, lead = _strip_shared_leading_colon_heads(name_a, name_b)
+        if lead and lead != normalize_name_for_dedup(head or ''):
+            name_a, name_b = core_a, core_b
+        venue_a, venue_b = _at_venue_parts(name_a), _at_venue_parts(name_b)
+        bare_a, bare_b = normalize_name_for_dedup(name_a), normalize_name_for_dedup(name_b)
+        if (venue_a and bare_b == venue_a[1]) or (venue_b and bare_a == venue_b[1]):
+            return False
+        if venue_a and venue_b and venue_a[1] == venue_b[1]:
+            if venue_a[0] == venue_b[0]:
+                return True
+            name_a, name_b = venue_a[0], venue_b[0]
+        norm_a = normalize_name_for_dedup(name_a)
+        norm_b = normalize_name_for_dedup(name_b)
+        if not norm_a or not norm_b or norm_a == norm_b:
+            return True
     # SequenceMatcher is not symmetric ("potluck halloween" vs "jacobdior
     # presents halloween" scores 0.53 one way, 0.49 the other); the lower score
     # keeps the verdict independent of merge order.
@@ -3036,8 +3185,8 @@ def same_capture_names_related(name_a, name_b, head=''):
     head_words = _ordered_significant_words(head or '')
     if len(head_words) >= SAME_CAPTURE_MIN_SERIES_WORDS:
         n = len(head_words)
-        if (_ordered_significant_words(name_a)[:n] == head_words
-                and _ordered_significant_words(name_b)[:n] == head_words):
+        if (_ordered_significant_words(full_a)[:n] == head_words
+                and _ordered_significant_words(full_b)[:n] == head_words):
             return True
     return False
 
@@ -4881,12 +5030,17 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     # Explicit human decisions the suppressed URL-twin handoff must respect.
     url_twin_dismissed_pairs = set()
     url_twin_redirect_survivors = {}
+    redirect_bridges = {}
     url_twin_reviewed_owners = set()
     if suppressed_event_ids:
         cursor.execute("SELECT event_id_a, event_id_b FROM dedupe_dismissed_pairs")
         url_twin_dismissed_pairs = {(min(a, b), max(a, b)) for a, b in cursor.fetchall()}
-        cursor.execute("SELECT duplicate_id, survivor_id FROM event_merge_redirects")
-        url_twin_redirect_survivors = dict(cursor.fetchall())
+        cursor.execute("SELECT duplicate_id, survivor_id, source_identities "
+                       "FROM event_merge_redirects")
+        _redirect_rows = cursor.fetchall()
+        url_twin_redirect_survivors = {row[0]: row[1] for row in _redirect_rows}
+        redirect_bridges = redirect_location_bridges(
+            [(row[0], row[2]) for row in _redirect_rows if len(row) > 2])
         cursor.execute("SELECT DISTINCT event_id FROM event_source_identities")
         url_twin_reviewed_owners = {row[0] for row in cursor.fetchall()}
 
@@ -5598,7 +5752,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 matched_event_id, url_twin_redirect_survivors, _survivor_state,
                 url_twin_dismissed_pairs, url_twin_reviewed_owners, location_id,
                 lambda a, b: same_place(a, b, location_containment),
-                dateless=dateless, dates_overlap=_dates_overlap)
+                dateless=dateless, dates_overlap=_dates_overlap,
+                website_id=website_id, name=name, location_bridges=redirect_bridges)
             if (survivor_id is not None
                     and not _program_veto({'id': survivor_id,
                                            'name': _receiving_event_name(survivor_id)})

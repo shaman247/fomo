@@ -114,5 +114,47 @@ class InWindowEvidenceKeepsTests(unittest.TestCase):
         self.assertFalse(ex.chunk_is_beyond_window(self.FAR + ' {"startDate":1792105200117}', TODAY))
 
 
+class OccurrenceBudgetIgnoresSlugDatesTests(unittest.TestCase):
+    """The occurrence budget counts a URL once (BL30/BL42 follow-up, 2026-10-18).
+
+    Mount Vernon's slugs carry each series' whole date history, so the budget
+    read every Crochet Group card as ~50 dates and cut cr-131420's tail into
+    9 pieces of 4 cards, 3 of them too small to prune (one visible date each).
+    """
+
+    def _slug(self, n):
+        return '-'.join(f'2026-{1 + k % 12:02d}-{1 + k % 28:02d}' for k in range(n))
+
+    def _card(self, day):
+        slug = self._slug(40)
+        return (f'##  [Crochet Group](https://mountvernonpubliclibrary.org/events/crochet-club-{slug}/)\n'
+                f'####  Thursday, March {day}, 2027 \n#### 1:00 pm - 3:00 pm\n'
+                'Come to the library to work on your crochet project.\n'
+                f'[Read more...](https://mountvernonpubliclibrary.org/events/crochet-club-{slug}/)\n')
+
+    def test_dated_url_counts_once(self):
+        card = self._card(4)
+        self.assertGreater(ex.count_date_tokens(card), 80)
+        # one printed date + two links that carry dates
+        self.assertEqual(ex.count_listed_dates(card), 3)
+
+    def test_text_without_urls_counts_as_before(self):
+        text = 'Sat, Oct 24 and Sun, Oct 25 2026-10-31'
+        self.assertEqual(ex.count_listed_dates(text), ex.count_date_tokens(text))
+
+    def test_slug_dates_do_not_split_a_chunk(self):
+        chunk = '\n'.join(self._card(1 + i % 28) for i in range(12))
+        self.assertGreater(ex.count_date_tokens(chunk), 250)
+        self.assertEqual(ex.cap_occurrences_per_chunk([chunk], budget=250), [chunk])
+
+    def test_cards_dated_only_in_links_still_split(self):
+        # A feed whose cards carry their date only in the link still demands one
+        # occurrence per card, so the budget still cuts it.
+        chunk = '\n'.join(f'### [Show {i}](https://x.org/e/show-2026-11-{1 + i % 28:02d}/)\nDoors 7pm'
+                          for i in range(30))
+        self.assertEqual(ex.count_listed_dates(chunk), 30)
+        self.assertGreater(len(ex.cap_occurrences_per_chunk([chunk], budget=10)), 1)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -48,6 +48,23 @@ class ServiceDeskTests(unittest.TestCase):
         self.assertIsNone(rule(
             'Tech Help Drop-In', 'Group troubleshooting; not one-on-one tutoring.'))
 
+    def test_topic_named_desks_added_2026_10_18(self):
+        # Shapes suppressed by the 2026-10-18 hide pass that the name regex missed.
+        self.assertEqual(rule(
+            'Tax Exemption Assistance',
+            'Nassau County Department of Assessment staff will meet one-on-one with '
+            'homeowners to help with exemption applications.'), 'one_on_one_service_desk')
+        self.assertEqual(rule(
+            'Healthcare Navigator Assistance',
+            'Meet one-on-one with a navigator to enroll in health insurance.'),
+            'one_on_one_service_desk')
+        self.assertEqual(rule(
+            'Ask A Tech', 'Bring your device for one-on-one help from our staff.'),
+            'one_on_one_service_desk')
+        # The topic alone, without a one-on-one body, is still not a desk.
+        self.assertIsNone(rule(
+            'Immigration Consultation Day', 'A panel of attorneys discusses recent policy changes.'))
+
     def test_homework_help_is_left_for_review(self):
         self.assertIsNone(rule(
             'QPL Homework Help: South Hollis',
