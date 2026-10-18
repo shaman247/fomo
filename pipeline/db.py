@@ -2350,7 +2350,7 @@ def get_all_locations(cursor):
     """
     Get all locations with their alternate names for location matching.
 
-    Returns a list of dicts with: id, name, short_name, address, lat, lng, emoji, alternate_names, website_scoped_names, closed
+    Returns a list of dicts with: id, name, short_name, address, lat, lng, emoji, alternate_names, website_scoped_names, closed, generic_location
     - alternate_names: list of global alternate names (no website_id)
     - closed: `location_match_policies.closed` (permanently closed venue)
     - website_scoped_names: dict mapping website_id -> list of alternate names
@@ -2358,7 +2358,7 @@ def get_all_locations(cursor):
     # Get all locations
     cursor.execute("""
         SELECT l.id, l.name, l.short_name, l.address, l.lat, l.lng, l.emoji, p.ambiguous_bare_names,
-               COALESCE(p.closed, 0)
+               COALESCE(p.closed, 0), COALESCE(l.generic_location, 0)
         FROM locations l
         LEFT JOIN location_match_policies p ON p.location_id = l.id
         WHERE l.lat IS NOT NULL AND l.lng IS NOT NULL
@@ -2380,6 +2380,10 @@ def get_all_locations(cursor):
             'ambiguous_bare_names': json.loads(row[7]) if row[7] else [],
             # Permanently closed: only website-scoped aliases may still reach it.
             'closed': bool(row[8]),
+            # Area placemarker (borough / neighbourhood pin); see
+            # processor._area_pin, which answers "TBA - <area>" with it (BL56).
+            # (len guard: 9-column row fixtures predate the column)
+            'generic_location': len(row) > 9 and bool(row[9]),
         }
 
     # Get all alternate names (both global and website-scoped)

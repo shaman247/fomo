@@ -6699,6 +6699,20 @@ def build_locations_map(cursor):
     # arm of single-venue authority in Step 3.5; see `roving_candidates` for
     # why this is a curated flag and not a heuristic.
     locations_map['roving_websites'] = db.get_roving_organizer_websites(cursor)
+    # Area key -> {id: info} for the borough/neighbourhood placemarkers that a
+    # "TBA - <area>" string, or a bare area under a roving organizer, may
+    # resolve to (BL56; see `_area_pin`).
+    area_pins = locations_map['area_pins'] = {}
+    for loc in locations_data:
+        if not loc.get('generic_location') or loc.get('closed'):
+            continue
+        for label in (loc.get('name'), loc.get('short_name')):
+            key = _area_key(label)
+            if key:
+                area_pins.setdefault(key, {})[loc.get('id')] = {
+                    'id': loc.get('id'), 'name': loc.get('name'),
+                    'address': loc.get('address'), 'lat': loc.get('lat'),
+                    'lng': loc.get('lng'), 'emoji': loc.get('emoji')}
     # A None cursor is used only by in-memory map fixtures.
     locations_map['venue_overrides'] = venue_overrides.load_rules(cursor) if cursor is not None else []
 
@@ -6828,6 +6842,74 @@ def _locality_names():
         names |= {'new york', 'new york city', 'nyc', 'online', 'virtual'}
         _LOCALITY_NAMES = frozenset(n for n in names if n)
     return _LOCALITY_NAMES
+
+
+# BL56 (2026-10-18). A venue string that says the venue is not yet announced:
+# RA writes "TBA - Brooklyn", "TBA - Secret Location", "TBA - The Bakery" and a
+# bare "TBA". The text after the dash is a HINT, not a venue name, so the
+# prefix/fuzzy tiers must never treat it as one ("TBA - The Bakery" fuzzy-
+# matched The Bakery; "TBA - Brooklyn Warehouse" matched a venue called that).
+_TBA_VENUE_RE = re.compile(
+    r'^\s*(?:tba|tbd|to be (?:announced|determined|confirmed))\b'
+    r'(?:\s*[-–—:,/|(]+\s*|\s+)?(?P<hint>.*?)\s*$',
+    re.IGNORECASE)
+_TRAILING_PAREN_RE = re.compile(r'\s*\([^()]*\)\s*$')
+_AREA_VIRTUAL_NAMES = frozenset({'online', 'virtual'})
+
+
+def _tba_venue_hint(location_name_raw):
+    """For a "TBA"/"TBA - <hint>" venue string, the hint ('' for a bare TBA).
+
+    None when the string is not a not-yet-announced venue.
+    """
+    m = _TBA_VENUE_RE.match(location_name_raw or '')
+    if m is None:
+        return None
+    hint = m.group('hint').strip()
+    if hint.endswith(')') and '(' not in hint:  # "TBA (Queens)"
+        hint = hint[:-1].strip()
+    return hint if re.search(r'\w', hint) else ''  # "To Be Announced!"
+
+
+def _area_key(text):
+    """`text` as a bare area name ("Brooklyn, NY" -> "brooklyn"), or ''.
+
+    Same spelling rules as `_locality_names` (punctuation deleted, lower case),
+    plus a trailing state suffix and our "(exact location unspecified)" marker
+    dropped, so a placemarker row and a source string meet on one key. A key
+    is only an AREA when `_locality_names` (the city config's boroughs,
+    geotags and area tokens) lists it.
+    """
+    text = _UNSPECIFIED_LOCATION_MARKER_RE.sub('', text or '')
+    text = ''.join(c for c in unicodedata.normalize('NFKD', text)
+                   if not unicodedata.combining(c))
+    key = ' '.join(re.sub(r'[^\w\s]', '', text.lower()).split())
+    for suffix in city_config.state_suffixes():
+        if key.endswith(suffix) and len(key) > len(suffix) + 1:
+            key = key[:-len(suffix)].strip()
+            break
+    if key in _AREA_VIRTUAL_NAMES or key not in _locality_names():
+        return ''
+    return key
+
+
+def _area_pin(locations_map, text):
+    """The ONE generic placemarker for the area `text` names, or None.
+
+    Pins come from the DB (`locations.generic_location = 1`), keyed by name
+    and short_name via `_area_key`; area names come from the city config. Two
+    pins answering one key decline.
+    """
+    key = _area_key(text)
+    if not key:
+        key = _area_key(_TRAILING_PAREN_RE.sub('', text or ''))
+    index = locations_map.get('area_pins', {})
+    pins = index.get(key) if key else None
+    if not pins and key.startswith('the '):
+        pins = index.get(key[4:])  # "The Bronx" -> the "Bronx (...)" pin
+    if not pins or len(pins) != 1:
+        return None
+    return next(iter(pins.values()))
 
 
 _ADDR_TYPE_WORD_SET = frozenset(_ADDR_TYPE_WORDS)
@@ -7295,6 +7377,53 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     # onto them. Admitted to the EXACT tiers (Steps 1-2) and to nothing else —
     # see `short_index_keys` in build_locations_map.
     short_index_keys = locations_map.get('short_index_keys', frozenset())
+
+    # Step 0 (BL56): a not-yet-announced venue ("TBA", "TBA - Brooklyn",
+    # "TBA - The Bakery"). What follows the "TBA" is a HINT, so it may only
+    # resolve by identity, never by prefix/fuzzy similarity:
+    #   * an area hint ("Brooklyn", "Chinatown") -> that area's generic pin,
+    #     or nothing when we have no pin for it;
+    #   * a curated alias of the whole string (RA's w388 "TBA - Rock Bar -
+    #     185 Christopher Street", the global "TBA - Little Shop of Soil");
+    #   * a hint that is EXACTLY a venue's name or alternate name ("TBA -
+    #     Brooklyn Brewery": RA prefixes promoter-made venue records whose
+    #     venue is known);
+    #   * anything else ("TBA - Secret Location", "TBA - Bushwick / Ridgewood")
+    #     stays unmapped.
+    # A bare "TBA" (or a city-wide "TBA - NYC") names no venue and no area and
+    # keeps the ordinary cascade: curated aliases, then the venue-less policy
+    # (the organizer's own venue, Steps 3.5/7). Its 3-letter key never reaches
+    # the prefix/fuzzy tiers.
+    tba_hint = _tba_venue_hint(location_name_raw)
+    if tba_hint is not None and tba_hint.lower() in _city_level_names():
+        tba_hint = ''
+    if tba_hint == '' and _area_key(sublocation_name_raw):
+        tba_hint = sublocation_name_raw.strip()  # "TBA" + sublocation "Queens"
+    if tba_hint and _area_key(tba_hint):
+        # Checked before the curated aliases: normalization drops a trailing
+        # borough, so "TBA (Queens)" collapses to the same "tba" key as RA's
+        # curated "TBA Brooklyn" alias.
+        pin = _area_pin(locations_map, tba_hint)
+        return make_result(pin, 'tba_area') if pin else None
+    if tba_hint:
+        hint_keys = [k for k in dict.fromkeys((
+            raw_loc_lower, normalized_loc,
+            _normalize_location_name(location_name_raw.split(',')[0]),
+            tba_hint.lower(), _normalize_location_name(tba_hint),
+            _normalize_location_name(tba_hint.split(',')[0]))) if k]
+        for tiers, guard in ((('website_scoped',), 'area'),
+                             (('names', 'alternate_names'), 'full')):
+            for key in hint_keys:
+                cand = _exact_unambiguous(locations_map, key, website_id, tiers)
+                if cand and (result := make_result(cand, 'tba_exact', guard=guard)):
+                    return result
+        # A street address in the hint is an identity too (Step 3's tier).
+        match = _address_tier_match(
+            locations_map, _extract_street_address(tba_hint.lower()), location_name_raw)
+        if (match is not None and match is not _AMBIGUOUS_ADDRESS
+                and (result := make_result(match, 'tba_address'))):
+            return result
+        return make_result(pin, 'tba_area') if (pin := _area_pin(locations_map, tba_hint)) else None
 
     # Step 1: Website-scoped alternate names (highest priority, most specific).
     # Uses primary_search_keys, not heuristic variants — user-curated mappings
@@ -8103,6 +8232,20 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
                 ('website_scoped', 'names', 'alternate_names', 'short_names'))
             if container and (result := make_result(container, 'container_of_venue')):
                 return result
+
+    # Step 5f (BL56): a bare AREA ("Brooklyn", "Queens, NY") under a roving
+    # organizer is its area's placemarker, not the organizer's office. The
+    # name normalizes to nothing, so Step 7 below would otherwise read it as
+    # venue-less: on 2026-10-18 the extraction shortened RA's "TBA - Brooklyn"
+    # to "Brooklyn" and three RA parties landed on ARTSPACE, w388's one linked
+    # row. City-level names ("NYC", "New York") stay venue-less placeholders
+    # (see `_city_level_names`), and so do Online/Virtual.
+    if (website_id and not normalized_loc and raw_loc_lower
+            and website_id in locations_map.get('roving_websites', ())):
+        area = _area_key(location_name_raw)
+        if area and area not in _city_level_names():
+            pin = _area_pin(locations_map, location_name_raw)
+            return make_result(pin, 'roving_area') if pin else None
 
     # Step 6: Source site fallback (match website name to location)
     # Only fires when no real venue name was extracted — otherwise an event
