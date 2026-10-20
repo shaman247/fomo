@@ -841,6 +841,8 @@ class TestJunkFilterGaps20260719(unittest.TestCase):
         self.assertTrue(is_obvious_non_event("Book Club - Cancelled", "desc"))
         self.assertTrue(is_obvious_non_event("Class Cancelled", "desc"))
         self.assertTrue(is_obvious_non_event(
+            "** CANCELED ** Center for Fiction | Andrew Miller on The Land in Winter", "desc"))
+        self.assertTrue(is_obvious_non_event(
             "Tonight's Show Has Been Cancelled", "desc"))
         self.assertTrue(is_obvious_non_event("Closed Today", "desc"))
         self.assertTrue(is_obvious_non_event("Closed This Weekend", "desc"))

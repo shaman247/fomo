@@ -949,6 +949,8 @@ _NON_EVENT_NAME_PATTERNS = [
     # anywhere is deliberately NOT matched — real events discuss cancel
     # culture, cancelled plans, etc.
     r'^\s*cancell?ed\s*[:\|\-—]',
+    # Emphasis-wrapped prefix: "** CANCELED ** Center for Fiction | ..." (pw.org).
+    r'^\s*\*+\s*cancell?ed\s*\*+',
     r'[\(\[\-—|]\s*cancell?ed\s*[\)\]]?\s*$',
     r'\b(?:is|are|has\s+been|have\s+been|was|were)\s+cancell?ed\b',
     r'^\s*(?:class|classes|session|program|meeting|show|screening|performance|'
