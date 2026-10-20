@@ -843,6 +843,16 @@
       "sha256": "0831f4c81f03242241d9cea57709b279f7072a296b61a059f72bc1d0fe5169a0"
     },
     {
+      "id": "noto-1f1ed-1f1f7",
+      "emoji": "🇭🇷",
+      "label": "REGIONAL INDICATOR SYMBOL LETTER H REGIONAL INDICATOR SYMBOL LETTER R",
+      "source": "noto/emoji_u1f1ed_1f1f7.svg",
+      "provider": "noto",
+      "upstream_path": "third_party/region-flags/waved-svg/emoji_u1f1ed_1f1f7.svg",
+      "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
+      "sha256": "ad35304ff4de50d1526eb016090bff5ba0d9c737f1ccf08657172af27fb4fdb9"
+    },
+    {
       "id": "noto-1f1ed-1f1f9",
       "emoji": "🇭🇹",
       "label": "REGIONAL INDICATOR SYMBOL LETTER H REGIONAL INDICATOR SYMBOL LETTER T",
@@ -11821,6 +11831,16 @@
       "upstream_path": "svg/emoji_u1f935_1f3ff_200d_2642.svg",
       "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
       "sha256": "e9b1a3d78ad5e3aae7b8301d905e2217116ee0078a40029002d053e1d2312844"
+    },
+    {
+      "id": "noto-1f936",
+      "emoji": "🤶",
+      "label": "MOTHER CHRISTMAS",
+      "source": "noto/emoji_u1f936.svg",
+      "provider": "noto",
+      "upstream_path": "svg/emoji_u1f936.svg",
+      "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
+      "sha256": "c9b5548b914c093eda084a4d510dda31740aefd9354d009295bdcccb973cd8e6"
     },
     {
       "id": "noto-1f937",
