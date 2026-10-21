@@ -4325,6 +4325,20 @@ venue_taxonomy:
       - Hospital
       source: https://www.bsfhc.org
       reason: Reviewed 2026-10-16 (Health Center/Hospital ruling); a Federally Qualified Health Center (outpatient primary and specialty care), not a hospital; it was tagged Hospital only. Hospital now sits under Health Center, so a stored Hospital row made it match the Hospital filter.
+    - location_id: 12121
+      expected_name: The Boulevard (North Bergen)
+      add:
+      - Event Hall
+      remove: []
+      source: https://www.vividseats.com/the-boulevard-tickets/venue/44174
+      reason: Reviewed 2026-10-21; 3167 John F. Kennedy Blvd hall whose own listing tagline (Patch North Bergen calendar) is "Event Space, Event Venue, Party Venue, Wedding Venue", booked by promoters for Latin music showcases, DJ nights and Spanish-language stand-up (Ricardo Quevedo via Songkick) with a seated-or-open-floor layout. Rental hall use, so Event Hall; no standing music-venue or comedy-club identity established.
+    - location_id: 12172
+      expected_name: 199 N 8th St
+      add:
+      - attraction
+      remove: []
+      source: https://partiful.com/e/1mDkkQytByQ3idCOFr6s
+      reason: Reviewed 2026-10-21; the only listing (Cura Collective Fall Artisan Fair on Partiful) gives the bare address and "Floor 2" with no venue name, and no tenant or rental listing for 199 N 8th St could be found, so it stays a reviewed Other building fallback.
     descriptions:
     - location_id: 2041
       expected_name: Cloud City
@@ -4463,6 +4477,10 @@ venue_taxonomy:
       expected_name: Mambroso
       name: 14 W 23rd St
       source: https://luma.com/mambroso
+    - location_id: 6111
+      expected_name: Loft at 20 W 23rd St
+      name: Loft on 5th
+      source: https://luma.com/pobmdisq
     other_review:
       tag: attraction
       reviewed_on: '2026-09-09'
@@ -4496,7 +4514,9 @@ venue_taxonomy:
           Club Luma listings name the venue only as "Reign" with no floor, and no business of that name at this
           address could be verified, so the building fallback is retained. Rechecked 2026-10-14 for new active event
           284979 ("The New York Philosophy Club - LES", https://luma.com/1x1uxdw2) — same "Reign" label, no floor, and still no
-          verifiable business of that name at 167 E Broadway; retained.
+          verifiable business of that name at 167 E Broadway; retained. Rechecked 2026-10-21 for new active event 298522
+          (Reading Club on Confucius's Analects, https://luma.com/g4nnckfw) — same "Reign" label and bare address, no
+          floor; retained.
       - location_id: 8353
         expected_name: 224 Buffalo Ave
         reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
@@ -4566,3 +4586,7 @@ venue_taxonomy:
         expected_name: 1158 Myrtle Ave
         reason: Reviewed 2026-10-16; the only listing (SAMA and Friends party on RA) gives the bare address, and no
           tenant, floor or ongoing venue use could be found.
+      - location_id: 12172
+        expected_name: 199 N 8th St
+        reason: Reviewed 2026-10-21; the only listing (Cura Collective Fall Artisan Fair on Partiful) gives the bare
+          address and "Floor 2" with no venue name, and no tenant or rental listing could be found.
