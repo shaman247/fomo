@@ -20,9 +20,9 @@ import db
 import tag_facets as tf
 from dblock import write_lock
 
-# Eligibility/skill terms that must not imply family intent. BL23 ruling: they
-# live under Age (Beginner Friendly under Education), and Family needs intent.
-ELIGIBILITY = ('All Ages', 'Young Adults', 'Beginner Friendly', '18+', '21+')
+# Eligibility/skill terms that must not imply family intent (BL23; shared with
+# process_tags' eligibility-only Family guard).
+ELIGIBILITY = tf.ELIGIBILITY
 DELIVERY_ROOT = 'Virtual'
 
 

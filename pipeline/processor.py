@@ -33,6 +33,7 @@ from datetime import datetime, timedelta
 import regex
 
 import db
+import tag_facets
 import venue_overrides
 import occurrence_provenance
 from tag_canonicalization import resolve_tag_name
@@ -535,6 +536,20 @@ def process_tags(row_dict, tag_rules, extra_tags=None, ancestor_map=None, root_t
         for anc in sorted(ancestors_to_add):
             processed_tags.append(anc)
             seen_tags.add(db.normalize_tag_key(anc))
+
+        # BL23: eligibility never implies Family. A hashtag Family beside only
+        # AllAges/BeginnerFriendly (no Family-descendant tag, no website Family
+        # tag, no kids/families wording in the name or description) is dropped.
+        family_key = db.normalize_tag_key(tag_facets.FAMILY_TAG)
+        if (family_key in seen_tags
+                and family_key not in {db.normalize_tag_key(t) for t in (extra_tags or ())}):
+            intent = [t for t in processed_tags if tag_facets.FAMILY_TAG in
+                      ancestor_map.get(db.normalize_tag_key(t), ())]
+            text = ' '.join(str(row_dict.get(k) or '') for k in ('name', 'description'))
+            if tag_facets.eligibility_only_family(processed_tags, intent, text):
+                processed_tags = [t for t in processed_tags
+                                  if db.normalize_tag_key(t) != family_key]
+                seen_tags.discard(family_key)
 
         # Fallback: add "Other" if no root-level tag was assigned
         # (Free/Virtual are cross-cutting and don't count as root tags)
@@ -9073,7 +9088,7 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
 
 
 def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
-                          locations_map=None):
+                          locations_map=None, event_name=None):
     """Apply detail-crawl data to a crawl_event row.
 
     Updates description, emoji, location, sublocation, occurrences, and tags
@@ -9095,8 +9110,10 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
     """
     tag_rules, ancestor_map, root_tags, disambiguation_rules = tag_context
 
-    # Process tags through pipeline rules
-    row_dict = {'hashtags': data['hashtags']}
+    # Process tags through pipeline rules. Name and description are the
+    # audience evidence the eligibility-only Family guard reads.
+    row_dict = {'hashtags': data['hashtags'], 'name': event_name or data.get('name'),
+                'description': data.get('description')}
     process_tags(
         row_dict, tag_rules,
         ancestor_map=ancestor_map, root_tags=root_tags,
@@ -9748,7 +9765,8 @@ async def crawl_event_details(cursor, connection, candidates, num_workers=10,
             raise ValueError('Detail events changed before applying agent responses; start a fresh run')
         for ce_id, name, data in results:
             location_warnings += bool(apply_crawled_details(
-                cursor, connection, ce_id, data, tag_context, locations_map=locations_map))
+                cursor, connection, ce_id, data, tag_context, locations_map=locations_map,
+                event_name=name))
             enriched += 1
             location_info = f" @ {data['location']}" if data.get('location') else ""
             print(f"    + {name}{location_info}: {(data.get('description') or '(no description; kept existing)')[:80]}...")

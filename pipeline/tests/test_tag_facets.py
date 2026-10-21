@@ -117,6 +117,52 @@ class AncestorMapTests(unittest.TestCase):
         self.assertEqual(tags, ['Talk', 'Other'])
 
 
+class EligibilityFamilyTests(unittest.TestCase):
+    """BL23 follow-up (2026-10-21): AllAges/BeginnerFriendly never carry Family alone."""
+
+    def setUp(self):
+        cursor = MagicMock()
+        cursor.fetchall.return_value = EDGES + [('Age', 'All Ages'), ('Education', 'Beginner Friendly')]
+        self.ancestors, self.roots = db.build_tag_ancestor_map(cursor)
+        self.rules = {'rewrite': {}, 'canonical': {}, 'exclude': []}
+
+    def tags(self, hashtags, name='', description='', extra=None):
+        row = {'hashtags': hashtags, 'name': name, 'description': description}
+        return processor.process_tags(row, self.rules, extra_tags=extra, ancestor_map=self.ancestors,
+                                      root_tags=self.roots)['tags']
+
+    def test_helper(self):
+        self.assertTrue(tf.eligibility_only_family({'Family', 'All Ages', 'Concert'}))
+        self.assertTrue(tf.eligibility_only_family({'Family', 'Beginner Friendly'}, text='Sew pajama pants'))
+        self.assertFalse(tf.eligibility_only_family({'Family', 'Concert'}))  # no eligibility tag
+        self.assertFalse(tf.eligibility_only_family({'Family', 'All Ages', 'Kids'}, {'Kids'}))
+        self.assertFalse(tf.eligibility_only_family({'Family', 'All Ages'}, text='Bring your kids!'))
+        self.assertFalse(tf.eligibility_only_family({'Family', 'All Ages'}, text='For Adults and Kids ages 0-5'))
+        self.assertFalse(tf.eligibility_only_family({'Family', 'All Ages'}, text='Friday Family Film'))
+        self.assertTrue(tf.eligibility_only_family({'Family', 'All Ages'}, text='Kidney health talk'))
+
+    def test_all_ages_show_loses_family(self):
+        tags = self.tags(['Music', 'AllAges', 'Family', 'Metal'], name='Arizmenda, Cenotaphe',
+                         description='Material World presents five bands.')
+        self.assertNotIn('Family', tags)
+        self.assertIn('All Ages', tags)
+        self.assertIn('Age', tags)
+
+    def test_beginner_class_loses_family(self):
+        tags = self.tags(['BeginnerFriendly', 'Family', 'Sewing'], name='Sew Pajama Pants')
+        self.assertNotIn('Family', tags)
+        self.assertIn('Education', tags)
+        # Age is a root, so dropping Family needs no Other fallback.
+        self.assertEqual(self.tags(['AllAges', 'Family'], name='Open skate'), ['All Ages', 'Age'])
+
+    def test_family_kept_with_intent_or_audience_evidence(self):
+        self.assertIn('Family', self.tags(['AllAges', 'Family', 'Kids'], name='Skate'))
+        self.assertIn('Family', self.tags(['AllAges', 'Family'], name='Halloween matinee',
+                                          description='All-Ages! Bring Your Kids!'))
+        self.assertIn('Family', self.tags(['AllAges', 'Family'], name='Open skate', extra=['Family']))
+        self.assertIn('Family', self.tags(['Family', 'Film'], name='Corpse Bride'))  # no eligibility tag
+
+
 class FakeTagCursor:
     """Just enough SQL for upsert_event_tags / sync_event_format_tags."""
 

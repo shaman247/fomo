@@ -11,6 +11,7 @@ source evidence alone (a kids' craft Workshop is not thereby Education).
 See .claude/notes/backlog-bl15-tags-20261007.md.
 """
 from collections import defaultdict
+import re
 
 import event_types as et
 
@@ -25,6 +26,34 @@ FORMAT_EXCLUSIVE = frozenset({FORMAT_ROOT} | FORMAT_CATEGORIES
                              | (set(et.EVENT_TYPES) - SHARED_LEAVES))
 # Names that may belong to the Format family at all (exclusive + shared leaves).
 FORMAT_FAMILY = FORMAT_EXCLUSIVE | SHARED_LEAVES
+
+# BL23: eligibility/skill tags say who MAY attend (they sit under Age, and
+# Beginner Friendly under Education). Family is intent: programming designed
+# for children or families, shown by a Family-descendant tag (Kids,
+# Storytime, Family Film ...) or by the source naming that audience.
+ELIGIBILITY = ('All Ages', 'Young Adults', 'Beginner Friendly', '18+', '21+')
+FAMILY_TAG = 'Family'
+_FAMILY_AUDIENCE_RE = re.compile(
+    r"\b(?:kids?|kiddos?|child(?:ren)?(?:'s)?|famil(?:y|ies)|toddlers?|preschool(?:ers?)?|"
+    r"bab(?:y|ies)|infants?|parents?|caregivers?|grown-?ups?|teens?|tweens?|youth|"
+    r"storytimes?|ages?\s+\d+)\b", re.IGNORECASE)
+
+
+def eligibility_only_family(names, family_intent=(), text=''):
+    """True when Family stands only beside an eligibility tag.
+
+    The extractor often emits Family next to AllAges/BeginnerFriendly for an
+    all-ages show, a skate night or a sewing class (2026-10-21: 23 events).
+    Such a Family is dropped unless a Family-intent tag (`family_intent`: the
+    event's tags that have Family as an ancestor) or the event's own name or
+    description (`text`) names children or families as the audience.
+    """
+    names = set(names)
+    if FAMILY_TAG not in names or not names & set(ELIGIBILITY):
+        return False
+    if set(family_intent) - set(ELIGIBILITY) - {FAMILY_TAG}:
+        return False
+    return not _FAMILY_AUDIENCE_RE.search(text or '')
 
 
 def format_membership(event_type):
