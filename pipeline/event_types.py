@@ -76,6 +76,11 @@ EVENT_TYPES_BY_CATEGORY = {
     # Gathering — facilitated convening around topic/faith/function
     "Gathering": [
         "Talk",
+        # Multi-speaker professional/academic convening with a registered,
+        # programmed agenda: conference, summit, symposium, convention. Usually
+        # half-day or longer. A single lecture or panel stays `Talk`; an
+        # exhibitor floor you browse is `Fair`.
+        "Conference",
         "Service",
         "Ceremony",
         "Civic Meeting",
@@ -141,7 +146,7 @@ TYPE_EMOJI = {
     "Pop-Up": "✨", "Immersive Experience": "🌌",
     "Club Night": "🪩", "Party": "🎉", "Mixer": "🫂", "Benefit": "🎗️", "Watch Party": "📺",
     "Festival": "🎡", "Community Celebration": "🎊",
-    "Talk": "🗣️", "Service": "🙏", "Ceremony": "🎖️", "Civic Meeting": "🏛️",
+    "Talk": "🗣️", "Conference": "🪪", "Service": "🙏", "Ceremony": "🎖️", "Civic Meeting": "🏛️",
     "Discussion Group": "💬",
     "Tour": "🧭", "Outing": "🥾",
 }
@@ -158,10 +163,12 @@ def category_for(event_type):
 
 # Existing topic identities that also name an event format. Sports is a topic
 # root, so it cannot be detected just by looking for non-Format parents.
-# tag_facets splits them: Concert/Sports chips keep format-only members (union),
-# the other six are content-only topic chips (BL23).
+# tag_facets splits them: Concert/Sports/Conference chips keep format-only members
+# (union), the other six are content-only topic chips (BL23). Conference was an
+# Education topic tag before it became a type (2026-10-22).
 FORMAT_TOPIC_NAMES = frozenset({
-    'Concert', 'Sports', 'Reading', 'Workshop', 'Fitness', 'Volunteer', 'Party', 'Festival',
+    'Concert', 'Sports', 'Conference', 'Reading', 'Workshop', 'Fitness', 'Volunteer', 'Party',
+    'Festival',
 })
 
 

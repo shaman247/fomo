@@ -2,9 +2,9 @@
 
 Format membership (the Format root, its six categories and the 30 exclusive
 type leaves) comes only from `events.event_type`. Topic ancestry and keyword
-inference never reach those nodes. The eight shared names in
-`event_types.FORMAT_TOPIC_NAMES` are also topics. Concert and Sports keep the
-union (BL23): `event_type` adds the leaf, and a leaf added only because of
+inference never reach those nodes. The nine shared names in
+`event_types.FORMAT_TOPIC_NAMES` are also topics. Concert, Sports and Conference
+keep the union (BL23): `event_type` adds the leaf, and a leaf added only because of
 `event_type` derives no topic parents. The other six are content-only topic
 chips: `event_type` never adds them, so their members (and parents) come from
 source evidence alone (a kids' craft Workshop is not thereby Education).
@@ -19,7 +19,7 @@ FORMAT_ROOT = et.FORMAT_ROOT_TAG
 FORMAT_CATEGORIES = frozenset(name for name, _ in et.CATEGORY_TAG.values())
 SHARED_LEAVES = et.FORMAT_TOPIC_NAMES
 # Shared names whose topic chip keeps format-only members (same concept).
-UNION_LEAVES = frozenset({'Concert', 'Sports'})
+UNION_LEAVES = frozenset({'Concert', 'Sports', 'Conference'})
 # Shared names whose topic chip is content-only (BL23 decision 2).
 CONTENT_ONLY_LEAVES = SHARED_LEAVES - UNION_LEAVES
 FORMAT_EXCLUSIVE = frozenset({FORMAT_ROOT} | FORMAT_CATEGORIES

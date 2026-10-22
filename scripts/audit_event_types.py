@@ -57,6 +57,8 @@ DRIFT_RULES = [
     # `Mixer` and reported as drift.
     ("exhibition / on view -> Exhibition",
      r"\b(on view|now on view)\b", {"Exhibition", "Open House"}),
+    ("conference/summit/symposium -> Conference",
+     r"\b(conference|summit|symposium|convention)\b", {"Conference", "Talk", "Fair", "Festival", "Benefit"}),
     ("mass/worship/shabbat -> Service",
      r"\b(sunday mass|holy mass|worship service|shabbat service|vespers)\b", {"Service"}),
 ]

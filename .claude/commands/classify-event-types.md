@@ -4,7 +4,7 @@ Populate the `events.event_type` column by classifying events against a fixed
 taxonomy. The classifier runs as Claude (no Gemini call), reading event name +
 description + venue + tags + occurrence shape and assigning one type per event.
 
-## Taxonomy (34 types + Other catch-all, 6 categories)
+## Taxonomy (39 types + Other catch-all, 6 categories)
 
 > The exact storable label strings are also defined in `pipeline/event_types.py`
 > (`VALID_EVENT_TYPES`) — the machine-readable single source of truth. When you
@@ -73,6 +73,7 @@ tags** (e.g. no `Dance` type — a dance show is `Theater Show` + `Dance` tag).
 
 ### Gathering — facilitated convening around topic/faith/function
 - **Talk** — lecture, panel, single-topic informational session; audience listens. Industry panels (Tech Week) live here.
+- **Conference** — a **multi-speaker professional or academic convening with a programmed agenda** that attendees register for: conference, summit, symposium, convention, annual meeting with sessions. Usually half a day or longer, often multi-track or multi-day. Different from `Talk` (one lecture or one panel — a single industry panel during Tech Week is still `Talk`), `Fair` (an exhibitor/vendor floor you browse — a trade show without a session program), `Festival` (multi-act celebration), and `Civic Meeting` (governance agenda). A "summit" that is really one panel discussion is `Talk`.
 - **Service** — **religious** ritual requiring liturgy/ritual/clergy/consecrated space. Worship, Mass, vespers, sermon, zazen with a teacher, secular humanist Sunday platform.
 - **Ceremony** — **secular/civic** *formal/ritual* observance: flag raising, civic memorial, dedication, naming, swearing-in, awards ceremony without performance program. The defining mark is a ritual/formal moment, not festivity. A festive public occasion (anniversary party, "X Day" celebration, holiday family day) is `Community Celebration`, not Ceremony. Different from `Service` (religious), `Festival` (multi-act).
 - **Civic Meeting** — community board hearing, town hall, advocacy group meeting, governance session
@@ -83,7 +84,7 @@ tags** (e.g. no `Dance` type — a dance show is `Theater Show` + `Dance` tag).
 - **Outing** — group outdoor activity not framed as instruction or place-learning: social bike ride, group skate, casual group walk
 
 ### Catch-all
-- **Other** — Use ONLY when an event is genuinely a real event but none of the 33 types above describe its structure. Prefer the closest-fitting real type over `Other` whenever defensible. If `Other` accumulates a recurring pattern (3+ events of the same shape), the taxonomy probably needs a new type — flag it for review. Do NOT use `Other` for junk rows (closures, submission calls, marketing) — those go to `UNKNOWN`.
+- **Other** — Use ONLY when an event is genuinely a real event but none of the 39 types above describe its structure. Prefer the closest-fitting real type over `Other` whenever defensible. If `Other` accumulates a recurring pattern (3+ events of the same shape), the taxonomy probably needs a new type — flag it for review. Do NOT use `Other` for junk rows (closures, submission calls, marketing) — those go to `UNKNOWN`.
 
 ## Decision rules
 
@@ -206,7 +207,7 @@ sweep in Mode B above is the sustaining mechanism for now.
 `Exam`, `Self-Paced Challenge`, `Voting`,
 `Exhibition`, `Open House`, `Market`, `Fair`, `Pop-Up`, `Immersive Experience`,
 `Club Night`, `Party`, `Mixer`, `Benefit`, `Watch Party`, `Festival`, `Community Celebration`,
-`Talk`, `Service`, `Ceremony`, `Civic Meeting`, `Discussion Group`,
+`Talk`, `Conference`, `Service`, `Ceremony`, `Civic Meeting`, `Discussion Group`,
 `Tour`, `Outing`,
 `Other` (genuine event, no taxonomy fit — flag for review),
 `UNKNOWN` (not an event — closures, submissions, marketing).
