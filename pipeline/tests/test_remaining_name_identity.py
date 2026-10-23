@@ -21,7 +21,10 @@ class RemainingNameIdentityTests(unittest.TestCase):
         self.assertFalse(merger.are_names_similar(older, younger))
         self.assertPair(younger, parent + ' (Ages 4-6)', False)
         self.assertPair(older, parent + ' (Ages 7+)', False)
-        self.assertPair(younger, parent + ' (Ages 6–9)', False)
+        # Overlapping audiences stay eligible; cohorts that only touch at an
+        # endpoint ("Ages 4-6" / "Ages 6-9") are consecutive bands (BL62).
+        self.assertPair(younger, parent + ' (Ages 5–9)', False)
+        self.assertPair(younger, parent + ' (Ages 6–9)', True)
         self.assertPair(older, parent + ' (Ages 9–12)', False)
         self.assertPair(younger, parent, False)
         self.assertPair(younger, 'Other Family Program (Ages 7+)', False)
@@ -50,7 +53,7 @@ class RemainingNameIdentityTests(unittest.TestCase):
         self.assertPair(a, a.replace('歲', '岁').replace('–', '-'), False)
         self.assertPair(a, b.replace('(7+歲)', '(4–6歲)'), False)
         self.assertPair(a, b.replace('Family Art Adventures', 'Other Family Adventures'), False)
-        self.assertPair(a, b.replace('(7+歲)', '(6–9歲)').replace('(Ages 7+)', '(Ages 6–9)'), False)
+        self.assertPair(a, b.replace('(7+歲)', '(5–9歲)').replace('(Ages 7+)', '(Ages 5–9)'), False)
 
     def test_explicit_exhibition_and_performance_parts(self):
         import merger

@@ -2,6 +2,7 @@
 import json
 import re
 from datetime import date, datetime
+from math import ceil
 
 from occurrence_times import standardize_time
 from delivery import virtual_tags_for_location
@@ -47,6 +48,98 @@ def _abridges(old, new):
     before, after = _label(old), _label(new)
     return (len(before) >= 200 and 2 * len(after) <= len(before)
             and re.match(r'20\d\d-\d\d-\d\d\b', before) is None)
+
+
+# Same-page paraphrase (BL21). Every same-source re-crawl re-extracts the
+# page, and the model rewords it each time: 43,102 logged description
+# refreshes in the 30 days to 2026-10-23, 89% from the very URL that supplied
+# the stored text. Each rewrite churned icon-review context, similarity and
+# embeddings without saying anything new. A rewrite of the same page keeps
+# the stored text when its content words overlap at least this much (light
+# stemming, rendered session lines dropped) and it neither adds a number nor a
+# logistics word, nor drops a status marker such as "sold out".
+_PARAPHRASE_OVERLAP = 0.5
+_SCHEDULE_LINE = re.compile(r'^\s*20\d\d-\d\d-\d\d\b.*$', re.M)
+_STOP_WORDS = frozenset(
+    'the and for with from are this that its your you our will join all more who their they '
+    'them his her was were has have can into about also any each than then there these those '
+    'what when where which while how out not but get one'.split())
+_LOGISTICS = ('sold', 'cancel', 'postpon', 'reschedul', 'waitlist', 'regist', 'rsvp', 'ticket',
+              'donat', 'livestream', 'zoom', 'virtual', 'online', 'hybrid', 'relocat', 'capacity')
+_LOGISTICS_WORDS = frozenset({'free', 'full', 'limited', 'closed', 'moved'})
+_STATUS = ('sold', 'cancel', 'postpon', 'reschedul', 'waitlist')
+
+
+def _tokens(text):
+    text = _SCHEDULE_LINE.sub('', text or '').casefold().replace('’', "'")
+    return re.findall(r"[a-z0-9$][a-z0-9'$:+.-]*[a-z0-9+]|[a-z0-9]", text)
+
+
+def _stem(word):
+    for suffix in ('ing', 'ed', 'es', 's', 'ly'):
+        if len(word) > len(suffix) + 3 and word.endswith(suffix):
+            return word[:-len(suffix)]
+    return word
+
+
+def _facts(tokens):
+    """Numbers (dates, times, prices, ages) and logistics/status words."""
+    numbers = {n for t in tokens for n in re.findall(r'\d+', t)}
+    words = {w for w in tokens if w in _LOGISTICS_WORDS}
+    words |= {p for p in _LOGISTICS for t in tokens if t.startswith(p)}
+    return numbers | words
+
+
+def _paraphrase(old, new):
+    """A reworded extraction of the same text: nothing to refresh.
+
+    Conservative by construction: a rewrite that adds a number or a logistics
+    word ("Registration required", "Free with RSVP", "*SOLD OUT*") is a real
+    change, as is one that drops a status marker (an event may be on sale
+    again), or one replacing truncated text.
+    """
+    if re.search(r'(\.\.\.|…)\s*$', (old or '').strip()):
+        return False
+    before, after = _tokens(old), _tokens(new)
+    old_facts, new_facts = _facts(before), _facts(after)
+    if new_facts - old_facts or {p for p in _STATUS if p in old_facts} - new_facts:
+        return False
+    words = [{_stem(w) for w in toks if len(w) > 2 and w not in _STOP_WORDS
+              and not any(c.isdigit() for c in w)} for toks in (before, after)]
+    if words[0] == words[1]:
+        return True
+    union = words[0] | words[1]
+    return bool(words[0] and words[1]) and len(words[0] & words[1]) / len(union) >= _PARAPHRASE_OVERLAP
+
+
+def _same_page(a, b):
+    return (a or '').strip().rstrip('/') == (b or '').strip().rstrip('/')
+
+
+# Tag-vote hysteresis (BL21). merger.compute_voted_tags keeps a tag when the
+# current crawl supplies it as curated or when at least 30% of crawls carry
+# it. A tag near that line flaps on alternate merges (Live Music -425/+289,
+# DJ -123/+126, Virtual -111/+111 across events, 2026-10-13), re-queueing
+# icon reviews and refreshing similarity each time. A tag the event already
+# holds therefore stays while a lower share of crawls still carries it; a
+# tag the event lacks must still clear the full threshold to be added.
+TAG_KEEP_SHARE = 0.15
+
+
+def tag_keep_threshold(total_crawls):
+    """Crawl votes a held tag needs to stay (the add threshold is 30%, min 2)."""
+    return max(1, ceil(total_crawls * TAG_KEEP_SHARE))
+
+
+def tag_vote_survives(tag, count, threshold, total_crawls, current_curated, held_tags):
+    """The compute_voted_tags survival test with hysteresis for held tags.
+
+    `held_tags` is the event's current tag set (names). Without it the test
+    is exactly the add rule, so callers that pass nothing keep the old vote.
+    """
+    if tag in current_curated or count >= threshold:
+        return True
+    return tag in (held_tags or ()) and count >= tag_keep_threshold(total_crawls)
 
 
 def _grouped(raw):
@@ -97,7 +190,8 @@ def plan_source_metadata_refresh(event, incoming, sources, occurrences,
     known venue, a strictly newer crawl, and evidence covering every remaining
     session. A rolling subset must not describe the whole canonical series.
     Grouped date-specific descriptions retain their separate refresh policy.
-    A substantially shorter text never replaces substantive program prose.
+    A substantially shorter text never replaces substantive program prose,
+    and a reworded re-extraction of the same page never replaces anything.
     """
     today = today or date.today()
     if (event.get('suppressed') or not incoming.get('website_id')
@@ -134,10 +228,14 @@ def plan_source_metadata_refresh(event, incoming, sources, occurrences,
         fields['sublocation'] = room[:255]
 
     old, new = event.get('description'), incoming.get('description')
+    owners = [s for s in prior if s.get('description') == old]
     if (not event.get('reviewed') and _description(old) and _substantive_description(new)
-            and old != new and not _abridges(old, new)
-            and any(s.get('description') == old for s in prior)
-            and not any(_grouped(s.get('raw_data')) for s in prior)):
+            and old != new and owners and not _abridges(old, new)
+            and not any(_grouped(s.get('raw_data')) for s in prior)
+            # A re-extraction of the page that supplied the stored text,
+            # reworded, says nothing new (BL21).
+            and not (any(_same_page(s.get('url'), incoming.get('url')) for s in owners)
+                     and _paraphrase(old, new))):
         fields['description'] = new
     return fields
 
@@ -148,11 +246,11 @@ def refresh_source_metadata(cursor, event_id, crawl_event_id, today=None,
     event_keys = ('id', 'website_id', 'reviewed', 'suppressed', 'location_id',
                   'location_name', 'sublocation', 'description')
     source_keys = ('id', 'website_id', 'crawled_at', 'location_id', 'location_name',
-                   'sublocation', 'description', 'raw_data')
+                   'sublocation', 'description', 'raw_data', 'url')
     cursor.execute('''SELECT e.id,e.website_id,e.reviewed,e.suppressed,e.location_id,
         e.location_name,e.sublocation,e.description,
         ce.id,cr.website_id,cr.crawled_at,ce.location_id,ce.location_name,
-        ce.sublocation,ce.description,ce.raw_data
+        ce.sublocation,ce.description,ce.raw_data,ce.url
         FROM events e JOIN crawl_events ce ON ce.id=%s
         JOIN crawl_results cr ON cr.id=ce.crawl_result_id WHERE e.id=%s''',
                    (crawl_event_id, event_id))
@@ -174,7 +272,7 @@ def refresh_source_metadata(cursor, event_id, crawl_event_id, today=None,
             or _grouped(incoming['raw_data'])):
         return {}
     cursor.execute('''SELECT ce.id,cr.website_id,cr.crawled_at,ce.location_id,
-        ce.location_name,ce.sublocation,ce.description,ce.raw_data
+        ce.location_name,ce.sublocation,ce.description,ce.raw_data,ce.url
         FROM event_sources es JOIN crawl_events ce ON ce.id=es.crawl_event_id
         JOIN crawl_results cr ON cr.id=ce.crawl_result_id WHERE es.event_id=%s''', (event_id,))
     sources = [dict(zip(source_keys, r)) for r in cursor.fetchall()]

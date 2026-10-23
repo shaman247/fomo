@@ -112,14 +112,71 @@ class TestOfferTitlesNeedCorroboration(unittest.TestCase):
                 self.assertTrue(is_obvious_non_event(name, desc))
 
     def test_sample_sale_with_no_markdown_language_falls_through(self):
-        """Accepted fail-safe miss (e16543, e142306, e216402)."""
+        """A DESCRIBED sample sale with no markdown language still falls
+        through (e216402 Tibi). Until BL60 (user ruling 2026-10-23) this test
+        also pinned the thin one-sentence Moose Knuckles body as a miss; that
+        shape is now dropped — see TestThinBodySampleSales."""
         self.assertFalse(is_obvious_non_event(
-            'Moose Knuckles Sample Sale - New York',
-            'A major sample sale featuring luxury outerwear and apparel from '
-            'Moose Knuckles at the Metropolitan Pavilion.'))
+            'Tibi Sample Sale',
+            'This sale features authentic runway pieces, vintage Tibi, and '
+            'one-of-a-kind samples, not overproduction inventory. You will '
+            'find shoes, tops, pants, jackets and dresses.'))
 
     def test_percent_off_with_no_body_falls_through(self):
         self.assertFalse(is_obvious_non_event('30% off Used Books', ''))
+
+
+class TestThinBodySampleSales(unittest.TestCase):
+    """BL60 (user-approved 2026-10-23): a "sample sale" title whose body is
+    blank, echoes the title, or is one short sentence (≤120 chars) is a
+    shopping window with nothing else to attend. Measured: 9 new event hits,
+    all retail sample sales, 0 false positives."""
+
+    def test_one_short_sentence(self):
+        for name, desc in (
+            # e16543 — the case the old fail-safe test pinned as a miss.
+            ('Moose Knuckles Sample Sale - New York',
+             'A major sample sale featuring luxury outerwear and apparel from '
+             'Moose Knuckles at the Metropolitan Pavilion.'),
+            # e299786.
+            ('Save the Duck Sample Sale',
+             'Save The Duck Outerwear Sample Sale at Chelsea Market.'),
+            # e142306.
+            ('Sample Sale',
+             'Shop Vince and more at the Privé sample sale at Chelsea Market.'),
+            # e282875 — a one-word tail is not a second sentence.
+            ('holiCHIC NYC Diwali Sample Sale',
+             'Diwali sample sale by holiCHIC. Free.'),
+        ):
+            with self.subTest(name=name):
+                self.assertEqual('retail_sale_window', which_junk_rule(name, desc))
+
+    def test_blank_or_echoed_body(self):
+        # e298465 — live and bodyless.
+        self.assertTrue(is_obvious_non_event(
+            'Mackage Sample Sale 2026 - New York', 'No description available.'))
+        self.assertTrue(is_obvious_non_event('Save the Duck Sample Sale', ''))
+        self.assertTrue(is_obvious_non_event(
+            'Save the Duck Sample Sale', 'Save the Duck Sample Sale'))
+
+    def test_two_sentences_need_markdown_language(self):
+        # e194818 — a second real sentence; no discount named.
+        self.assertFalse(is_obvious_non_event(
+            'Mod Ref NY Sample Sale',
+            "We're bringing our Sample Sale to NY! Shop a collection of styles "
+            'from previous seasons for one weekend only!'))
+
+    def test_vetoes_still_apply_to_thin_bodies(self):
+        self.assertFalse(is_obvious_non_event(
+            'Pop-Up Sample Sale', 'At Chelsea Market.'))
+        self.assertFalse(is_obvious_non_event(
+            'Sample Sale Party with DJ', ''))
+
+    def test_thin_body_alone_is_not_enough_without_sample_sale(self):
+        # The refuted bare-"sale" gate stays refuted: thin bodies are common.
+        self.assertFalse(is_obvious_non_event(
+            'Fall Book Sale', 'At the library.'))
+        self.assertFalse(is_obvious_non_event('Sidewalk Sale!', ''))
 
 
 class TestSaleWordIsNotASignal(unittest.TestCase):

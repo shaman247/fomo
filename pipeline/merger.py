@@ -30,14 +30,16 @@ import canonical_url_identity
 import site_profiles
 from location_containment import LocationContainment
 from event_name_guards import class_show_identity_mismatch
-from remaining_name_identity import remaining_name_identity_mismatch
+from remaining_name_identity import (remaining_name_identity_mismatch,
+                                     explicit_disjoint_age_band_mismatch,
+                                     trailing_roman_ordinal_mismatch)
 from festival_member_identity import (explicit_festival_member_mismatch,
                                       festival_sibling_program_mismatch)
 from event_name_guards import conversation_subject_mismatch, game_program_variant_mismatch, library_program_variant_mismatch, named_sub_event_mismatch, participatory_program_variant_mismatch
 from session_details import refresh_source_session_details
-from source_metadata import refresh_source_metadata
+from source_metadata import refresh_source_metadata, tag_vote_survives
 from delivery import canonical_location_label
-from schedule_envelopes import envelope, reconcile_envelopes
+from schedule_envelopes import SESSION_TYPES, envelope, occurrence, reconcile_envelopes
 import occurrence_provenance
 from reschedules import has_reschedule_notice, reconcile_reschedules
 from festival_identity import numbered_member_pair, numbered_festival_span_mismatch
@@ -978,8 +980,10 @@ def _explicit_numbered_level(name):
     Parse before punctuation normalization so Level 1/2 cannot become Level 1.
     Bare numbers, grades, floors, plural levels and open-ended levels are outside
     this rule. A missing label never establishes a conflicting skill level.
+    Roman levels count too: MCPL's "English Class: Basic - Level II" vs
+    "... Level I" (BL62, 2026-10-23).
     """
-    matches = list(re.finditer(r'\blevel\s*(\d{1,2})(?!\w|\.\d)', name or '', re.I))
+    matches = list(re.finditer(r'\blevel\s*(\d{1,2}|[ivx]{1,5})(?!\w|\.\d)', name or '', re.I))
     if len(matches) != 1 or re.search(r'\blevels\b', name or '', re.I):
         return None
     match = matches[0]
@@ -987,7 +991,10 @@ def _explicit_numbered_level(name):
     if re.match(r'\s*[\[(]?\s*(?:\+|(?:[/&,–—-]|\b(?:and|or|to|through)\b)\s*'
                 r'(?:(?:level\s*)?(?:\d|[ivxlcdm]+\b)|up\b|above\b|higher\b))', tail, re.I):
         return None
-    return int(match[1])
+    if match[1].isdigit():
+        return int(match[1])
+    number = _ordinal_number(match[1].lower())
+    return int(number) if number else None
 
 
 def _numbered_levels_differ(name1, name2):
@@ -3068,6 +3075,18 @@ def _strip_shared_leading_colon_heads(name_a, name_b):
     at least one segment of its own.
     """
     segs_a, segs_b = _colon_segments(name_a), _colon_segments(name_b)
+    # One publisher writes the same program head with a colon on one card and
+    # a spaced dash on the next: FUUB w843 "Child's Play: Twelfth Night" /
+    # "Child's Play - Holiday Camp (Election Day)" — the camp fused onto the
+    # class at the 2026-10-15 merge (263713). Read the dash as the colon only
+    # when the other title's colon head matches it.
+    for segs, other in ((segs_a, segs_b), (segs_b, segs_a)):
+        if len(segs) == 1 and len(other) > 1:
+            dash = re.split(r'\s+[-–—]\s+', segs[0], maxsplit=1)
+            if (len(dash) == 2 and dash[1].strip()
+                    and normalize_name_for_dedup(dash[0])
+                    == normalize_name_for_dedup(other[0])):
+                segs[:] = dash
     shared = []
     while len(segs_a) > 1 and len(segs_b) > 1:
         lead = normalize_name_for_dedup(segs_a[0])
@@ -3091,6 +3110,22 @@ def _at_venue_parts(name):
     program = normalize_name_for_dedup(m.group('program'))
     venue = normalize_name_for_dedup(m.group('venue'))
     return (program, venue) if program and venue else None
+
+
+def _ordinal_sibling_names_differ(name_a, name_b):
+    """Sibling listings that differ only by an explicit cohort marker (BL62).
+
+    A bare trailing Roman numeral ("Beethoven Piano Sonatas II" / "III"), a
+    numbered or Roman skill level ("Level I" / "Level II") or disjoint age /
+    grade bands ("for ages 9-13" / "13-17") are near-identical titles, so the
+    0.5 ratio below reads them as one listing. At two permalinks of one
+    capture they are two events; `are_names_similar` already says so through
+    `is_false_positive`.
+    """
+    return bool(name_a and name_b and (
+        _numbered_levels_differ(name_a, name_b)
+        or trailing_roman_ordinal_mismatch(name_a, name_b)
+        or explicit_disjoint_age_band_mismatch(name_a, name_b)))
 
 
 def same_capture_names_related(name_a, name_b, head='', *, program_affixes=True):
@@ -3123,6 +3158,8 @@ def same_capture_names_related(name_a, name_b, head='', *, program_affixes=True)
     norm_b = normalize_name_for_dedup(name_b or '')
     if not norm_a or not norm_b or norm_a == norm_b:
         return True
+    if _ordinal_sibling_names_differ(name_a, name_b):
+        return False
     # Two headliners sharing only "+ Special Guests TBA" (BL43b): the shared
     # tail alone lifts the ratio past the threshold.
     if _placeholder_lineup_differs(name_a, name_b):
@@ -3609,6 +3646,23 @@ _SINGLE_OCCASION_CLOSING_RE = re.compile(
     r'closing gala|finale|final night|last night)\b', re.I)
 # A standalone reception with no opening/closing qualifier → treat as earliest.
 _SINGLE_OCCASION_RECEPTION_RE = re.compile(r'\breception\b', re.I)
+# A bare "Opening"/"Closing" that ENDS the title as a separate label (BL59:
+# White Columns 211656 "Mieko Meguro, Eric Spencer, Juliette Collet — Opening",
+# whose Sep 12 → Oct 24 span a merge re-added after the sweep dropped it):
+#   * after an em/en dash (spaced or not) or a SPACED hyphen — "Show – Opening".
+#     An unspaced hyphen is excluded so "Grand Re-Opening" stays out, and the
+#     label must follow the dash directly so "Off-Broadway – The Opening" (a
+#     show's title) stays out;
+#   * in a trailing parenthetical — "Before We Call It Home (Closing)";
+#   * right after an art-show noun — "Exhibition Opening", "Gallery Opening",
+#     "Exhibit Closing". Holiday-hours titles ("Presidents' Day Opening",
+#     "Early Closing", "Closing: Labor Day") never match.
+# An optional trailing "Reception" is allowed. Mirrors the sweep's
+# EDGE_SUFFIX_RE (2026-10-23).
+_SINGLE_OCCASION_EDGE_SUFFIX_RE = re.compile(
+    r'(?:(?:\s*[\u2014\u2013]|\s-+)\s*(opening|closing)(?:\s+reception)?'
+    r'|\(\s*(opening|closing)(?:\s+reception)?\s*\)'
+    r'|\b(?:exhibition|exhibit|gallery|art)\s+(opening|closing))\s*$', re.I)
 # "(Friday Ticket)" / "Saturday ticket" — the weekday is exact, not inferred.
 _SINGLE_OCCASION_WEEKDAY_TICKET_RE = re.compile(
     r'\b(mon|tues?|wednes|wed|thurs?|thu|fri|satur|sat|sun)(?:day)?\s+ticket\b', re.I)
@@ -3622,9 +3676,12 @@ def _single_occasion_edge(name):
     """'earliest' | 'latest' | None — which end of a span the name pins."""
     if not name:
         return None
-    if _SINGLE_OCCASION_CLOSING_RE.search(name):
+    suffix = _SINGLE_OCCASION_EDGE_SUFFIX_RE.search(name)
+    suffix_kind = next(g for g in suffix.groups() if g).lower() if suffix else None
+    if _SINGLE_OCCASION_CLOSING_RE.search(name) or suffix_kind == 'closing':
         return 'latest'
     if (_SINGLE_OCCASION_EARLIEST_RE.search(name)
+            or suffix_kind == 'opening'
             or _SINGLE_OCCASION_RECEPTION_RE.search(name)):
         return 'earliest'
     return None
@@ -3864,6 +3921,99 @@ def _span_horizon_sources(cursor, event_id, crawl_event_id, sd, ed):
     return owners
 
 
+# BL23 R2 (2026-10-23): an untimed span this long is a season / series
+# envelope, never one attendable slot. schedule_envelopes.envelope() stops at
+# 30 days and its SESSION_TYPES lacks Sports, so the w3524 NYC Tourism Knicks
+# card (Oct 20 – Apr 11) re-attached to e240927 beside MSG's dated games on
+# the 2026-10-10 merge and nothing removed it.
+SEASON_ENVELOPE_MIN_DAYS = 31
+# Dated sessions from another publisher inside the span that make it redundant.
+SEASON_ENVELOPE_MIN_SESSIONS = 3
+# Those sessions must reach both ends of the span's visible part (from today to
+# the FUTURE_WINDOW_DAYS horizon) within this many days, so a few preview
+# dates of a long run never erase the rest of it. 14 days tolerates a team's
+# road trips (Knicks 2026-10: last stored game 7 days short of the horizon).
+SEASON_ENVELOPE_EDGE_DAYS = 14
+# Scheduled-attendance formats only: an exhibition's or festival's run is the
+# event itself, and its dated satellites must never erase it.
+SEASON_ENVELOPE_TYPES = frozenset(SESSION_TYPES | {'Sports'})
+
+
+def _drop_covered_season_envelopes(cursor, event_id, crawl_event_id, existing_rows,
+                                   new_occurrences):
+    """Drop season envelopes that other publishers' dated sessions cover (BL23 R2).
+
+    An untimed span of SEASON_ENVELOPE_MIN_DAYS or more on a scheduled-attendance
+    event is refused (incoming) or deleted (stored) when the event holds timed
+    single-day occurrences on at least SEASON_ENVELOPE_MIN_SESSIONS distinct days
+    inside it, each supported by a linked or incoming source from a website that
+    does not carry the span, and those days reach both ends of the span's visible
+    part (SEASON_ENVELOPE_EDGE_DAYS). Spans with no source provenance, and
+    sessions with none, are left alone; crawl evidence is untouched. Every
+    action is printed. Returns the filtered (existing_rows, new_occurrences).
+    """
+    def is_span(o):
+        return (o[0] and o[2] and not o[1] and not o[3]
+                and (o[2] - o[0]).days >= SEASON_ENVELOPE_MIN_DAYS)
+
+    merged = [occurrence(r) for r in list(existing_rows) + list(new_occurrences)]
+    spans = {o for o in merged if is_span(o)}
+    if not spans:
+        return existing_rows, new_occurrences
+    cursor.execute('SELECT event_type FROM events WHERE id = %s', (event_id,))
+    row = cursor.fetchone()
+    if not row or row[0] not in SEASON_ENVELOPE_TYPES:
+        return existing_rows, new_occurrences
+    cursor.execute(
+        "SELECT cr.website_id, co.start_date, co.start_time, co.end_date, co.end_time "
+        "FROM crawl_events ce JOIN crawl_results cr ON cr.id = ce.crawl_result_id "
+        "JOIN crawl_event_occurrences co ON co.crawl_event_id = ce.id "
+        "WHERE ce.id = %s OR ce.id IN "
+        "    (SELECT crawl_event_id FROM event_sources WHERE event_id = %s)",
+        (crawl_event_id, event_id))
+    span_owners, session_sites = {}, {}
+    for website_id, *occ in cursor.fetchall():
+        o = occurrence(occ)
+        if is_span(o):
+            span_owners.setdefault(o, set()).add(website_id)
+        elif o[0] and o[1] and o[2] in (None, o[0]):
+            session_sites.setdefault((o[0], o[1]), set()).add(website_id)
+    held_sessions = {(o[0], o[1]) for o in merged
+                     if o[0] and o[1] and o[2] in (None, o[0])}
+    today, horizon = get_active_date_window()
+    covered = {}
+    for span in spans:
+        owners = span_owners.get(span)
+        if not owners:
+            continue
+        days = {d for d, t in held_sessions
+                if span[0] <= d <= span[2] and session_sites.get((d, t), set()) - owners}
+        edge = timedelta(days=SEASON_ENVELOPE_EDGE_DAYS)
+        if (len(days) >= SEASON_ENVELOPE_MIN_SESSIONS
+                and min(days) <= max(span[0], today) + edge
+                and max(days) >= min(span[2], horizon) - edge):
+            others = set().union(*(session_sites.get((d, t), set()) for d, t in held_sessions
+                                   if d in days)) - owners
+            covered[span] = (len(days), sorted(owners), sorted(others))
+    if not covered:
+        return existing_rows, new_occurrences
+    stored = {occurrence(r) for r in existing_rows}
+    for span, (n_days, owners, others) in sorted(covered.items()):
+        if span in stored:
+            cursor.execute(
+                "DELETE FROM event_occurrences WHERE event_id = %s AND start_date = %s "
+                "AND end_date = %s AND COALESCE(start_time, '') = '' "
+                "AND COALESCE(end_time, '') = ''", (event_id, span[0], span[2]))
+            action = 'removed'
+        else:
+            action = 'refused'
+        print(f"    SEASON-ENVELOPE {action} e{event_id} {span[0]}..{span[2]} "
+              f"(from w{','.join(map(str, owners))}): {n_days} dated session day(s) "
+              f"from w{','.join(map(str, others))} cover it")
+    return ([r for r in existing_rows if occurrence(r) not in covered],
+            [r for r in new_occurrences if occurrence(r) not in covered])
+
+
 def _merge_occurrences_into_event(cursor, event_id, new_occurrences, *, crawl_event_id=None):
     """Insert new occurrences into event_occurrences, deduping by (sd, st, ed).
 
@@ -3903,6 +4053,11 @@ def _merge_occurrences_into_event(cursor, event_id, new_occurrences, *, crawl_ev
             and any(r[1] and r[2] in (None, r[0]) for r in existing_rows + new_occurrences)):
         existing_rows, new_occurrences = reconcile_envelopes(
             cursor, event_id, crawl_event_id, existing_rows, new_occurrences)
+    if crawl_event_id is not None:
+        existing_count = len(existing_rows)
+        existing_rows, new_occurrences = _drop_covered_season_envelopes(
+            cursor, event_id, crawl_event_id, existing_rows, new_occurrences)
+        overnight_changed = overnight_changed or len(existing_rows) != existing_count
     # (sd, start_time, ed) -> end_time. Legacy data may have multiple rows per key
     # (pre-tightening); we keep the first non-empty end_time we see so the new
     # merger doesn't clobber a real value with a stale empty one.
@@ -4458,6 +4613,7 @@ def compute_voted_tags(cursor, event_id, current_crawl_tags, curated_tag_set,
         # expanded with ancestors and the Other fallback below.
         tag_counts = {tag: 1 for tag in dict.fromkeys(current_crawl_tags) if tag}
         threshold = 1
+        total_crawls, held = 1, set()  # no hysteresis: the newest crawl stands alone
     else:
         described = (" AND ce.description IS NOT NULL AND ce.description NOT IN ('', %s)"
                      if evidence_only else "")
@@ -4503,10 +4659,20 @@ def compute_voted_tags(cursor, event_id, current_crawl_tags, curated_tag_set,
         # Apply majority vote threshold
         threshold = max(2, ceil(total_crawls * 0.3))
 
+        # Hysteresis (BL21, 2026-10-23): a tag the event already holds stays
+        # while >= 15% of crawls still carry it; adding one still needs the
+        # 30% vote. Without it a tag hovering at the threshold flipped on and
+        # off merge to merge (replay over 8,000 events: curated tags flipping
+        # >= 2x 5,390 -> 1,740) and every flip re-queued the icon review.
+        cursor.execute(
+            "SELECT t.name FROM event_tags et JOIN tags t ON t.id = et.tag_id "
+            "WHERE et.event_id = %s", (event_id,))
+        held = {row[0] for row in cursor.fetchall()}
+
     surviving = []
     current_curated = set(current_crawl_tags) & curated_tag_set
     for tag, count in tag_counts.items():
-        if tag in current_curated or count >= threshold:
+        if tag_vote_survives(tag, count, threshold, total_crawls, current_curated, held):
             surviving.append((tag, count))
 
     # Separate curated vs keyword tags
@@ -4742,6 +4908,53 @@ def _run_archival_tail(cursor, connection, website_ids, audit_context, empty_con
         print(f"  ⚠️  Total current/upcoming events archived: {total_upcoming_flagged} (review recommended)")
 
 
+def _horizon_only_unmerged_results(cursor, future_limit_date, website_ids=None):
+    """Unstamped processed crawl_results carrying a row dated past the horizon.
+
+    The candidate query skips a crawl_event whose every date is beyond
+    `future_limit_date`, so a result holding only such rows never reaches
+    new_crawl_events. Before BL22 it did, and the merge stamped its merged_at;
+    `liveness_probe._ws_latest` reads only merged crawls, so without this a
+    site whose latest crawl lists only far-future dates loses its latest
+    merged crawl. A result that also has in-window rows is in the candidate
+    set anyway. Plan: `range` on crawl_event_occurrences.idx_start_date
+    (~2k rows, 0.12 s unscoped, 2026-10-23).
+    """
+    query = """
+        SELECT DISTINCT cr.id
+        FROM crawl_results cr
+        JOIN crawl_events ce ON ce.crawl_result_id = cr.id
+        JOIN crawl_event_occurrences ceo ON ceo.crawl_event_id = ce.id
+        WHERE cr.status = 'processed'
+          AND cr.merged_at IS NULL
+          AND ceo.start_date > %s
+    """
+    params = [future_limit_date]
+    if website_ids:
+        query += f" AND cr.website_id IN ({','.join(['%s'] * len(website_ids))})"
+        params.extend(website_ids)
+    cursor.execute(query, params)
+    return sorted(row[0] for row in cursor.fetchall())
+
+
+def _stamp_merged_at(cursor, crawl_result_ids):
+    """Set crawl_results.merged_at = NOW() for these ids, by primary key.
+
+    The old `WHERE id IN (SELECT DISTINCT crawl_result_id FROM crawl_events
+    WHERE id IN (...))` planned as a full PRIMARY index scan (~87k rows) with a
+    DEPENDENT SUBQUERY whatever the list size (MariaDB 10.4 cannot semi-join a
+    single-table UPDATE), and under REPEATABLE-READ it next-key-locked every
+    row it read: the 10-18 s stamp BL22 observed. The id list plans as `range
+    PRIMARY` and locks only these rows.
+    """
+    ids = sorted(set(crawl_result_ids))
+    for i in range(0, len(ids), 1000):
+        chunk = ids[i:i + 1000]
+        cursor.execute(
+            "UPDATE crawl_results SET merged_at = NOW() WHERE id IN ("
+            + ','.join(['%s'] * len(chunk)) + ")", chunk)
+
+
 def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     """
     Merge new crawl_events into the final events table with deduplication.
@@ -4803,6 +5016,12 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                   SELECT 1 FROM crawl_event_occurrences ceo
                   WHERE ceo.crawl_event_id = ce.id
                     AND (ceo.start_date >= %s OR (ceo.end_date IS NOT NULL AND ceo.end_date >= %s))
+                    -- Same horizon as the loop's valid-occurrence filter: a row
+                    -- dated only past FUTURE_WINDOW_DAYS is always skipped there,
+                    -- so fetching it only forced the full event-index load on
+                    -- every merge (w336's four 2027-05-01 rows, BL22). It stays
+                    -- unlinked and qualifies once its dates enter the window.
+                    AND ceo.start_date <= %s
               )
               OR (
                   -- Dateless listing: an "Ongoing" exhibition whose detail page
@@ -4829,7 +5048,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
           )
     """
     dateless_cutoff = datetime.now() - timedelta(days=DATELESS_MERGE_WINDOW_DAYS)
-    merge_params = [current_date, current_date, dateless_cutoff]
+    merge_params = [current_date, current_date, future_limit_date, dateless_cutoff]
     if website_ids:
         placeholders = ','.join(['%s'] * len(website_ids))
         merge_query += f" AND cr.website_id IN ({placeholders})"
@@ -4838,6 +5057,12 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
 
     new_crawl_events = cursor.fetchall()
     print(f"  Found {len(new_crawl_events)} unprocessed crawl_events")
+    # Crawl results whose rows are all past the horizon no longer reach
+    # new_crawl_events, but they still went through this merge (deferred by
+    # design) and liveness_probe needs their merged_at. Read at the same point
+    # as the candidate query so a result processed mid-merge is not stamped.
+    horizon_result_ids = _horizon_only_unmerged_results(
+        cursor, future_limit_date, merge_scope)
 
     if not new_crawl_events:
         # Nothing to link, but a website whose latest crawl is a clean empty
@@ -4847,6 +5072,9 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         if empty_contents:
             _run_archival_tail(cursor, connection, sorted(empty_contents), audit_context,
                                empty_contents=empty_contents)
+        if horizon_result_ids:
+            _stamp_merged_at(cursor, horizon_result_ids)
+            _retry_on_deadlock(connection.commit)
         return 0, 0
 
     # ── Build lookup indexes for deduplication ──
@@ -6401,21 +6629,11 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         # ── Stamp merged_at on the crawl_results whose events went through this merge ──
         # Pure observability: lets `status='processed' AND merged_at IS NULL` flag
         # crawl results whose merge tail was interrupted (lock race / killed run)
-        # without joining through event_sources.
-        for i in range(0, len(crawl_event_ids), 1000):
-            chunk = crawl_event_ids[i:i + 1000]
-            ph = ','.join(['%s'] * len(chunk))
-            review_clause = ''
-            stamp_params = list(chunk)
-            if identity_review_results:
-                review_ids = sorted(identity_review_results)
-                review_clause = ' AND id NOT IN (' + ','.join(['%s'] * len(review_ids)) + ')'
-                stamp_params.extend(review_ids)
-            cursor.execute(f"""
-                UPDATE crawl_results SET merged_at = NOW()
-                WHERE id IN (SELECT DISTINCT crawl_result_id FROM crawl_events WHERE id IN ({ph}))
-                {review_clause}
-            """, stamp_params)
+        # without joining through event_sources. Results held for identity
+        # review stay unstamped.
+        stamp_ids = ({row[12] for row in new_crawl_events} | set(horizon_result_ids)) \
+            - identity_review_results
+        _stamp_merged_at(cursor, stamp_ids)
         _retry_on_deadlock(connection.commit)
 
     if identity_review_sources:

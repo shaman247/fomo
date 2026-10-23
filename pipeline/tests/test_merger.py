@@ -2077,6 +2077,43 @@ class SingleOccasionSignalTests(unittest.TestCase):
         self.assertEqual(
             merger._single_occasion_edge('Grand Opening Weekend'), 'earliest')
 
+    def test_trailing_opening_closing_label_is_a_signal(self):
+        """BL59: White Columns 211656's Sep 12 → Oct 24 span came back through
+        a merge after the sweep dropped it, because only the sweep knew the
+        trailing "— Opening" label. Same cases as the sweep's EDGE_SUFFIX_RE."""
+        for name in ('Mieko Meguro, Eric Spencer, Juliette Collet — Opening',
+                     'The Architecture of Genocide – Opening',
+                     'Portraits—Opening',
+                     'Unboxed: Black Fathers Art - Opening',
+                     'Some Show — Opening Reception',
+                     'Some Show — OPENING',
+                     'Before We Call It Home (Opening)',
+                     'Tith Kanitha: Journey into Clarity Exhibition Opening',
+                     'Sebastian Ferruzo Gallery Opening',
+                     'Riders Ready: The Science of BMX Exhibit Opening'):
+            with self.subTest(name=name):
+                self.assertEqual(merger._single_occasion_edge(name), 'earliest')
+        for name in ('Some Show — Closing', 'Some Show - Closing Reception',
+                     'Before We Call It Home (Closing)',
+                     'Crossing Relations: Exhibition Closing'):
+            with self.subTest(name=name):
+                self.assertEqual(merger._single_occasion_edge(name), 'latest')
+
+    def test_holiday_hours_and_show_titles_are_not_edge_labels(self):
+        for name in ('Brooke Di Spirito presents Off-Broadway – The Opening',
+                     'Museum Grand Re-Opening',
+                     'Opening – 2026 Art by Construction Workers Show',
+                     "Presidents' Day Opening",
+                     'New Year’s Eve: Early Closing',
+                     'Closing: Labor Day Weekend 2026',
+                     'Delayed Opening',
+                     "Disney's Mary Poppins - Press Opening",
+                     'In Residence – West Harlem Arts Space Opening',
+                     'Lecture: Long Island State Hospitals - Thirty Years After Closing',
+                     'The Opening Act — Comedy Night Out'):
+            with self.subTest(name=name):
+                self.assertIsNone(merger._single_occasion_edge(name))
+
     def test_weekday_ticket_signal_is_exact(self):
         self.assertEqual(
             merger._single_occasion_weekday('Brooklyn World Wide (Friday Ticket)'), 4)
@@ -2101,6 +2138,26 @@ class SingleOccasionGuardTests(unittest.TestCase):
     2026-09-15 (204117 Putnam, 222964 Public Art Fund, 234384 GHP,
     237978 Japan Society, 199544 With Others).
     """
+
+    def test_white_columns_trailing_opening_span_is_refused(self):
+        """BL59: e211656 '… — Opening' got the shows' Sep 12 → Oct 24 span
+        (occurrence 1078499) back from a merge after the sweep dropped it."""
+        kept, report = merger.filter_single_occasion_occurrences(
+            'Mieko Meguro, Eric Spencer, Juliette Collet — Opening',
+            'Mieko Meguro, Eric Spencer, Juliette Collet — Opening',
+            [(date(2026, 9, 12), '18:00', None, '20:00'),
+             (date(2026, 9, 12), '', date(2026, 10, 24), '')],
+            {'2026-09-12'})
+        self.assertEqual(kept, [(date(2026, 9, 12), '18:00', None, '20:00')])
+        self.assertEqual(report['spans_dropped'], 1)
+
+    def test_show_title_with_the_opening_keeps_its_run(self):
+        span = [(date(2026, 10, 1), '', date(2026, 11, 15), '')]
+        kept, report = merger.filter_single_occasion_occurrences(
+            'Brooke Di Spirito presents Off-Broadway – The Opening',
+            'Brooke Di Spirito presents Off-Broadway – The Opening', span, set())
+        self.assertEqual(kept, span)
+        self.assertEqual(report['spans_dropped'], 0)
 
     def test_putnam_parent_run_span_is_refused(self):
         """ce1188403 'Annual Juried Fine Arts Show' 10/17 → 11/8 into e204117."""

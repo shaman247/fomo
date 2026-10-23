@@ -106,7 +106,7 @@ const Utils = (() => {
     }
 
     function formatSingleOccurrence(occurrence) {
-        const { start, end, originalStartTime, originalEndTime } = occurrence;
+        const { start, end, originalStartTime, originalEndTime, precision } = occurrence;
         if (!(start instanceof Date) || isNaN(start) || !(end instanceof Date) || isNaN(end)) {
             return "Date/Time N/A";
         }
@@ -117,6 +117,17 @@ const Utils = (() => {
         const startDateStr = start.toLocaleDateString('en-US', DATE_OPTIONS);
         const endDateStr = end.toLocaleDateString('en-US', DATE_OPTIONS);
         const isSameDay = start.toDateString() === end.toDateString();
+
+        // Endpoints the pipeline synthesized are not published dates: an
+        // end-only run's start is the crawl date, an open run's end a rolling
+        // horizon. Show only what the source printed.
+        const startAsOf = precision && precision.start === 'as_of';
+        const endOpen = precision && precision.end === 'open';
+        if (!isSameDay && (startAsOf || endOpen)) {
+            if (startAsOf && endOpen) return 'Ongoing';
+            if (startAsOf) return `Through ${endDateStr}`;
+            return start > new Date() ? `Opens ${startDateStr}` : `Ongoing since ${startDateStr}`;
+        }
 
         const startTimeStr = hasStartTime ? formatTimeCompact(start) : '';
         const endTimeStr = hasEndTime ? formatTimeCompact(end) : '';
@@ -155,8 +166,10 @@ const Utils = (() => {
 
             // Multi-day spans (e.g. exhibition runs) render as their own "start – end"
             // range so the end date isn't lost when grouping by start date.
+            // Identical texts (e.g. several "Through Nov 8" spans) show once.
             if (isMultiDay) {
-                segments.push({ text: formatSingleOccurrence(occurrence) });
+                const text = formatSingleOccurrence(occurrence);
+                if (!segments.some(s => s.text === text)) segments.push({ text });
                 return;
             }
 

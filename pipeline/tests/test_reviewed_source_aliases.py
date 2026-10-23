@@ -136,14 +136,15 @@ class SourceAliasMergePathTests(unittest.TestCase):
             if quarantined:db.archive_outdated_events.assert_not_called()
         self.assertFalse(any('INSERT IGNORE INTO event_sources' in c.args[0] for c in cursor.execute.call_args_list))
         stamps=[c for c in cursor.execute.call_args_list if 'UPDATE crawl_results SET merged_at' in c.args[0]]
-        self.assertEqual(len(stamps),2)
-        for stamp in stamps:
-            if quarantined:
-                self.assertIn('AND id NOT IN (%s)',stamp.args[0])
-                self.assertEqual(stamp.args[1],[202,99])
-            else:
-                self.assertNotIn('AND id NOT IN',stamp.args[0])
-                self.assertEqual(stamp.args[1],[202])
+        # BL22: the stamp is by crawl_result primary key; a result held for
+        # identity review (cr 99) is left out entirely rather than filtered in SQL.
+        if quarantined:
+            self.assertEqual(stamps,[])
+        else:
+            self.assertEqual(len(stamps),2)
+            for stamp in stamps:
+                self.assertNotIn('SELECT',stamp.args[0])
+                self.assertEqual(stamp.args[1],[99])
 
     def test_changed_reviewed_identity_is_stable_and_holds_archival(self):
         self.run_scenario(quarantined=True)

@@ -249,39 +249,117 @@ def named_tree_lighting_display_mismatch(left, right):
     return bool(a and b and a[0] == b[0] and a[1] != b[1])
 
 
-def explicit_disjoint_age_band_mismatch(left, right):
-    """Exact same program with explicitly disjoint age suffixes is distinct.
+_BAND_UNIT = r'(?:\s*(months?|mos?|years?|yrs?)(?:\s*old)?)?'
+_AGE_BAND_RE = re.compile(
+    r'\b(ages?|grades?)\s*:?\s*'
+    r'(\d{1,2}|birth|newborns?|pre-?k|k)' + _BAND_UNIT +
+    r'\s*(?:(?:[-–—]|\bto\b|\bthrough\b|\bthru\b)\s*(\d{1,2})' + _BAND_UNIT +
+    r'(?!\s*[/:.]\d)|(\+|\s*(?:&|and)\s*(?:up|older|over)\b|\s*or\s*older\b))',
+    re.I)
 
-    An unlabelled program or overlapping audiences remain eligible; this is
-    not a general numeric-title or minimum-age heuristic.
+
+def _band_bound(token, unit):
+    token = token.lower().replace('-', '')
+    value = {'birth': 0, 'newborn': 0, 'newborns': 0, 'k': 0, 'prek': -1}.get(token)
+    value = int(token) if value is None else value
+    return value / 12 if unit and unit.lower().startswith('mo') else value
+
+
+def _age_band(value):
+    """(kind, low, high, parent) for ONE explicit age/grade band, else None.
+
+    "(Ages 4-6)", "for ages 9-13", "• Ages 4-8 •", "(Ages Birth-1 year)",
+    "Grades K-2", "Ages 6-18 months", "(Ages 7+)" / "ages 5 and up". A title
+    naming two bands, or a band followed by another number ("Ages 4-8 & 9-13"),
+    is ambiguous and returns None.
     """
-    def band(value):
-        match = re.search(r'\(\s*ages?\s*(\d{1,2})(?:\s*[-–—]\s*(\d{1,2})|(\+))\s*\)\s*$',
-                          value or '', re.I)
-        if not match:
-            return None
-        start, end = int(match[1]), int(match[2]) if match[2] else float('inf')
-        # Bilingual titles may repeat the same age qualifier in their other
-        # language. Remove only an exactly agreeing Chinese age parenthesis;
-        # a contradictory translation remains part of the parent and cannot
-        # manufacture a same-program witness.
-        def repeated_age(other):
-            lo = int(other[1])
-            hi = int(other[2]) if other[2] else float('inf')
-            return '' if (lo, hi) == (start, end) else other[0]
-        parent_text = re.sub(
-            r'\(\s*(\d{1,2})(?:\s*[-–—]\s*(\d{1,2})|(\+))\s*[岁歲]\s*\)',
-            repeated_age, value[:match.start()])
-        parent = _norm(parent_text)
-        if len(parent.split()) < 2 or end < start:
-            return None
-        return parent, start, end
-    a, b = band(left), band(right)
-    return bool(a and b and a[0] == b[0] and (a[2] < b[1] or b[2] < a[1]))
+    matches = list(_AGE_BAND_RE.finditer(value or ''))
+    if len(matches) != 1:
+        return None
+    match = matches[0]
+    if re.match(r'\s*(?:[&,/]|\band\b|\bor\b)\s*\d', value[match.end():], re.I):
+        return None
+    kind = 'grade' if match[1].lower().startswith('grade') else 'age'
+    hi_unit = match[5]
+    lo_unit = match[3] or (hi_unit if hi_unit and hi_unit.lower().startswith('mo') else None)
+    low = _band_bound(match[2], lo_unit)
+    high = _band_bound(match[4], hi_unit) if match[4] else float('inf')
+    if high < low:
+        return None
+    # Bilingual titles may repeat the same age qualifier in their other
+    # language. Remove only an exactly agreeing Chinese age parenthesis;
+    # a contradictory translation remains part of the parent and cannot
+    # manufacture a same-program witness.
+    def repeated_age(other):
+        lo = int(other[1])
+        hi = int(other[2]) if other[2] else float('inf')
+        return '' if (lo, hi) == (low, high) else other[0]
+    parent_text = re.sub(
+        r'\(\s*(\d{1,2})(?:\s*[-–—]\s*(\d{1,2})|(\+))\s*[岁歲]\s*\)',
+        repeated_age, value[:match.start()] + ' ' + value[match.end():])
+    return kind, low, high, ' '.join(w for w in _norm(parent_text).split() if w != 'for')
+
+
+def explicit_disjoint_age_band_mismatch(left, right):
+    """The same program offered to explicitly different age/grade cohorts.
+
+    Both titles name one band of the same kind, the rest of the titles agree
+    exactly (at least two words, "for" ignored), and
+    the bands are disjoint or only touch at an endpoint: libraries number
+    consecutive cohorts "Ages 1-2" / "Ages 2-4" and "9-13" / "13-17" (BL62).
+    An unlabelled program or genuinely overlapping audiences ("Ages 7+" vs
+    "Ages 9-12") remain eligible; this is not a general numeric-title or
+    minimum-age heuristic.
+    """
+    a, b = _age_band(left), _age_band(right)
+    if not (a and b) or a[0] != b[0] or a[1:3] == b[1:3]:
+        return False
+    if a[3] != b[3] or len(a[3].split()) < 2:
+        return False
+    return a[2] <= b[1] or b[2] <= a[1]
+
+
+_ROMAN_TAIL_RE = re.compile(
+    r"(?<![\w'’.&/-])([IVX]{1,5})(?=\s*[.!]?\s*$|\s*[:(\[|]|\s+[-–—]\s)")
+
+
+def _roman_tail(value):
+    """(head words, value) for an uppercase Roman numeral I-XX ending a title.
+
+    "Beethoven Piano Sonatas II", "Act III: …". Sequels, cycles and course
+    levels publish one listing per numeral; the head words alone are shared.
+    """
+    match = _ROMAN_TAIL_RE.search(value or '')
+    if not match or not re.fullmatch(r'X{0,2}(?:IX|IV|V?I{0,3})', match[1]):
+        return None
+    head = _norm(value[:match.start()])
+    if not head:
+        return None
+    digits = {'I': 1, 'V': 5, 'X': 10}
+    token, total = match[1], 0
+    for i, ch in enumerate(token):
+        val = digits[ch]
+        total += -val if i + 1 < len(token) and val < digits[token[i + 1]] else val
+    return head, total
+
+
+def trailing_roman_ordinal_mismatch(left, right):
+    """Same title head, different bare trailing Roman numeral (BL62).
+
+    "Beethoven Piano Sonatas II" is a raw substring of "… III", which is how
+    the processor's containment grouping and the merger's ratio tiers fused
+    CMS's two cycle concerts. Requires a numeral on BOTH sides and one head
+    ending the other ("CMS: Beethoven Piano Sonatas III" still compares).
+    """
+    a, b = _roman_tail(left), _roman_tail(right)
+    if not (a and b) or a[1] == b[1]:
+        return False
+    return a[0] == b[0] or a[0].endswith(' ' + b[0]) or b[0].endswith(' ' + a[0])
 
 
 GUARDS = (registration_section_mismatch, explicit_program_role_mismatch,
           named_tree_lighting_display_mismatch, explicit_disjoint_age_band_mismatch,
+          trailing_roman_ordinal_mismatch,
           numbered_course_mismatch, parent_afterparty_mismatch,
           sports_watch_dance_mismatch, branded_boat_mismatch,
           duration_class_subject_mismatch, college_audience_mismatch,

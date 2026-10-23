@@ -9,7 +9,8 @@ from pathlib import Path
 from unittest.mock import Mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from source_metadata import plan_source_metadata_refresh, refresh_source_metadata
+from source_metadata import (plan_source_metadata_refresh, refresh_source_metadata,
+                             tag_keep_threshold, tag_vote_survives)
 
 
 class MetadataPlanTests(unittest.TestCase):
@@ -148,7 +149,7 @@ class MetadataPlanTests(unittest.TestCase):
     def test_comparable_or_longer_rewrite_of_detail_text_still_refreshes(self):
         detail = 'A' * 120 + ' detail-page description of the class and its materials.'
         self.event['description'] = self.prior['description'] = detail
-        for new in [detail[:-20] + ' updated.', detail + ' Registration now required.']:
+        for new in [detail[:-20] + ' updated; now in Studio 4.', detail + ' Registration now required.']:
             with self.subTest(new=new):
                 self.incoming['description'] = new
                 self.assertEqual(self.plan()['description'], new)
@@ -161,11 +162,101 @@ class MetadataPlanTests(unittest.TestCase):
                 self.incoming['description'] = 'An artist talk; RSVP required.'
                 self.assertEqual(self.plan()['description'], 'An artist talk; RSVP required.')
 
+    def use_page_text(self, old, new, old_url='https://x.org/e/1', new_url='https://x.org/e/1/'):
+        self.event['description'] = self.prior['description'] = old
+        self.prior['url'], self.incoming['url'] = old_url, new_url
+        self.incoming['description'] = new
+
+    def test_same_page_paraphrase_keeps_stored_text_but_room_still_fills(self):
+        # Re-extraction rewordings logged by the 2026-10 merges (BL21).
+        for old, new in [
+                ('Bowne House educators read stories celebrating December holidays and winter fun, '
+                 'with a surprise craft and refreshments. For ages 5 and up with an adult; '
+                 'admission by donation.',
+                 'Bowne House educators read stories celebrating December holidays and winter fun, '
+                 'with a surprise craft project and refreshments. For ages 5 and up, accompanied '
+                 'by an adult. Donation in any amount.'),
+                ('Speaking and listening exercises related to real-life situations to build English confidence.',
+                 'Speaking and listening exercises related to real-life situations to help students '
+                 'become more confident English speakers.'),
+                ('Test your hearing by an Audiologist from Ear Works Audiology. Registration required.',
+                 'Test your hearing by an Audiologist from Ear Works Audiology (Age Well Expo).'),
+                ('A weekly game.\n2026-10-01 6pm', 'A weekly game.')]:
+            with self.subTest(new=new[:30]):
+                self.use_page_text(old, new)
+                self.assertEqual(self.plan(), {'sublocation': '15th floor'})
+
+    def test_real_description_change_on_the_same_page_still_refreshes(self):
+        old = 'Teens sew a mushroom pocket pal or backpack charm.'
+        for new in ['Teens sew a mushroom pocket pal or backpack charm. Registration required.',
+                    '*SOLD OUT* Teens sew a mushroom pocket pal or backpack charm.',
+                    'Teens sew a mushroom pocket pal or backpack charm, 4-6pm.',
+                    'Teens sew a mushroom pocket pal or backpack charm. Free with RSVP.',
+                    'A knitting circle for adults who want to finish winter scarves together.']:
+            with self.subTest(new=new):
+                self.use_page_text(old, new)
+                self.assertEqual(self.plan()['description'], new)
+        # Dropping a status marker may mean the event changed state again.
+        self.use_page_text('Sold out. ' + old, old)
+        self.assertEqual(self.plan()['description'], old)
+        # Truncated stored text is replaced by the complete rewording.
+        self.use_page_text('Teens sew a mushroom pocket pal or backpack...',
+                           'Teens sew a mushroom pocket pal or a backpack charm.')
+        self.assertIn('description', self.plan())
+
+    def test_paraphrase_from_another_page_keeps_existing_policy(self):
+        old = 'Speaking and listening exercises related to real-life situations to build English confidence.'
+        new = ('Speaking and listening exercises related to real-life situations to help students '
+               'become more confident English speakers.')
+        self.use_page_text(old, new, new_url='https://x.org/calendar')
+        self.assertEqual(self.plan()['description'], new)
+        # Only the page that supplied the stored text counts as "the same page".
+        self.sources.append(dict(self.prior, id=19, url='https://x.org/calendar',
+                                 description='An older listing stub.'))
+        self.assertEqual(self.plan()['description'], new)
+
     def test_linked_incoming_does_not_forge_prior_provenance(self):
         self.sources = [self.incoming]
         self.assertEqual(self.plan(), {})
         self.sources.append(self.prior)
         self.assertIn('description', self.plan())
+
+
+class TagHysteresisTests(unittest.TestCase):
+    def survives(self, tag, count, total, current=(), held=()):
+        threshold = max(2, -(-total * 3 // 10))  # merger's add rule: max(2, ceil(30%))
+        return tag_vote_survives(tag, count, threshold, total, set(current),
+                                 None if held is None else set(held))
+
+    def test_add_rule_is_unchanged_without_held_tags(self):
+        self.assertTrue(self.survives('Live Music', 1, 6, current={'Live Music'}))
+        self.assertTrue(self.survives('Jazz', 2, 6))
+        self.assertFalse(self.survives('Jazz', 1, 6))
+        self.assertFalse(self.survives('Jazz', 2, 10))
+        self.assertTrue(self.survives('Jazz', 3, 10, held=None))
+
+    def test_held_tag_stays_below_add_threshold_until_keep_share(self):
+        # Live Music on 2 of 10 crawls: not enough to add, enough to keep.
+        self.assertFalse(self.survives('Live Music', 2, 10))
+        self.assertTrue(self.survives('Live Music', 2, 10, held={'Live Music'}))
+        # A held tag the crawls stopped carrying still drops.
+        self.assertFalse(self.survives('Live Music', 1, 10, held={'Live Music'}))
+        self.assertFalse(self.survives('DJ', 0, 3, held={'DJ'}))
+        self.assertEqual([tag_keep_threshold(n) for n in (2, 6, 7, 10, 14, 20)], [1, 1, 2, 2, 3, 3])
+
+    def test_alternating_crawls_no_longer_flap_a_held_curated_tag(self):
+        held, history = set(), []
+        states = []
+        for crawl in range(8):
+            current = {'Virtual'} if crawl % 2 == 0 else set()
+            history.append(current)
+            count = sum('Virtual' in c for c in history)
+            if self.survives('Virtual', count, len(history), current, held):
+                held = {'Virtual'}
+            else:
+                held = set()
+            states.append(bool(held))
+        self.assertEqual(states, [True] * 8)
 
 
 class Cursor:
@@ -192,14 +283,14 @@ class MetadataSQLTests(unittest.TestCase):
                 location_id INT,location_name TEXT,sublocation TEXT,description TEXT);
             CREATE TABLE crawl_results(id INT,website_id INT,crawled_at TEXT);
             CREATE TABLE crawl_events(id INT,crawl_result_id INT,location_id INT,
-                location_name TEXT,sublocation TEXT,description TEXT,raw_data TEXT);
+                location_name TEXT,sublocation TEXT,description TEXT,raw_data TEXT,url TEXT);
             CREATE TABLE event_sources(event_id INT,crawl_event_id INT);
             CREATE TABLE event_occurrences(event_id INT,start_date TEXT,start_time TEXT,end_date TEXT);
             CREATE TABLE crawl_event_occurrences(crawl_event_id INT,start_date TEXT,start_time TEXT,end_date TEXT);
             INSERT INTO events VALUES(1,10,0,0,5,'School',NULL,'Old source text');
             INSERT INTO crawl_results VALUES(100,10,'2026-09-19 10:00:00'),(101,10,'2026-09-21 10:00:00');
-            INSERT INTO crawl_events VALUES(20,100,5,'School',NULL,'Old source text','{}'),
-                (21,101,5,'School','Room 101','New RSVP information','{}');
+            INSERT INTO crawl_events VALUES(20,100,5,'School',NULL,'Old source text','{}',NULL),
+                (21,101,5,'School','Room 101','New RSVP information','{}',NULL);
             INSERT INTO event_sources VALUES(1,20);
             INSERT INTO event_occurrences VALUES(1,'2026-10-01','6pm',NULL);
             INSERT INTO crawl_event_occurrences VALUES(21,'2026-10-01','6pm',NULL);
@@ -242,9 +333,18 @@ class MetadataSQLTests(unittest.TestCase):
 
     def test_sql_reads_other_sources_before_mutating(self):
         self.db.executescript("INSERT INTO crawl_results VALUES(102,99,'2026-09-18 10:00:00');"
-                             "INSERT INTO crawl_events VALUES(22,102,5,'School',NULL,'Other text','{}');"
+                             "INSERT INTO crawl_events VALUES(22,102,5,'School',NULL,'Other text','{}',NULL);"
                              'INSERT INTO event_sources VALUES(1,22);')
         self.assertEqual(self.refresh(), {})
+
+    def test_sql_same_page_paraphrase_is_not_written_or_audited(self):
+        self.db.execute("UPDATE crawl_events SET url='https://school.org/e/1'")
+        self.db.execute("UPDATE events SET sublocation='Room 101'")
+        self.db.execute("UPDATE crawl_events SET description='The old text from the source.' WHERE id=21")
+        logger = Mock()
+        self.assertEqual(self.refresh(logger), {})
+        self.assertEqual(self.db.execute('SELECT description FROM events').fetchone()[0], 'Old source text')
+        logger.log_update.assert_not_called()
 
     def test_sql_restores_delivery_label_even_without_room_or_text_change(self):
         self.db.execute("UPDATE crawl_events SET location_name='Online (Zoom)',sublocation=NULL,"

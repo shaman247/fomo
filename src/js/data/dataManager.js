@@ -566,19 +566,22 @@ const DataManager = (() => {
         if (!Array.isArray(occurrencesArray)) return []; // Keep this check for safety
 
         const parsedOccurrences = occurrencesArray.map(occ => {
-            const [startDateStr, startTimeStr, endDateStr, endTimeStr] = occ;
+            // Optional 5th element: exporter's endpoint precision for spans whose
+            // start/end the pipeline synthesized ({start:'as_of'} / {end:'open'}).
+            const [startDateStr, startTimeStr, endDateStr, endTimeStr, precision] = occ;
             const start = Utils.parseDateInZone(startDateStr, startTimeStr);
             const effectiveEndDateStr = (endDateStr && endDateStr.trim() !== '') ? endDateStr : startDateStr;
             const effectiveEndTimeStr = (endTimeStr && endTimeStr.trim() !== '') ? endTimeStr : startTimeStr;
             const end = Utils.parseDateInZone(effectiveEndDateStr, effectiveEndTimeStr);
 
+            let parsed = null;
             if (start && !end) {
-                return { start, end: new Date(start), originalStartTime: startTimeStr, originalEndTime: endTimeStr };
+                parsed = { start, end: new Date(start), originalStartTime: startTimeStr, originalEndTime: endTimeStr };
+            } else if (start && end) {
+                parsed = { start, end, originalStartTime: startTimeStr, originalEndTime: endTimeStr };
             }
-            if (start && end) {
-                return { start, end, originalStartTime: startTimeStr, originalEndTime: endTimeStr };
-            }
-            return null;
+            if (parsed && precision && typeof precision === 'object') parsed.precision = precision;
+            return parsed;
         }).filter(Boolean);
 
         parsedOccurrences.sort((a, b) => a.start - b.start);

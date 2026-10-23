@@ -86,6 +86,20 @@ class SharedLeadingHeadTests(unittest.TestCase):
                 self.assertTrue(related(a, b, a))
                 self.assertTrue(related(b, a, a))
 
+    def test_a_dash_head_matching_the_other_colon_head_is_shared(self):
+        # FUUB w843, 2026-10-15 merge: the Election Day camp fused onto the
+        # Tuesday class 263713 because "Child's Play -" was not read as the
+        # same head as "Child's Play:" (BL25 watch, 2026-10-23).
+        camp = "Child's Play - Holiday Camp (Election Day)"
+        for event in ("Child's Play: Twelfth Night", "Child's Play: Legally Blonde Jr."):
+            with self.subTest(event=event):
+                self.assertFalse(related(camp, event, event))
+                self.assertFalse(related(event, camp, event))
+        named = "Child's Play: Acting Hamilton Holiday Camp (Election Day)"
+        self.assertTrue(related(camp, named, named))
+        # The same program written both ways stays related.
+        self.assertTrue(related('Jazz Night - Late Set', 'Jazz Night: Late Set', 'Jazz Night'))
+
 
 class SharedVenueTailTests(unittest.TestCase):
 

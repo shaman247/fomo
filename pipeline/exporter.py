@@ -8,9 +8,10 @@ import json
 import os
 import re
 import sys
-from datetime import datetime, timedelta
+from datetime import date as date_type, datetime, timedelta
 
 import db
+import occurrence_provenance
 from publishability import PUBLISHABLE_WEBSITE_GATE as _PUBLISHABLE_WEBSITE_GATE
 from event_types import EVENT_TYPES_BY_CATEGORY, EVENT_TYPES, separate_format_topics
 from tag_canonicalization import stored_tag_mapping
@@ -304,6 +305,64 @@ def _resolve_root(website_id, parent_map):
     return current
 
 
+# Crawl_events processed before this date predate the processor's synthesized-
+# endpoint markers (occurrence_provenance.endpoints, shipped 2026-10-07); for
+# them the synthesized dates are recognised by arithmetic, as the merger does.
+ENDPOINT_MARKERS_SINCE = date_type(2026, 10, 8)
+
+
+def load_endpoint_precision(cursor, current_date, future_limit_date):
+    """{(event_id, start_iso, end_iso): precision} for synthesized span endpoints.
+
+    The processor gives an end-only run ("Through Nov 8") today's date as its
+    start and a start-only open run today + OPEN_RUN_HORIZON_DAYS as its end.
+    Neither date is published, so the export marks them per occurrence as the
+    optional 5th element of the occurrence array: {"start": "as_of"} or
+    {"end": "open"} (absent = exact). A stored untimed span is marked only when
+    every linked source carrying that exact span synthesized the endpoint;
+    one source publishing it keeps it exact.
+    """
+    cursor.execute("""
+        SELECT eo.event_id, eo.start_date, eo.end_date,
+               DATE(cr.crawled_at), DATE(cr.processed_at),
+               CASE WHEN ce.raw_data LIKE '%%"endpoints"%%' THEN ce.raw_data END
+        FROM event_sources es
+        JOIN event_occurrences eo ON eo.event_id = es.event_id
+        JOIN crawl_event_occurrences co ON co.crawl_event_id = es.crawl_event_id
+             AND co.start_date = eo.start_date AND co.end_date = eo.end_date
+             AND COALESCE(co.start_time, '') = '' AND COALESCE(co.end_time, '') = ''
+        JOIN crawl_events ce ON ce.id = es.crawl_event_id
+        JOIN crawl_results cr ON cr.id = ce.crawl_result_id
+        WHERE COALESCE(eo.start_time, '') = '' AND COALESCE(eo.end_time, '') = ''
+          AND eo.end_date > eo.start_date
+          AND eo.end_date >= %s AND eo.start_date <= %s
+    """, (current_date, future_limit_date))
+    owners = {}
+    for event_id, sd, ed, crawled, processed, raw in cursor.fetchall():
+        key = (str(sd), str(ed))
+        sidecar = occurrence_provenance.sidecar_from_raw(raw) if raw else None
+        start_mark = key in occurrence_provenance.endpoint_slots(
+            sidecar, occurrence_provenance.START_AS_OF_CRAWL)
+        end_mark = key in occurrence_provenance.endpoint_slots(
+            sidecar, occurrence_provenance.END_OPEN_RUN_HORIZON)
+        if (processed or crawled) and (processed or crawled) < ENDPOINT_MARKERS_SINCE:
+            dates = [d for d in (crawled, processed) if d]
+            start_mark = start_mark or sd in dates
+            end_mark = end_mark or any(
+                (ed - d).days == occurrence_provenance.OPEN_RUN_HORIZON_DAYS for d in dates)
+        owners.setdefault((event_id,) + key, []).append((start_mark, end_mark))
+    precision = {}
+    for key, marks in owners.items():
+        mark = {}
+        if all(s for s, _ in marks):
+            mark['start'] = 'as_of'
+        if all(e for _, e in marks):
+            mark['end'] = 'open'
+        if mark:
+            precision[key] = mark
+    return precision
+
+
 def export_events(cursor):
     """
     Export events from the events table to JSON files for the website.
@@ -398,6 +457,8 @@ def export_events(cursor):
         for eid, url in cursor.fetchall():
             urls_by_id.setdefault(eid, []).append(url)
 
+    endpoint_precision = load_endpoint_precision(cursor, current_date, future_limit_date)
+
     all_events = []
     descriptions_by_id = {}  # event_id -> description; shipped as desc companions
     referenced_organizer_ids = set()  # organizer roots emitted on any exported event
@@ -423,6 +484,11 @@ def export_events(cursor):
                     str(occ[2]) if occ[2] else None,
                     occ[3]
                 ])
+                # Optional 5th element: synthesized endpoint precision.
+                precision = (not occ[1] and not occ[3] and occ[2]
+                             and endpoint_precision.get((event_id, str(occ[0]), str(occ[2]))))
+                if precision:
+                    occurrences[-1].append(precision)
 
         if not occurrences:
             continue
@@ -1021,6 +1087,7 @@ def export_public_datasets(cursor, export_date=None, export_dir=PUBLIC_EXPORT_DI
     # Source websites per event (merged events carry several), for organizer
     # attribution — same resolution as the frontend export.
     source_sites_by_event = _load_source_sites(cursor)
+    endpoint_precision = load_endpoint_precision(cursor, current_date, future_limit_date)
 
     upcoming_records = []
     past_records = []
@@ -1036,6 +1103,11 @@ def export_public_datasets(cursor, export_date=None, export_dir=PUBLIC_EXPORT_DI
         # no longer lists them) but are the past dataset's bread and butter.
         upcoming_occ = [] if archived else dedupe_public_occurrences(
             occ_rows, current_date, future_limit_date)
+        for occ in upcoming_occ:  # additive: synthesized endpoint precision
+            precision = (not occ['start_time'] and not occ['end_time'] and occ['end_date']
+                         and endpoint_precision.get((event_id, occ['start_date'], occ['end_date'])))
+            if precision:
+                occ['precision'] = precision
         past_occ = dedupe_past_occurrences(occ_rows, current_date)
         if not upcoming_occ and not past_occ:
             continue

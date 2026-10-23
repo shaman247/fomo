@@ -1,0 +1,21 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "DG59UB89RL.fomocity.fomo"
+        ],
+        "components": [
+          {
+            "/": "/",
+            "?": {
+              "qv": "1",
+              "q": "*"
+            },
+            "comment": "Open version 1 structured searches in the installed app."
+          }
+        ]
+      }
+    ]
+  }
+}

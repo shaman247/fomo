@@ -2273,7 +2273,8 @@ _RETAIL_PROMO_DESC_RE = re.compile(
 # hand-suppressed, 13 archived-only), and none of them was already caught by
 # another junk rule. 27 matching crawl_events over the last 21 days. Accepted
 # fail-safe misses, all in the safe direction: a sample sale whose body names no
-# discount at all (e16543 Moose Knuckles, e142306, e216402 Tibi) and "Buy One
+# discount at all (e216402 Tibi; the THIN-body ones such as e16543 Moose
+# Knuckles and e142306 are caught since BL60, see below) and "Buy One
 # Tour Ticket, Get One 50% Off", vetoed by its own word `tour`. A bare
 # "<season> Sale" / "Black Friday Sale" deliberately does NOT match; that is the
 # exact shape the refutation above is about.
@@ -2296,6 +2297,93 @@ _SALE_WINDOW_VETO_RE = re.compile(
     r'\bpop[\s-]?ups?\b|\bgiveaway\b|\btasting\b|\bcharm\s+bar\b'
     r'|\bdrink\s+specials?\b|\blive\s+music\b|\bdj\b|\bkaraoke\b|\btrivia\b'
     r'|\bfood\s+truck', re.IGNORECASE)
+# THIN-BODY sample sales (BL60, user-approved 2026-10-23). The fail-safe miss
+# above — a sample sale whose body names no discount — turned out to be the
+# common shape of an aggregator's sample-sale card: a blank body, the title
+# echoed back, or one short sentence saying where it is ("Save The Duck
+# Outerwear Sample Sale at Chelsea Market."). Such a row has nothing to attend
+# beyond the shopping window, so a "sample sale" title is enough once the body
+# is that thin (≤ `_SAMPLE_SALE_THIN_CHARS`, at most one sentence plus a
+# trailing one/two-word fragment such as "Free."). A body that says anything
+# more still needs the markdown corroboration, and the name/programming vetoes
+# above still apply. Measured 2026-10-23 over all events: 9 new hits (e16543
+# Moose Knuckles, e88684/e91219/e294465 James Perse, e142306 Privé, e156867 and
+# e298465 Mackage, e282875 holiCHIC, e299786 Save the Duck), all retail sample
+# sales, 0 false positives; over all crawl_events, 14 distinct name/body pairs,
+# all sample sales.
+_SAMPLE_SALE_NAME_RE = re.compile(r'\bsample\s+sale\b', re.IGNORECASE)
+_SAMPLE_SALE_THIN_CHARS = 120
+# A sentence boundary followed by at least three more words: a second real
+# sentence, not a "Free." tail.
+_SECOND_SENTENCE_RE = re.compile(r'[.!?]\s+\S+\s+\S+\s+\S')
+# In-store GIVEAWAYS (BL60, 2026-10-23): a café/shop's purchase-free freebie
+# mechanic published as a dated row. Three w6018 (Dumbo Improvement District)
+# rows about the café maman, suppressed in the 2026-10-19 run: e297019 "Maelys x
+# maman collaboration" (first 50 guests receive a complimentary beverage),
+# e297023 "Find a Pumpkin, Find a Cookie at Maman" (sticker hidden under the
+# cup, bring it to the register) and e297027 "Come in Costume, Leave With a
+# Croissant at Maman" (a voucher for a complimentary croissant).
+#
+# The mechanics alone are NOT junk — real events advertise the same freebies:
+# "first 15 people in a Knicks jersey get a SHOT" (a watch party), "everyone in
+# costume gets a free shot" (Devil's Disco, a live party), "first 50 people get
+# a free signature drink" (a DJ morning party), "the first 25 people to register
+# receive free admission" (a singles walk). Three gates, all required:
+#   1. a giveaway MECHANIC in the body (first-N-guests-receive, a hidden
+#      sticker, bring-it-to-the-register, a voucher for a free item, in costume
+#      receive);
+#   2. the prize is a complimentary/free café ITEM (cookie, croissant, latte,
+#      beverage, sample …) — drops the free-admission and merch shapes;
+#   3. no programming word anywhere (join us, DJ, music, party, workshop,
+#      tasting, game, celebrate, contest, prizes …). Any of them means there is
+#      something to attend besides the freebie, and the row survives.
+# A "gift with (your) purchase" title or body is the retail form of the same
+# offer (e18173 "Gift with Purchase at TUMI") and shares gate 3.
+#
+# Measured over all 267,846 events: 4 hits, the 3 maman rows plus e18173, all
+# hand-suppressed. Without gate 2 the mechanic also hits Devil's Disco and a
+# live customization pop-up — the reason gate 2 exists. Product collaborations
+# with no giveaway ("<brand> x <café> latte") are not covered; the maman one
+# falls to its first-50-guests mechanic.
+_INSTORE_GIVEAWAY_MECHANIC_RE = re.compile(
+    r'\bfirst\s+\d+\s+(?:guests|customers|visitors|shoppers|people|patrons)\b'
+    r'[^.]{0,40}\b(?:receive|get|gets|will\s+receive)\b'
+    r'|\b(?:sticker|stamp|token)s?\b[^.]{0,40}\bhidden\b'
+    r'|\bbring\s+(?:it|this|them)\s+to\s+the\s+(?:register|counter|cashier)\b'
+    r'|\bvoucher\s+for\s+a\s+(?:free|complimentary)\b'
+    r'|\bin\s+costume\s+(?:receive|get|gets)\b', re.IGNORECASE)
+_INSTORE_GIVEAWAY_ITEM_RE = re.compile(
+    r'\b(?:complimentary|free)\s+(?:[\w\'-]+\s+){0,2}?'
+    r'(?:cookie|croissant|pastry|pastries|pain\s+au\s+chocolat|coffee|latte|'
+    r'drink|beverage|treat|scoop|cone|donut|doughnut|bagel|muffin|sample|'
+    r'pup\s+cup|slice|tea|matcha)s?\b', re.IGNORECASE)
+_GIFT_WITH_PURCHASE_RE = re.compile(
+    r'\bgift\s+with\s+(?:your\s+|any\s+|every\s+)?purchase\b', re.IGNORECASE)
+_INSTORE_PROMO_VETO_RE = re.compile(
+    r'\b(?:join\s+us|live\s+music|dj|djs|party|workshop|class|classes|tasting|'
+    r'performance|concert|game|watch|screening|contest|competition|prizes?|'
+    r'raffle|mingle|singles|celebrat\w*|hang\s+out|tour|talk|reading|signing|'
+    r'meet\s+(?:and|&)\s+greet|music|dance|dancing|crafts?|activit(?:y|ies)|'
+    r'trivia|bingo|karaoke|parade|festival|market|fair|show|lecture|panel)\b',
+    re.IGNORECASE)
+
+# Retail PERSONALIZATION services (BL60, 2026-10-23): a shop's monogramming /
+# hand-painting / personalization station published as a dated row — e299938
+# "Tartan Tales: Hand-Painted Keepsakes" (personalize your Jo Malone gift),
+# e299943 "The Personalization Station", e172233 "Soccer Ball Monogramming",
+# e140438 "Complimentary Classic Monogramming at Tumi". A service counter, not
+# an occasion. Teaching words veto ("Intro to Embroidery: Tote Bags" creates
+# monogrammed designs in a beginner class), as do party/DJ/grand-opening
+# programming (the West Elm grand opening with chainstitch monogramming and a
+# DJ). Measured over all 267,846 events: 4 hits, all 4 hand-suppressed.
+_RETAIL_PERSONALIZATION_RE = re.compile(
+    r'\b(?:personali[sz]ation\s+station|monogramming|'
+    r'hand-painted\s+(?:finishing\s+touch|keepsakes?)|engraving\s+station)\b',
+    re.IGNORECASE)
+_RETAIL_PERSONALIZATION_VETO_RE = re.compile(
+    r'\b(?:learn|class|classes|workshop|course|beginners?|stitch\w*|dj|music|'
+    r'celebrat\w*|party|grand\s+opening|demo|make\s+your\s+own|diy)\b',
+    re.IGNORECASE)
 
 # Venue reopening announcements: a "<venue> Reopening" status notice ("Museum
 # Reopening" — "reopens in Autumn 2026 following summer restoration") rather than
@@ -3505,6 +3593,15 @@ def _is_ticket_product_package(name, description=None):
     return not _TICKET_PRODUCT_VETO_RE.search(name + ' ' + description)
 
 
+def _sale_body_is_thin(name, description):
+    """Blank, an echo of the title, or one short sentence (BL60 sample sales)."""
+    if _description_adds_nothing(name, description):
+        return True
+    text = re.sub(r'\s+', ' ', description or '').strip()
+    return (len(text) <= _SAMPLE_SALE_THIN_CHARS
+            and not _SECOND_SENTENCE_RE.search(text))
+
+
 def _is_retail_sale_window(name, description=None):
     """True for a shop's discount/markdown window published as a dated event.
 
@@ -3520,9 +3617,33 @@ def _is_retail_sale_window(name, description=None):
         return False
     if _SALE_WINDOW_SELF_NAME_RE.search(name):
         return True
+    if _SAMPLE_SALE_NAME_RE.search(name) and _sale_body_is_thin(name, description):
+        return True
     return bool(_SALE_WINDOW_OFFER_NAME_RE.search(name)
                 and description
                 and _SALE_WINDOW_OFFER_DESC_RE.search(description))
+
+
+def _is_instore_giveaway(name, description=None):
+    """True for a shop/café freebie mechanic or gift-with-purchase offer.
+
+    See the comment block above `_INSTORE_GIVEAWAY_MECHANIC_RE`.
+    """
+    description = description or ''
+    both = name + ' ' + description
+    if _INSTORE_PROMO_VETO_RE.search(both):
+        return False
+    if _GIFT_WITH_PURCHASE_RE.search(both):
+        return True
+    return bool(_INSTORE_GIVEAWAY_MECHANIC_RE.search(description)
+                and _INSTORE_GIVEAWAY_ITEM_RE.search(description))
+
+
+def _is_retail_personalization(name, description=None):
+    """True for a shop's monogramming/personalization service row."""
+    both = name + ' ' + (description or '')
+    return bool(_RETAIL_PERSONALIZATION_RE.search(both)
+                and not _RETAIL_PERSONALIZATION_VETO_RE.search(both))
 
 
 def _is_food_holiday_promo(name, description=None):
@@ -3682,6 +3803,11 @@ _JUNK_RULES = (
     # self-describing half is name-only on purpose (the live MoMA row has no
     # body at all). See `_SALE_WINDOW_SELF_NAME_RE` for the refuted `sale` gate.
     _JunkRule('retail_sale_window', pred=_pred(_is_retail_sale_window)),
+    # BL60: a café/shop freebie mechanic ("first 50 guests receive a
+    # complimentary latte", a sticker under the cup) or gift-with-purchase, and
+    # a shop's monogramming/personalization station. Programming words veto.
+    _JunkRule('instore_giveaway', pred=_pred(_is_instore_giveaway)),
+    _JunkRule('retail_personalization', pred=_pred(_is_retail_personalization)),
     # "<program> Ends!" deadline notice: the blank/echo-body half …
     _JunkRule('program_deadline_bare', _PROGRAM_DEADLINE_NAME_RE, desc_mode='adds_nothing',
               vetoes=((_PROGRAM_DEADLINE_VETO_RE, 'both'),)),
@@ -3840,6 +3966,8 @@ def is_obvious_non_event(name, description=None, location=None, sublocation=None
     private venue buyouts, month-calendar listing
     placeholders, "National <food/drink> Day" restaurant promos, retail
     discount windows (storewide/member-shopping/percent-off/sample sales),
+    café/shop in-store giveaways and gift-with-purchase offers, monogramming/
+    personalization stations,
     ticketing upsell products (packages/bundles), serial "<place> #<n>" placeholders,
     and bare generic placeholder names — the kinds of rows that
     should never reach the map. High precision by design; anything fuzzier
@@ -4081,6 +4209,13 @@ def group_event_occurrences(rows, source_url=None, location_refs=None):
             return not _venue_shaped_mismatch(a[1], refs_for(b, b_text))
         return a[1] == b[1]
 
+    def comma_rival_session(a, b, a_text='', b_text=''):
+        """MIXED pair whose unresolved side names a rival venue before a
+        street address (`_venue_shaped_mismatch(judge_comma_head=True)`)."""
+        if a[0] == 'id':
+            return _venue_shaped_mismatch(b[1], refs_for(a, a_text), judge_comma_head=True)
+        return _venue_shaped_mismatch(a[1], refs_for(b, b_text), judge_comma_head=True)
+
     def refs_for(key, loc_text):
         refs = [loc_text] if loc_text else []
         refs.extend((location_refs or {}).get(key[1], ()))
@@ -4236,6 +4371,16 @@ def group_event_occurrences(rows, source_url=None, location_refs=None):
                 # in cr 122926 alone). A venue-shaped mismatch never reaches
                 # here - locations_compatible already rejected it.
                 if mixed:
+                    # BL43: but a "<venue>, <street address>" session at a
+                    # rival venue, on its own event URL, is another session
+                    # (BCCLS "Novels at Night" at Bonefish Grill vs the Upper
+                    # Saddle River library). Same-URL rows still group: a
+                    # duplicate record that adds the room's address (Hunter's
+                    # "Leubsdorf Gallery, 132 East 68th St") is one listing.
+                    if (not urls_compatible(row_url, group_event_urls.get(existing_key))
+                            and comma_rival_session(row_loc, existing_loc,
+                                                    row_name_loc, loc_name(existing))):
+                        continue
                     return existing_key
                 # Signal 2: the event URL. Two listings carrying different
                 # event URLs are different events — the same reasoning
@@ -6995,9 +7140,43 @@ def _depluralize(tokens):
     return {t[:-1] if len(t) > 3 and t.endswith('s') else t for t in tokens}
 
 
-def _venue_shaped_mismatch(unresolved_text, resolved_refs):
+def _rival_venue_head(raw, normalized, resolved_refs):
+    """True when a "<venue>, <street address>" string names a rival venue in
+    its leading comma segment (BL43).
+
+    That is the exact shape the extraction prompt's SESSION VENUES rule asks
+    for when one listing carries sessions at two venues, and it only reaches
+    the grouper when the address failed to resolve. The street tail made the
+    whole string read as an address of the resolved venue, so BCCLS "Novels
+    at Night" at "Bonefish Grill, 601 From Road" fused into the Upper Saddle
+    River library's crawl_event (cr 135010, 2026-10-23). The head alone is
+    judged by `_venue_shaped_mismatch`, so a room, locality, placeholder,
+    street or anything sharing identity with the resolved venue still groups;
+    the caller then still tests the WHOLE string against the resolved venue's
+    references, so "Alameda Ave, Little Neck" keeps joining "Little Neck church
+    parking lot".
+    """
+    if ',' not in raw:
+        return False
+    head = raw.split(',', 1)[0]
+    h = _normalize_location_name(head)
+    if not h or h == normalized or _mentions_street(h):
+        return False
+    # "Alameda Ave, Little Neck": a trailing abbreviation is a street name
+    # even without a house number (`_mentions_street` wants the number so
+    # that "St. Cecilia" stays a venue; a TRAILING "St"/"Ave" never is one).
+    if h.split()[-1] in _ADDR_TYPE_WORD_SET:
+        return False
+    return _venue_shaped_mismatch(head, resolved_refs)
+
+
+def _venue_shaped_mismatch(unresolved_text, resolved_refs, judge_comma_head=False):
     """True when `unresolved_text` names a DIFFERENT venue from the resolved
     row — the only case where a mixed (id vs name) pair must not fuse.
+
+    `judge_comma_head` (BL43): also read a "<venue>, <street address>" string
+    by its head instead of exempting it as street-shaped. Only the grouper's
+    different-URL check asks this; see `_rival_venue_head`.
 
     False (keep fusing) for every shape that is not a rival venue:
       * collapses to nothing under normalization (virtual / online / bare borough)
@@ -7041,7 +7220,11 @@ def _venue_shaped_mismatch(unresolved_text, resolved_refs):
     words = u.split()
     if len(words) < 2:
         return False
-    if _mentions_street(u):
+    # With `judge_comma_head`, a street tail does not exempt a rival venue
+    # named before the comma (BL43); the whole string still has to share
+    # nothing with the resolved venue below.
+    if _mentions_street(u) and not (
+            judge_comma_head and _rival_venue_head(raw, u, resolved_refs)):
         return False
     # A locality with a geographic qualifier, or a branch label.
     core = ' '.join(w for w in words if w not in _GEO_QUALIFIERS
@@ -8298,16 +8481,47 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
     # genuinely different word can no longer sneak through. Real spelling
     # variants that survive squashing (e.g. "Ave" vs "Avenue") belong in
     # location_alternate_names, which is checked earlier and is explicit.
+    #
+    # The squash compares NORMALIZED names, and normalization strips an area
+    # qualifier, so a BRANCH name collapses onto the bare brand: Commonpoint
+    # w3027's global alias "Commonpoint Bronx" squashes to the site name
+    # "Commonpoint", and every venue-less Commonpoint row (Queens camps,
+    # trips) landed on l2897 Commonpoint Bronx Center (BL12 delivery
+    # follow-up, 2026-10-23). The area must travel with the key, as in
+    # `_home_name_parts`: a key naming an area the site name does not is a
+    # branch, and the already-collapsed key ("commonpoint") is declined by the
+    # brand-family guard. A site that names the same area ("Kadampa
+    # Meditation Center NYC") still matches its own venue. Declining leaves
+    # the row to Step 7/7b, which pick the organizer's own venue only on name
+    # evidence, else unmapped. Replay over 1,035 venue-less 120-day triples:
+    # only the w3027 row changed venue (l2897 -> unmapped); w685 now reaches
+    # the same l2180 through Step 7.
     if not normalized_loc:
-        site_key = _squash_identity(_normalize_location_name(source_site_name))
+        site_norm, site_area = _normalize_location_name_parts(source_site_name or '')
+        site_key = _squash_identity(site_norm)
+        site_class = _area_qualifier_class(site_area)
         if site_key:
+            shared_shorts = locations_map.get('shared_short_names', {})
             for priority, tier in all_tiers:
                 for key in tier:
                     match = tier[key]
                     if isinstance(match, list):
                         continue
-                    if (_squash_identity(_normalize_location_name(key)) == site_key
-                            and (result := make_result(match, 'source_site'))):
+                    norm_key, key_area = _normalize_location_name_parts(key)
+                    if _squash_identity(norm_key) != site_key:
+                        continue
+                    key_class = _area_qualifier_class(key_area)
+                    if key_class and key_class != site_class:
+                        continue  # "Commonpoint Bronx" is a branch of "Commonpoint"
+                    if (not key_class and _is_brand_family_key(
+                            locations_map, norm_key, match.get('id'))):
+                        continue  # the collapsed "commonpoint" key itself
+                    if tier is locations_map.get('short_names') and key in shared_shorts:
+                        # Claimed by 2+ venues; the dict holds the last write.
+                        # w685's "St. Joseph's University" short_name is on both
+                        # campuses, so it must not out-rank Step 7's one link.
+                        continue
+                    if (result := make_result(match, 'source_site')):
                         return result
 
     # Step 7: Website-linked location fallback
