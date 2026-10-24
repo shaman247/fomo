@@ -476,7 +476,7 @@ const PopupContentBuilder = (() => {
         // Tag-state Sets can be expensive to derive when called per-location in a
         // tight loop (e.g. MarkerController's label computation). Callers may
         // precompute and pass them in via ctx.tagSets.
-        const { selectedTagsSet, requiredTagsSet, forbiddenTagsSet } =
+        const { selectedTagsSet, requiredTagsSet, forbiddenTagsSet, selectedGroups } =
             ctx.tagSets || Utils.partitionTagStates(activeFilters.tagStates);
         const hasActiveTagFilters = selectedTagsSet.size > 0;
 
@@ -501,12 +501,11 @@ const PopupContentBuilder = (() => {
             const orgTags = Utils.organizerTagsForEvent(event);
 
             // selectedTagsSet here also contains required tags (it feeds
-            // selectedTagMatchCount below), but the predicate's selected tier
-            // only runs when requiredTagsSet is empty — where the two
-            // conventions coincide — so the boolean is unaffected.
+            // selectedTagMatchCount below); the predicate's selected tier uses
+            // selectedGroups, which exclude them, so the boolean is unaffected.
             const isMatchingTags = Utils.matchesTagSets(
                 combinedTags, locationTags, orgTags,
-                selectedTagsSet, requiredTagsSet, forbiddenTagsSet
+                selectedTagsSet, requiredTagsSet, forbiddenTagsSet, selectedGroups
             );
 
             let selectedTagMatchCount = 0;

@@ -147,14 +147,14 @@ const MarkerController = (() => {
         // Derive tag-state Sets ONCE per render, not per location. Hands them
         // to sortEventsForLocation via ctx.tagSets so the inner loop skips the
         // O(|tagStates|) partition work per call.
-        const { selectedTagsSet, requiredTagsSet, forbiddenTagsSet } = Utils.partitionTagStates(tagStates);
+        const { selectedTagsSet, requiredTagsSet, forbiddenTagsSet, selectedGroups } = Utils.partitionTagStates(tagStates);
         return {
             activeFilters: { tagStates, sliderStartDate: selectedDates[0] },
             filterFunctions: { getLocationInfo: (key) => state.appState.locationsByLatLng[key] },
             selectedStartDate: selectedDates[0],
             selectedEndDate: selectedDates[1],
             forceDisplayEventId: state.eventProvider.getForceDisplayEventId(),
-            tagSets: { selectedTagsSet, requiredTagsSet, forbiddenTagsSet }
+            tagSets: { selectedTagsSet, requiredTagsSet, forbiddenTagsSet, selectedGroups }
         };
     }
 

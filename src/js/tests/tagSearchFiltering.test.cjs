@@ -147,6 +147,41 @@ test('same-name Ballroom topic and venue identities filter independently and sha
     assert.equal(a.Utils.getTagDisplayName('venue:Ballroom'),a.Utils.getTagDisplayName('Ballroom'));
 });
 
+test('Tags and Venues selections OR within a selector and AND across them', () => {
+    const a=app();
+    a.state.locationsByLatLng['40,-74']={name:'Park',tags:['venue:Outdoor']};
+    a.state.locationsByLatLng['41,-74']={name:'Cinema',tags:['venue:Cinema']};
+    const parkFilm={id:1,name:'Movie night',tags:['Film'],locationKey:'40,-74'};
+    const parkJazz={id:2,name:'Jazz picnic',tags:['Jazz'],locationKey:'40,-74'};
+    const cinemaFilm={id:3,name:'Premiere',tags:['Film'],locationKey:'41,-74'};
+    const parkYoga={id:4,name:'Yoga',tags:['Wellness'],locationKey:'40,-74'};
+    const all=[parkFilm,parkJazz,cinemaFilm,parkYoga];
+    a.load(all);
+    const ids=states=>Array.from(a.FilterManager.filterEventsByTags(states,all),e=>e.id).sort();
+    const popup=(states,e)=>{
+        const s=a.Utils.partitionTagStates(states);
+        return a.Utils.matchesTagSets(e.tags,a.state.locationsByLatLng[e.locationKey].tags,[],
+            s.selectedTagsSet,s.requiredTagsSet,s.forbiddenTagsSet,s.selectedGroups);
+    };
+    const cases=[
+        [{Film:'selected','venue:Outdoor':'selected'},[1]],
+        [{Film:'selected',Jazz:'selected','venue:Outdoor':'selected'},[1,2]],
+        [{Film:'selected','venue:Outdoor':'selected','venue:Cinema':'selected'},[1,3]],
+        [{Film:'required','venue:Outdoor':'selected'},[1]],
+        [{Film:'selected','venue:Outdoor':'required'},[1]],
+        [{Film:'selected',Jazz:'required'},[2]], // required still supersedes selected within a selector
+        [{Jazz:'required',Film:'selected','venue:Outdoor':'selected'},[2]],
+    ];
+    for(const [states,expected] of cases){
+        assert.deepEqual(ids(states),expected,JSON.stringify(states));
+        assert.deepEqual(all.filter(e=>popup(states,e)).map(e=>e.id),expected,JSON.stringify(states));
+        // matchesTagSets without explicit groups derives the same answer.
+        const s=a.Utils.partitionTagStates(states);
+        assert.deepEqual(all.filter(e=>a.Utils.matchesTagSets(e.tags,a.state.locationsByLatLng[e.locationKey].tags,[],
+            s.selectedTagsSet,s.requiredTagsSet,s.forbiddenTagsSet)).map(e=>e.id),expected);
+    }
+});
+
 test('location aliases are searchable but never displayed', () => {
     const a = app();
     a.state.locationsByLatLng['40,-74'] = {name:'KGB Bar', tags:['venue:Bar'], aliases:['The Red Room at KGB']};

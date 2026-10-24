@@ -117,10 +117,11 @@ test('the yielding first render runs the same steps in the same order, scoring m
         return { log, yields, matching: app.state.currentlyMatchingEvents };
     };
     const sync = await run(false), split = await run(true);
-    const steps = ['filter', 'tag.counts', 'venue.counts', 'format.counts', 'area.counts',
+    // Tags and Venues counts each filter by the other selector first.
+    const steps = ['filter', 'filter', 'tag.counts', 'filter', 'venue.counts', 'format.counts', 'area.counts',
         'group', 'visible', 'markers', 'panel'];
     assert.deepEqual(sync.log, steps);
-    assert.deepEqual(split.log, [...steps.slice(0, 7), 'score1:A', 'score2:B', ...steps.slice(7)]);
+    assert.deepEqual(split.log, [...steps.slice(0, 9), 'score1:A', 'score2:B', ...steps.slice(9)]);
     assert.equal(sync.yields, 0);
     assert.equal(split.yields, 3);
     assert.equal(split.matching.length, 2);

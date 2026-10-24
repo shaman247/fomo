@@ -118,53 +118,32 @@ const FilterManager = (() => {
      * @returns {Array} Events matching tag filters
      */
     function filterEventsByTags(tagStates, baseEvents) {
-        const { selectedTags, requiredTags, forbiddenTags } = Utils.partitionTagStates(tagStates);
+        const { requiredTags, forbiddenTags, selectedGroups } = Utils.partitionTagStates(tagStates);
+        const index = state.appState.eventTagIndex;
 
-        // Tag-index ids must resolve to the date-filtered copies in baseEvents
-        // (they carry matching_occurrences); state.appState.eventsById holds
-        // the un-annotated originals, which would rank and display recurring
-        // events by occurrences outside the active date range downstream.
-        let baseById = null;
-        if (requiredTags.length > 0 || selectedTags.length > 0) {
-            baseById = new Map();
+        // Required tags each narrow the match; each facet's selected tags
+        // (Tags, Venues) narrow it by their union, so facets AND together.
+        let matchingEventIds = null;
+        const narrow = ids => {
+            matchingEventIds = matchingEventIds === null
+                ? ids
+                : new Set([...matchingEventIds].filter(id => ids.has(id)));
+        };
+        for (const tag of requiredTags) narrow(new Set(index[tag] || []));
+        for (const group of selectedGroups) {
+            const ids = new Set();
+            for (const tag of group) for (const id of index[tag] || []) ids.add(id);
+            narrow(ids);
+        }
+
+        let filteredEvents = baseEvents;
+        if (matchingEventIds !== null) {
+            // Tag-index ids must resolve to the date-filtered copies in baseEvents
+            // (they carry matching_occurrences); state.appState.eventsById holds
+            // the un-annotated originals, which would rank and display recurring
+            // events by occurrences outside the active date range downstream.
+            const baseById = new Map();
             for (const event of baseEvents) baseById.set(event.id, event);
-        }
-
-        let filteredEvents;
-
-        // If no tags selected, use all base events
-        if (selectedTags.length === 0 && requiredTags.length === 0) {
-            filteredEvents = baseEvents;
-        }
-        // Required tags: use intersection of tag indexes
-        else if (requiredTags.length > 0) {
-            let matchingEventIds = new Set(state.appState.eventTagIndex[requiredTags[0]] || []);
-
-            // Intersect with other required tags
-            for (let i = 1; i < requiredTags.length; i++) {
-                const tag = requiredTags[i];
-                const eventIdsForTag = new Set(state.appState.eventTagIndex[tag] || []);
-                matchingEventIds = new Set(
-                    [...matchingEventIds].filter(id => eventIdsForTag.has(id))
-                );
-            }
-
-            filteredEvents = Array.from(matchingEventIds)
-                .map(id => baseById.get(id))
-                .filter(Boolean);
-        }
-        // Selected tags: use union of tag indexes (including related tags!)
-        else if (selectedTags.length > 0) {
-            const matchingEventIds = new Set();
-
-            selectedTags.forEach(tag => {
-                if (state.appState.eventTagIndex[tag]) {
-                    state.appState.eventTagIndex[tag].forEach(eventId =>
-                        matchingEventIds.add(eventId)
-                    );
-                }
-            });
-
             filteredEvents = Array.from(matchingEventIds)
                 .map(id => baseById.get(id))
                 .filter(Boolean);

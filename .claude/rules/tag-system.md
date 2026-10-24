@@ -26,7 +26,9 @@ Venue-only names stored on events are event keywords. Geographic tags belong
 to venues. The frontend export publishes curated event names as `tags`, event
 keywords as `keywords`, venue filter keys as `venue:<name>`, and plain location
 keywords separately. Display labels omit the namespace. Same-name filters remain
-independent in Tags and Venues, including required/excluded states. Legacy
+independent in Tags and Venues, including required/excluded states. Selected
+filters OR within a selector and AND across Tags and Venues (Film + Outdoor =
+outdoor film events; `Utils.tagFilterFacet`). Legacy
 unambiguous venue links redirect to scoped keys; ambiguous names keep the event
 meaning. Area URLs keep their plain names.
 

@@ -1890,8 +1890,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const currentTagStates = FilterPanelUI.getTagStates();
 
-            // Facet counts use dates + topics + the other selector, across the
-            // whole map. Deduplication and ancestor counts live in each selector.
+            // Facet counts use dates + every other facet, across the whole map:
+            // Tags counts honour the Venues selection and vice versa, since the
+            // two AND together. Deduplication and ancestor counts live in each selector.
             const tagMatches = FilterManager.filterEventsByTags(
                 currentTagStates, this.state.allEventsFilteredByDate || []);
             const areaMatches = tagMatches.filter(event =>
@@ -1899,8 +1900,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const formatMatches = tagMatches.filter(FormatSelector.matches);
             const selectorEvents = (this.state.allEventsFilteredByDate || []).filter(event =>
                 FormatSelector.matches(event) && NeighborhoodSelector.matches(event, this.state.locationsByLatLng[event.locationKey]));
-            TagSelector.updateCounts(selectorEvents, this.state.locationsByLatLng);
-            VenueSelector.updateCounts(selectorEvents, this.state.locationsByLatLng);
+            const facetStates = facet => Object.fromEntries(Object.entries(currentTagStates)
+                .filter(([tag]) => Utils.tagFilterFacet(tag) === facet));
+            TagSelector.updateCounts(FilterManager.filterEventsByTags(facetStates('venue'), selectorEvents),
+                this.state.locationsByLatLng);
+            VenueSelector.updateCounts(FilterManager.filterEventsByTags(facetStates('tag'), selectorEvents),
+                this.state.locationsByLatLng);
             FormatSelector.updateCounts(areaMatches);
             NeighborhoodSelector.updateCounts(formatMatches, this.state.locationsByLatLng);
             const allMatchingEventsFlatList = FomoQueries.currentViewEvents() ?? areaMatches.filter(FormatSelector.matches);

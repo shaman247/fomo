@@ -553,18 +553,50 @@ const Utils = (() => {
         return ids.map(id => ORGANIZER_TAG_PREFIX + id);
     }
 
-    /**
-     * Three-tier tag matching rule shared by FilterManager and
-     * PopupContentBuilder: forbidden excludes, required must all match,
-     * selected needs at least one (only checked when nothing is required).
-     * Tag lists are passed separately (event, location, organizer) so hot
-     * callers can reuse existing arrays without concatenating.
-     */
     function eventFilterTags(event, location) {
         return new Set([...(event.tags || []), ...(location?.tags || []), ...organizerTagsForEvent(event)]);
     }
 
-    function matchesTagSets(eventTags, locationTags, orgTags, selectedTagsSet, requiredTagsSet, forbiddenTagsSet) {
+    /**
+     * The selector a filter tag belongs to: 'venue' (Venues) or 'tag' (Tags,
+     * plus organizers and search-panel keywords). Selected tags OR within a
+     * facet and AND across facets, so Film + Outdoor means outdoor film events.
+     * Mirrors the Venues selector's membership when it is loaded.
+     */
+    function tagFilterFacet(tag) {
+        const isVenue = typeof VenueTags !== 'undefined' ? VenueTags.has(tag) : tag.startsWith('venue:');
+        return isVenue ? 'venue' : 'tag';
+    }
+
+    /**
+     * Groups selected (non-required) tags by facet. A facet with a required tag
+     * contributes no group: its required tags already gate it, matching the
+     * single-facet rule that required supersedes selected.
+     * @returns {Array<Set>} one Set per facet; an event must match one tag of each
+     */
+    function selectedFacetGroups(selectedTags, requiredTags) {
+        const requiredFacets = new Set([...requiredTags].map(tagFilterFacet));
+        const groups = new Map();
+        for (const tag of selectedTags) {
+            if (requiredTags.has(tag)) continue;
+            const facet = tagFilterFacet(tag);
+            if (requiredFacets.has(facet)) continue;
+            if (!groups.has(facet)) groups.set(facet, new Set());
+            groups.get(facet).add(tag);
+        }
+        return [...groups.values()];
+    }
+
+    /**
+     * Three-tier tag matching rule shared by FilterManager and
+     * PopupContentBuilder: forbidden excludes, required must all match, and
+     * each facet's selected group needs at least one match (see
+     * selectedFacetGroups). Tag lists are passed separately (event, location,
+     * organizer) so hot callers can reuse existing arrays without concatenating.
+     */
+    function matchesTagSets(eventTags, locationTags, orgTags, selectedTagsSet, requiredTagsSet, forbiddenTagsSet,
+        selectedGroups = selectedFacetGroups(selectedTagsSet, requiredTagsSet)) {
+        const has = tag => eventTags.includes(tag) || locationTags.includes(tag) || orgTags.includes(tag);
         if (forbiddenTagsSet.size > 0) {
             if (eventTags.some(t => forbiddenTagsSet.has(t))
                 || locationTags.some(t => forbiddenTagsSet.has(t))
@@ -572,18 +604,15 @@ const Utils = (() => {
                 return false;
             }
         }
-        if (requiredTagsSet.size > 0) {
-            for (const tag of requiredTagsSet) {
-                if (!eventTags.includes(tag) && !locationTags.includes(tag) && !orgTags.includes(tag)) {
-                    return false;
-                }
-            }
-            return true;
+        for (const tag of requiredTagsSet) {
+            if (!has(tag)) return false;
         }
-        if (selectedTagsSet.size > 0) {
-            return eventTags.some(t => selectedTagsSet.has(t))
-                || locationTags.some(t => selectedTagsSet.has(t))
-                || orgTags.some(t => selectedTagsSet.has(t));
+        for (const group of selectedGroups) {
+            if (!eventTags.some(t => group.has(t))
+                && !locationTags.some(t => group.has(t))
+                && !orgTags.some(t => group.has(t))) {
+                return false;
+            }
         }
         return true;
     }
@@ -637,9 +666,12 @@ const Utils = (() => {
      * selectedTagsSet INCLUDES required tags (popup/label sorting counts
      * required-tag matches toward hasActiveTagFilters and selectedTagMatchCount).
      *
+     * selectedGroups splits the selected tags by facet (see selectedFacetGroups).
+     *
      * @param {Object} tagStates - Tag states object {tagName: state}
      * @returns {{selectedTags: Array, requiredTags: Array, forbiddenTags: Array,
-     *            selectedTagsSet: Set, requiredTagsSet: Set, forbiddenTagsSet: Set}}
+     *            selectedTagsSet: Set, requiredTagsSet: Set, forbiddenTagsSet: Set,
+     *            selectedGroups: Array<Set>}}
      */
     function partitionTagStates(tagStates) {
         const selectedTags = [];
@@ -662,7 +694,8 @@ const Utils = (() => {
                 forbiddenTagsSet.add(tag);
             }
         }
-        return { selectedTags, requiredTags, forbiddenTags, selectedTagsSet, requiredTagsSet, forbiddenTagsSet };
+        const selectedGroups = selectedFacetGroups(selectedTagsSet, requiredTagsSet);
+        return { selectedTags, requiredTags, forbiddenTags, selectedTagsSet, requiredTagsSet, forbiddenTagsSet, selectedGroups };
     }
 
     return {
@@ -679,6 +712,7 @@ const Utils = (() => {
         organizerTagsForEvent,
         matchesTagSets,
         eventFilterTags,
+        tagFilterFacet,
         isValidUrl,
         buildEventDateTime,
         parseDateInZone,
