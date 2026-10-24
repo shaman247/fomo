@@ -45,6 +45,7 @@ const MapManager = (() => {
         promotedPlaces: new Set(),
         promotedSignature: null,
         symbolSignature: null,
+        settleTimer: null,
         measureContext: null,
 
         // Popup content callbacks by locationKey
@@ -73,7 +74,17 @@ const MapManager = (() => {
         // Ensure source/layers exist whenever the map becomes idle, too.
         // Safety net covering any path where style.load didn't (re-)create them.
         mapInstance.on('idle', _ensureLayers);
-        mapInstance.on('moveend', refreshPromotedMarkers);
+        // A wheel zoom's moveend trails the camera's last frame by ~200ms
+        // while MapLibre waits for the gesture to continue. Promote as soon
+        // as the camera settles so markers and titles don't wait for it.
+        mapInstance.on('move', () => {
+            clearTimeout(state.settleTimer);
+            state.settleTimer = setTimeout(refreshPromotedMarkers, 50);
+        });
+        mapInstance.on('moveend', () => {
+            clearTimeout(state.settleTimer);
+            refreshPromotedMarkers();
+        });
         mapInstance.on('resize', refreshPromotedMarkers);
 
         // Try immediate setup if style is already loaded

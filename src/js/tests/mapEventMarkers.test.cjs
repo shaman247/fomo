@@ -7,13 +7,15 @@ function harness({ reducedMotion = true } = {}) {
     const images = new Map(), layouts = new Map(), requests = [], hoverRequests = [];
     const layers = new Map(), filters = new Map(), filterCalls = [], featureStates = new Map();
     const dataUpdates = [];
+    const handlers = new Map(), timers = new Map();
+    let nextTimer = 0;
     const animationFrames = new Map();
     let now = 0, nextFrame = 0;
     let data, theme = 'light', projectX = 500;
     const rect = { left: 0, top: 0, right: 1000, bottom: 700 };
     const source = { setData: value => { data = value; dataUpdates.push(value); } };
     const map = {
-        on() {}, isStyleLoaded: () => true, getSource: () => source, addSource() {},
+        on: (name, fn) => handlers.set(name, [...(handlers.get(name) || []), fn]), isStyleLoaded: () => true, getSource: () => source, addSource() {},
         addLayer: layer => layers.set(layer.id, layer), getLayer: id => layers.get(id),
         setPaintProperty() {}, getCanvas: () => ({ getBoundingClientRect: () => rect }),
         getBounds: () => ({ contains: () => true }), project: () => ({ x: projectX, y: 350 }),
@@ -27,6 +29,8 @@ function harness({ reducedMotion = true } = {}) {
     const context = vm.createContext({
         window: { devicePixelRatio: 1, matchMedia: () => ({ matches: reducedMotion }) }, innerWidth: 1000, innerHeight: 700,
         performance: { now: () => now },
+        setTimeout: (fn, ms) => { timers.set(++nextTimer, fn); return nextTimer; },
+        clearTimeout: id => timers.delete(id),
         requestAnimationFrame: fn => { animationFrames.set(++nextFrame, fn); return nextFrame; },
         cancelAnimationFrame: id => animationFrames.delete(id),
         document: { getElementById: id => id === 'map-container' ? { getBoundingClientRect: () => rect } : null,
@@ -56,6 +60,8 @@ function harness({ reducedMotion = true } = {}) {
     return { manager, images, requests, hoverRequests, layouts, layers, filters, filterCalls, featureStates, dataUpdates, key, locations, data: () => data,
         setTheme: value => { theme = value; },
         setProjectX: value => { projectX = value; },
+        fire: name => (handlers.get(name) || []).forEach(fn => fn()),
+        runTimers: () => { const pending = [...timers.values()]; timers.clear(); pending.forEach(fn => fn()); },
         animationFrames,
         advance: ms => {
             now += ms;
@@ -311,4 +317,16 @@ test('labels near the right edge skip tiers that would run off screen', () => {
     assert.ok(filter.includes(`["match",["get","locationKey"],"${h.key}",2,0]`), filter);
     h.setProjectX(500); h.manager.refreshPromotedMarkers();
     assert.ok(!JSON.stringify(h.filters.get('marker-symbols')).includes('labelTier'));
+});
+test('promotion refreshes once the camera settles, without waiting for moveend', () => {
+    const h = harness();
+    h.render([{ id: 1, name: 'Brooklyn Botanic Garden Chili Pepper Fiesta' }]);
+    h.setProjectX(700);
+    h.fire('move'); h.fire('move');
+    assert.ok(!JSON.stringify(h.filters.get('marker-symbols')).includes('labelTier'), 'nothing while the camera moves');
+    h.runTimers();
+    assert.ok(JSON.stringify(h.filters.get('marker-symbols')).includes('labelTier'), 'the settled camera refreshes promotion');
+    h.filterCalls.length = 0;
+    h.fire('move'); h.fire('moveend'); h.runTimers();
+    assert.ok(!h.filterCalls.includes('marker-symbols'), 'moveend cancels the pending settle and refilters nothing new');
 });
