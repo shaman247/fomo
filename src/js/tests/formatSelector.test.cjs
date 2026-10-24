@@ -155,3 +155,16 @@ test('format counts include Other, hide empty categories, and count events only 
     assert.deepEqual([...s.visibleTypes()],['Game']);
     assert.equal(s.matches({event_type:'Game'}),true);
 });
+test('a popup format chip toggles between that format alone and all events', () => {
+    const s = selector();
+    s.setSelection(['Concert', 'Game']);
+    assert.equal(s.isSoleSelection('Concert'), false);
+    s.toggleSole('Concert');
+    assert.deepEqual([...s.selection()], ['Concert']);
+    assert.equal(s.isSoleSelection('Concert'), true);
+    s.toggleSole('Concert');
+    assert.equal(s.selection(), null);
+    s.toggleSole('Unlisted Type');
+    assert.deepEqual([...s.selection()], ['Other']);
+    assert.equal(s.isSoleSelection('Unlisted Type'), true);
+});

@@ -7,6 +7,7 @@ const FormatSelector = (() => {
     let button, panel, onChange;
     let eventCounts = {}, totalCount = 0;
 
+    function formatOf(type) { return types.includes(type) ? type : 'Other'; }
     function count(type) { return eventCounts[type] || 0; }
     function categoryCount(category) {
         return [...new Set(groups[category] || [])].reduce((sum, type) => sum + count(type), 0);
@@ -18,7 +19,7 @@ const FormatSelector = (() => {
             const id = event.id ?? event;
             if (seen.has(id)) continue;
             seen.add(id);
-            const type = types.includes(event.event_type) ? event.event_type : 'Other';
+            const type = formatOf(event.event_type);
             counts[type] = (counts[type] || 0) + 1;
         }
         const changed = totalCount !== seen.size || types.some(type => count(type) !== (counts[type] || 0));
@@ -65,8 +66,11 @@ const FormatSelector = (() => {
         return [...new Set(names.flatMap(name => groups[name === 'Outings' ? 'Outing' : name] || (types.includes(name) ? [name] : [])))];
     }
     function matches(event) {
-        return selected === null || selected.size === 0 || selected.has(types.includes(event.event_type) ? event.event_type : 'Other');
+        return selected === null || selected.size === 0 || selected.has(formatOf(event.event_type));
     }
+    function isSoleSelection(type) { return selected?.size === 1 && selected.has(formatOf(type)); }
+    /** Filter to just this format, or back to all events when it already is the only one. */
+    function toggleSole(type) { commit(isSoleSelection(type) ? null : [formatOf(type)]); }
     function label() {
         const values = selection();
         return values === null || values.length === 0 ? 'All Events' : values.length === 1 ? values[0] : `${values.length} Formats`;
@@ -216,5 +220,5 @@ const FormatSelector = (() => {
             if (panel.matches(':popover-open')) position();
         });
     }
-    return { init, configure, updateCounts, count, categoryCount, visibleTypes, fromLegacyTags, selection, setSelection, groupState, setGroupSelection, matches, label };
+    return { init, configure, updateCounts, count, categoryCount, visibleTypes, fromLegacyTags, selection, setSelection, groupState, setGroupSelection, matches, isSoleSelection, toggleSole, label };
 })();

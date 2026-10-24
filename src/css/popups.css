@@ -200,12 +200,6 @@
     display: block;
 }
 
-.event-format-chip {
-    margin-right: 6px;
-    vertical-align: middle;
-    cursor: default;
-}
-
 .popup-event-card-datetime {
     font-size: 0.85em;
     color: var(--secondary-text);

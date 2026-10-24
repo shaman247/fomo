@@ -40,6 +40,7 @@ const PopupContentBuilder = (() => {
         createInteractiveTagButton: null,
         hierarchyTagsSet: new Set(),
         tagEmojiMap: {},
+        tagIconMap: {},
         getDebugMode: () => false
     };
 
@@ -83,6 +84,39 @@ const PopupContentBuilder = (() => {
         span.className = 'tag-keyword';
         Utils.appendChipContent(span, state.tagEmojiMap[tag], tag);
         return span;
+    }
+
+    function syncFormatChip(chip) {
+        const sole = FormatSelector.isSoleSelection(chip.dataset.format);
+        chip.classList.toggle('state-selected', sole);
+        chip.classList.toggle('state-unselected', !sole);
+    }
+
+    /**
+     * Creates the event's format chip. Formats are FormatSelector's filter, not
+     * tags: a click filters to just this format, a second click shows all again.
+     */
+    function createFormatChip(format) {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'tag-button event-format-chip';
+        chip.dataset.format = format;
+        syncFormatChip(chip);
+        // Most formats are not curated tags, so the icon comes from the icon map
+        // rather than tagEmojiMap. The accent only shows while selected.
+        const iconRecord = { icon_id: state.tagIconMap[format], emoji: state.tagEmojiMap[format] };
+        if (iconRecord.icon_id || iconRecord.emoji) {
+            chip.appendChild(IconManager.createElement(iconRecord, { className: 'chip-emoji event-icon',
+                onAccent: color => chip.style.setProperty('--chip-color', color) }));
+        }
+        chip.append(format);
+        chip.addEventListener('click', () => FormatSelector.toggleSole(format));
+        return chip;
+    }
+
+    /** Re-applies selection state to rendered format chips after the format filter changes. */
+    function syncFormatChips() {
+        document.querySelectorAll('.event-format-chip').forEach(syncFormatChip);
     }
 
     /**
@@ -345,10 +379,11 @@ const PopupContentBuilder = (() => {
         const tagsToShow = event.display_tags || event.tags;
 
         // Show curated tags (from tag hierarchy), hide keywords (unless debug mode)
+        // The format chip leads the list, so drop a same-named tag (e.g. Concert).
         const curatedTags = (tagsToShow && tagsToShow.length > 0)
             ? (state.hierarchyTagsSet.size > 0 && !state.getDebugMode()
                 ? tagsToShow.filter(tag => state.hierarchyTagsSet.has(tag))
-                : tagsToShow)
+                : tagsToShow).filter(tag => tag !== event.event_type)
             : [];
 
         // Organizers render as first-class, interactive tag chips (namespaced
@@ -368,10 +403,11 @@ const PopupContentBuilder = (() => {
             }
         }
 
-        if (curatedTags.length > 0 || organizerTags.length > 0) {
+        if (event.event_type || curatedTags.length > 0 || organizerTags.length > 0) {
             const tagsContainer = document.createElement('div');
             tagsContainer.className = 'tag-tags-container popup-tags-container';
 
+            if (event.event_type) tagsContainer.appendChild(createFormatChip(event.event_type));
             curatedTags.forEach(tag => {
                 const el = createTagElement(tag);
                 if (el) tagsContainer.appendChild(el);
@@ -575,13 +611,6 @@ const PopupContentBuilder = (() => {
         if (interactive) {
             const metadata = document.createElement('div');
             metadata.className = 'popup-event-card-metadata';
-            if (event.event_type) {
-                const formatChip = document.createElement('span');
-                formatChip.className = 'tag-button event-format-chip';
-                formatChip.title = `Format: ${event.event_type}`;
-                Utils.appendChipContent(formatChip, state.tagEmojiMap[event.event_type], event.event_type);
-                metadata.appendChild(formatChip);
-            }
             metadata.appendChild(createEventDatetimeElement(event));
             card.appendChild(metadata);
         }
@@ -820,6 +849,7 @@ const PopupContentBuilder = (() => {
         state.createInteractiveTagButton = config.createInteractiveTagButton || null;
         state.hierarchyTagsSet = config.hierarchyTagsSet || new Set();
         state.tagEmojiMap = config.tagEmojiMap || {};
+        state.tagIconMap = config.tagIconMap || {};
         state.getDebugMode = config.getDebugMode || (() => false);
     }
 
@@ -858,6 +888,7 @@ const PopupContentBuilder = (() => {
         init,
         createLocationPopupContent,
         createEventCard,
-        getDefaultSectionAndEvents
+        getDefaultSectionAndEvents,
+        syncFormatChips
     };
 })();

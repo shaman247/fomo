@@ -1704,6 +1704,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 createInteractiveTagButton: (tag) => FilterPanelUI.createInteractiveTagButton(tag),
                 hierarchyTagsSet: this.state.hierarchyTagsSet,
                 tagEmojiMap: this.state.tagEmojiMap,
+                tagIconMap: this.state.tagIconMap,
                 getDebugMode: () => this.state.debugMode
             });
 
@@ -1782,6 +1783,7 @@ document.addEventListener('DOMContentLoaded', () => {
          */
         _requestFilterUpdate(datesChanged = false) {
             FomoQueries.invalidate();
+            PopupContentBuilder.syncFormatChips();
             this._pendingDateUpdate = this._pendingDateUpdate || datesChanged;
             if (this._filterUpdateQueued) return;
             this._filterUpdateQueued = true;
