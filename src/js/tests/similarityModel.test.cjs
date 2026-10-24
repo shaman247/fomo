@@ -201,6 +201,26 @@ test('historical saved event fetches its shard and still influences upcoming eve
     assert.ok(m.score({ id: 2 }) > .99);
 });
 
+test('a liked event boosts only close neighbours; tag likes keep the published threshold', async () => {
+    // cos(1, 4) ~ .60 and cos(1, 5) ~ .80 against the published positive threshold .35.
+    const { r, m } = setup({ [`${generation}/core.json`]: { ...core(), affinityThresholds: { positive: .35, negative: .55 } },
+        [`${generation}/active-0.json`]: block(['2', '3', '4', '5'], [[127, 0], [0, 127], [76, 102], [102, 76]]) });
+    r.set('event', '1', 'An old jazz show', 1);
+    await m.load(); await settle();
+    assert.ok(m.score({ id: 2 }) > .99);
+    assert.equal(m.score({ id: 4 }), 0);
+    assert.equal(r.details({ id: 4, tags: [] }, {}).score, 0);
+    const near = m.score({ id: 5 });
+    assert.ok(Math.abs(near - (.802 - .66) / (1 - .66)) < .01, String(near));
+    assert.ok(r.score({ id: 5, tags: [] }, {}) > r.score({ id: 4, tags: [] }, {}));
+    r.remove('event', '1');
+    r.set('tag', 'Jazz', 'Jazz', 1);
+    assert.ok(Math.abs(m.score({ id: 4 }) - (.5975 - .35) / (1 - .35)) < .01);
+    // An event like never weakens a match another preference already gives.
+    r.set('event', '1', 'An old jazz show', 1);
+    assert.ok(m.score({ id: 4 }) > .35);
+});
+
 test('new event uses own tags; venue audience does not leak', async () => {
     const { r, m } = setup();
     r.set('tag', 'Jazz', 'Jazz', -1);

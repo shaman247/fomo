@@ -2,12 +2,16 @@
 const SimilarityModel = (() => {
     const base = 'data/similarity/';
     let dimensions = 0, manifest = null, loading = null, loaded = false;
-    let preferences = [], positive = null, negative = null, positiveCount = 0, negativeCount = 0;
+    let preferences = [], positive = null, likedEvents = null, negative = null, positiveCount = 0, negativeCount = 0;
     let version = 0;
     let fallback = new WeakMap();
     let preparedScores = new WeakMap(), scoreQueue = new Map(), scoring = false;
     let profileEpoch = 0;
     let thresholds = { positive: .35, negative: .55 };
+    // Neighbours of a liked event below this cosine were mostly judged irrelevant by
+    // the BL16 blind panel (ad0b2d7f: graded P@5 .66 at the published .35; .76 here).
+    // Place and tag likes keep the published threshold; the model files are unchanged.
+    const EVENT_LIKE_THRESHOLD = .66;
     const vectorPool = new Map(), constituentSets = new WeakMap();
     const vectors = { event: new Map(), place: new Map(), tag: new Map() };
     const support = { event: new Map(), place: new Map(), tag: new Map() };
@@ -93,20 +97,20 @@ const SimilarityModel = (() => {
     }
 
     function rebuildProfile() {
-        positive = []; negative = [];
+        positive = []; likedEvents = []; negative = [];
         positiveCount = 0;
         negativeCount = 0;
         for (const entry of preferences) {
             const vector = vectors[entry.type]?.get(entry.type === 'place' ? resolvePlace(entry.id) : entry.id);
             if (!vector?.length) continue;
-            const target = entry.stance === 1 ? positive : negative;
+            const target = entry.stance !== 1 ? negative : entry.type === 'event' ? likedEvents : positive;
             if (entry.stance === 1) positiveCount++;
             else negativeCount++;
             target.push(...vector);
         }
         // Parent and child preferences can share many exact constituents.
         const unique = parts => [...new Set(parts)];
-        positive = unique(positive); negative = unique(negative);
+        positive = unique(positive); likedEvents = unique(likedEvents); negative = unique(negative);
         version++;
         fallback = new WeakMap();
         preparedScores = new WeakMap(); scoreQueue.clear();
@@ -305,10 +309,12 @@ const SimilarityModel = (() => {
     }
 
     const strength = (value, threshold) => Math.max(0, (value - threshold) / (1 - threshold));
+    const eventThreshold = () => Math.max(thresholds.positive, EVENT_LIKE_THRESHOLD);
 
     async function affinityAsync(parts) {
-        const liked = positive, disliked = negative;
-        return strength(await closestAsync(parts, liked), thresholds.positive)
+        const liked = positive, events = likedEvents, disliked = negative;
+        return Math.max(strength(await closestAsync(parts, liked), thresholds.positive),
+            strength(await closestAsync(parts, events), eventThreshold()))
             - strength(await closestAsync(parts, disliked), thresholds.negative);
     }
 
@@ -317,7 +323,9 @@ const SimilarityModel = (() => {
         // pottery preference must not dilute an existing strong jazz match.
         // Conservative semantic propagation; exact preferences remain separate.
         // Generic thematic overlap is weaker evidence for a negative inference.
-        return strength(closest(parts, positive), thresholds.positive) - strength(closest(parts, negative), thresholds.negative);
+        return Math.max(strength(closest(parts, positive), thresholds.positive),
+            strength(closest(parts, likedEvents), eventThreshold()))
+            - strength(closest(parts, negative), thresholds.negative);
     }
 
     async function prepareScores() {
@@ -345,7 +353,7 @@ const SimilarityModel = (() => {
     function score(event) {
         if (!loaded || !(positiveCount || negativeCount)) return 0;
         const parts = eventVector(event);
-        if (parts.length * (positive.length + negative.length) <= 32) return affinity(parts);
+        if (parts.length * (positive.length + likedEvents.length + negative.length) <= 32) return affinity(parts);
         if (preparedScores.has(event)) return preparedScores.get(event);
         scoreQueue.set(event, parts);
         if (!scoring) { scoring = true; void pause().then(prepareScores); }
