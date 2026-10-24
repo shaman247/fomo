@@ -1,10 +1,94 @@
 """Keep date-specific room and eligibility evidence when grouping a series."""
 import json
+import re
+
+# Words whose presence flips meaning ("Adults only" vs "All ages", "No
+# registration" vs "Registration required"); texts must agree on them to fold.
+_POLARITY_WORDS = frozenset(('no', 'not', 'only', 'free', 'cancelled', 'canceled',
+                             'postponed', 'rescheduled', 'sold', 'waitlist'))
+_TRUNCATION_MARK = re.compile(r'\s*(?:…|\.\.\.)\s*$')
 
 
 def _placeholder_description(description):
     normalized = ' '.join((description or '').split()).casefold()
     return normalized in ('', 'no description available.')
+
+
+def _words(text):
+    return re.findall(r'\w+', text.casefold())
+
+
+def _specifics(text):
+    """Numbers and mid-sentence capitalized words: names, prices, ages, dates."""
+    found = set()
+    for sentence in re.split(r'(?<=[.!?;:])\s+|\n+', text):
+        for i, word in enumerate(re.findall(r"[\w$][\w'’$.-]*", sentence)):
+            word = word.rstrip('.')
+            if any(ch.isdigit() for ch in word) or (i and word[:1].isupper()):
+                found.add(word.casefold())
+    return found
+
+
+def _truncated_prefix(short, full):
+    """`short` is a listing teaser cut from `full` (mid-word or with an ellipsis)."""
+    if not _cut_off(short):
+        return False
+    head, body = _words(_TRUNCATION_MARK.sub('', short)), _words(full)
+    if len(head) >= len(body) or not head:
+        return False
+    # The last word may be cut mid-word ("exerc" of "exercises").
+    return head[:-1] == body[:len(head) - 1] and body[len(head) - 1].startswith(head[-1])
+
+
+def _same_text(a, b):
+    """Two extractions of one listing: a paraphrase or a truncated teaser.
+
+    Rewording is fine; a difference in names, numbers or polarity words (one
+    night's lineup, a second session's fee, an age band) is session evidence.
+    """
+    if _truncated_prefix(a, b) or _truncated_prefix(b, a):
+        return True
+    return (_specifics(a) == _specifics(b)
+            and _POLARITY_WORDS & set(_words(a)) == _POLARITY_WORDS & set(_words(b)))
+
+
+def _display_variants(details):
+    """Fold variants that say the same thing so the description shows only real
+    per-session differences; `session_details` itself keeps every variant."""
+    substantive = [v for v in details if not _placeholder_description(v['description'])]
+    rooms = {v['sublocation'] for v in substantive}
+    folded = []
+    for variant in details:
+        stub = _placeholder_description(variant['description'])
+        # A stub only says where its sessions were; keep that when no text does.
+        if stub and (not variant['sublocation'] or variant['sublocation'] in rooms):
+            continue
+        home = next((f for f in folded if f['sublocation'] == variant['sublocation']
+                     and _placeholder_description(f['description']) == stub
+                     and (stub or _same_text(f['description'], variant['description']))),
+                    None)
+        if home is None:
+            folded.append({**variant, 'sessions': list(variant['sessions'])})
+            continue
+        home['sessions'] += [s for s in variant['sessions'] if s not in home['sessions']]
+        if _better_text(variant['description'], home['description']):
+            home['description'] = variant['description']
+    if not substantive and len(folded) < 2:
+        # All stubs, at most one named room: one placeholder the detail crawl can fill.
+        stub = max(details, key=lambda v: len(v['description']))
+        return [{**(folded[0] if folded else stub), 'description': stub['description']}]
+    return folded
+
+
+def _cut_off(text):
+    return not re.search(r'[.!?)"”]\s*$', text) or bool(_TRUNCATION_MARK.search(text))
+
+
+def _better_text(new, old):
+    """Longer wins, except that a complete text beats one cut off mid-sentence."""
+    if _cut_off(new) != _cut_off(old):
+        return _cut_off(old)
+    return len(new) > len(old)
 
 
 def _description_session_key(row):
@@ -45,8 +129,18 @@ def preserve_session_details(event, rows):
             event['description'] = next(iter(variants.values()))['description']
         return
     details = list(variants.values())
+    event['session_details'] = details
+    render_session_details(event, details)
+
+
+def render_session_details(event, details):
+    """Set the event's description (and mixed-room sublocation) from its variants."""
+    shown = _display_variants(details)
+    if len(shown) == 1:
+        event['description'] = shown[0]['description']
+        return
     sections = []
-    for variant in details:
+    for variant in shown:
         labels = []
         for session in variant['sessions']:
             label = ' '.join(filter(None, [session['start_date'], session['start_time']]))
@@ -59,11 +153,13 @@ def preserve_session_details(event, rows):
         heading = '; '.join(labels)
         if variant['sublocation']:
             heading += ' — ' + variant['sublocation']
-        sections.append(heading + '\n' + variant['description'])
+        if _placeholder_description(variant['description']):
+            sections.append(heading)
+        else:
+            sections.append(heading + '\n' + variant['description'])
     event['description'] = '\n\n'.join(sections)
-    if len({v['sublocation'] for v in details}) > 1:
+    if len({v['sublocation'] for v in shown}) > 1:
         event['sublocation'] = 'Varies by session; see description'
-    event['session_details'] = details
 
 
 def refresh_source_session_details(cursor, event_id, crawl_event_id, raw_data):

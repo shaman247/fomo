@@ -64,9 +64,17 @@ class PlaceholderDetailsTests(unittest.TestCase):
             with self.subTest(difference=difference):
                 event = self.preserve([self.row(**difference),
                                        self.row('Tickets are $20.')])
-                self.assertIn('No description available.', event['description'])
-                self.assertIn('Tickets are $20.', event['description'])
+                # The stub's session stays in session_details; the shown text
+                # does not repeat the placeholder as its own section.
+                self.assertNotIn('No description available.', event['description'])
                 self.assertEqual(len(event['session_details']), 2)
+                if 'sublocation' in difference:
+                    # Its room is still worth showing, as a heading-only section.
+                    self.assertTrue(event['description'].startswith(
+                        '2026-10-01 7pm — Balcony\n\n2026-10-01 7pm — Main Room\n'))
+                    self.assertEqual(event['sublocation'], 'Varies by session; see description')
+                else:
+                    self.assertEqual(event['description'], 'Tickets are $20.')
 
     def test_missing_url_date_or_start_time_cannot_prove_duplicate(self):
         for field in ('url', 'start_date', 'start_time'):
@@ -74,7 +82,7 @@ class PlaceholderDetailsTests(unittest.TestCase):
                 with self.subTest(field=field, value=value):
                     event = self.preserve([self.row(**{field: value}),
                                            self.row('Registration required.', **{field: value})])
-                    self.assertIn('No description available.', event['description'])
+                    self.assertEqual(event['description'], 'Registration required.')
                     self.assertEqual(len(event['session_details']), 2)
 
     def test_only_covered_date_is_removed_from_placeholder_variant(self):
@@ -100,8 +108,7 @@ class PlaceholderDetailsTests(unittest.TestCase):
                     self.row('A two-day program.', **later)]
             event = self.preserve(rows)
             self.assertEqual(len(event['session_details']), 2)
-            self.assertIn('through 2026-10-02', event['description'])
-            self.assertIn('No description available.', event['description'])
+            self.assertEqual(event['description'], 'A two-day program.')
 
     def test_conflicting_substantive_prose_survives_with_own_sessions(self):
         rows = [self.row(), self.row('Adults only; tickets $20.'),
