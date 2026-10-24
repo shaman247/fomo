@@ -133,30 +133,41 @@ def preserve_session_details(event, rows):
     render_session_details(event, details)
 
 
+def _session_labels(variant):
+    labels = []
+    for session in variant['sessions']:
+        if not session['start_date']:
+            continue
+        label = ' '.join(filter(None, [session['start_date'], session['start_time']]))
+        if session['end_date'] and session['end_date'] != session['start_date']:
+            label += ' through ' + session['end_date']
+        if session['end_time']:
+            label += '–' + session['end_time']
+        if label not in labels:
+            labels.append(label)
+    return labels
+
+
 def render_session_details(event, details):
     """Set the event's description (and mixed-room sublocation) from its variants."""
     shown = _display_variants(details)
     if len(shown) == 1:
         event['description'] = shown[0]['description']
         return
+    headed = [(_session_labels(v), v) for v in shown]
+    # Undated text (a series overview) leads; it gets no date heading.
+    headed.sort(key=lambda pair: bool(pair[0]))
     sections = []
-    for variant in shown:
-        labels = []
-        for session in variant['sessions']:
-            label = ' '.join(filter(None, [session['start_date'], session['start_time']]))
-            if session['end_date'] and session['end_date'] != session['start_date']:
-                label += ' through ' + session['end_date']
-            if session['end_time']:
-                label += '–' + session['end_time']
-            if label not in labels:
-                labels.append(label)
+    for labels, variant in headed:
         heading = '; '.join(labels)
         if variant['sublocation']:
-            heading += ' — ' + variant['sublocation']
+            heading = (heading + ' — ' if heading else '') + variant['sublocation']
         if _placeholder_description(variant['description']):
             sections.append(heading)
-        else:
+        elif heading:
             sections.append(heading + '\n' + variant['description'])
+        else:
+            sections.append(variant['description'])
     event['description'] = '\n\n'.join(sections)
     if len({v['sublocation'] for v in shown}) > 1:
         event['sublocation'] = 'Varies by session; see description'

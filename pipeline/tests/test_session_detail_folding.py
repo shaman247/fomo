@@ -96,6 +96,25 @@ class FoldingTests(unittest.TestCase):
                 self.assertEqual(event['description'], stub)
                 self.assertNotIn('sublocation', event)
 
+    def test_undated_overview_leads_without_a_heading(self):
+        # e248690/e114951: an undated series row used to render as a blank
+        # heading ("\nOverview..." or " — Room\n...") or a leading "; ".
+        overview = 'Teen poetry workshop series listed Sep 2 - Dec 16.'
+        dated = 'Tonight: Jane Doe leads a workshop on the sonnet.'
+        undated = dict(row(overview, ''), start_time='', end_time='')
+        event = preserve([row(dated, '2026-10-21'), undated])
+        self.assertEqual(event['description'],
+                         overview + '\n\n2026-10-21 10:30am–11:15am\n' + dated)
+        roomed = preserve([row(dated, '2026-10-21', sublocation='Studio A'),
+                           dict(undated, sublocation='Media Center')])
+        self.assertEqual(roomed['description'],
+                         'Media Center\n' + overview
+                         + '\n\n2026-10-21 10:30am–11:15am — Studio A\n' + dated)
+        # An undated session inside a dated variant adds no empty label.
+        mixed = preserve([row(dated, '2026-10-21'), dict(undated, description=dated),
+                          row('Different text with Kim Lee.', '2026-10-28')])
+        self.assertTrue(mixed['description'].startswith('2026-10-21 10:30am–11:15am\n'))
+
     def test_folded_sessions_share_one_heading_when_others_differ(self):
         a = 'Prime Time Comedy featuring special guest comedians.'
         a2 = 'Prime Time Comedy, featuring special guest comedians!'
