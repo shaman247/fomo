@@ -309,7 +309,8 @@ def main(remote_dir=None, use_tls=False, force=False, skip_build=False, skip_fro
             pass
     new_state = {}
 
-    if bundle_changed(local_dir, previous_state, ftp_remote_dir):
+    new_bundle = bundle_changed(local_dir, previous_state, ftp_remote_dir)
+    if new_bundle:
         if skip_frontend_checks:
             print("App bundle changed; frontend gate SKIPPED (--skip-frontend-checks)\n")
         elif not run_frontend_checks(local_dir):
@@ -375,6 +376,11 @@ def main(remote_dir=None, use_tls=False, force=False, skip_build=False, skip_fro
         with open(STATE_FILE, 'w') as f:
             json.dump(new_state, f, indent=2, sort_keys=True)
         print(f"Saved upload state to {STATE_FILE}")
+
+        if new_bundle:
+            bundle_hash = next((p.name[4:-3] for p in Path(local_dir).glob('app.*.js')), '')
+            print("\nNew app bundle is live. Tomorrow, review what real devices report from it:")
+            print(f"  ./venv/bin/python scripts/client_errors.py --days 1 --bundle {bundle_hash}")
 
         # Close FTP connection
         ftp.quit()
