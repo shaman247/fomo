@@ -80,6 +80,53 @@ class TestCommonpointBareBrand(unittest.TestCase):
         self.assertEqual(self._id('Commonpoint Bronx Center'), 2897)
 
 
+class TestCommonpointReviewedHomeVenue(unittest.TestCase):
+    """User ruling 2026-10-23 (BL12): a w3027 row with an EMPTY or placeholder
+    location, or naming only the organizer, maps to the reviewed home l6046.
+    Data only, no code: `website_locations.is_primary` on the w3027 → l6046
+    link (Step 7b arm 4, 6 links ≤ HOME_VENUE_MAX_LINKED) and a w3027-scoped
+    `portable=0` alias "Commonpoint" on l6046 (Step 1, ahead of the fuzzy tier
+    that sent the bare brand to the Bronx alias)."""
+
+    def setUp(self):
+        locs = [
+            (2897, 'Commonpoint Bronx Center', None, ['Commonpoint Bronx'], {}),
+            (3286, 'Commonpoint Queens Bay Terrace Center', None, [], {}),
+            (4392, 'Commonpoint Queens Central Queens', None, [], {}),
+            (6046, 'Sam Field Center (Commonpoint Queens)', None, [],
+             {3027: ['Online', 'Commonpoint']}),
+        ]
+        m = _map(locs, website_names={3027: 'Commonpoint'})
+        m['website_linked'] = {3027: [dict(r, is_primary=(r['id'] == 6046))
+                                      for r in _linked(m, 2897, 3286, 4392, 6046)]}
+        self.m = m
+
+    def _id(self, loc, site='commonpoint'):
+        res = get_location_id(loc, '', site, 'Membership Casino Trip', self.m,
+                              website_id=3027)
+        return (res or {}).get('id')
+
+    def test_empty_location_takes_the_home_venue(self):
+        self.assertEqual(self._id(''), 6046)
+        # Detail path: no site name, so Step 6 cannot fire; Step 7b answers.
+        self.assertEqual(self._id('', site=''), 6046)
+
+    def test_placeholder_takes_the_home_venue(self):
+        self.assertEqual(self._id('Not specified'), 6046)
+
+    def test_bare_brand_takes_the_home_venue(self):
+        self.assertEqual(self._id('Commonpoint'), 6046)
+
+    def test_bronx_branch_is_not_captured_by_the_bare_alias(self):
+        # "Commonpoint Bronx" collapses to the same "commonpoint" key; the
+        # area guard on the scoped tier refuses the Queens home venue.
+        self.assertEqual(self._id('Commonpoint Bronx'), 2897)
+
+    def test_other_websites_unaffected(self):
+        res = get_location_id('', '', 'some other org', 'Talk', self.m, website_id=99)
+        self.assertIsNone(res)
+
+
 class TestSourceSiteStillMatchesItsOwnVenue(unittest.TestCase):
 
     def test_site_naming_the_same_area(self):

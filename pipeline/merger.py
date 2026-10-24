@@ -2117,6 +2117,99 @@ def _match_by_url_identity_relaxed(name, url, website_id, location_id, crawl_eve
     return hits.pop() if len(hits) == 1 else None
 
 
+def report_dead_keepers(cursor, landings, listing_url_keys, url_key_name_counts):
+    """Log `DEAD-KEEPER` for sources this merge put on a keeper-less hidden row.
+
+    BL13 tripwire (2026-10-23, no behavior change). A suppressed dedupe loser
+    with no `event_merge_redirects` row keeps catching fresh sources once its
+    visible keeper is archived (renamed, delisted or re-pinned): no visible
+    candidate qualifies, so the suppressed fallback wins and a live program
+    shows nowhere. BL19 found 34 such carriers; 12 were real public programs.
+
+    `landings`: {suppressed event id: {'name', 'sources': [(ce_id, website_id)]}}
+    for the sources linked to suppressed rows that have no redirect and are not
+    a reviewed match or source-identity owner. A row is reported when it shares
+    a crawl_event (event_sources) or an event-specific URL (event_urls, exact
+    string; specific on one of the incoming websites) with an ARCHIVED,
+    non-suppressed row -- the likely dead keeper. Read-only; batched so the
+    unindexed `event_urls.url` is scanned once per merge.
+    Returns [(event_id, [(partner_id, partner_name, kinds)])].
+    """
+    if not landings:
+        return []
+    ids = sorted(landings)
+    partners = {}  # event id -> {partner id: [name, set(kinds)]}
+
+    def _add(eid, pid, pname, kind):
+        if pid != eid:
+            partners.setdefault(eid, {}).setdefault(pid, [pname, set()])[1].add(kind)
+
+    def _in(values):
+        return ','.join(['%s'] * len(values))
+
+    ce_owner = {}
+    urls_by_event = {}
+    for i in range(0, len(ids), 500):
+        chunk = ids[i:i + 500]
+        cursor.execute("SELECT event_id, crawl_event_id FROM event_sources "
+                       f"WHERE event_id IN ({_in(chunk)})", chunk)
+        for eid, ce in cursor.fetchall():
+            ce_owner.setdefault(ce, set()).add(eid)
+        cursor.execute(f"SELECT event_id, url FROM event_urls WHERE event_id IN ({_in(chunk)})",
+                       chunk)
+        for eid, url in cursor.fetchall():
+            sites = {w for _ce, w in landings[eid]['sources'] if w is not None}
+            key = normalize_url_for_identity(url) if url else ''
+            if any(_url_key_is_event_specific(w, key, listing_url_keys, url_key_name_counts)
+                   for w in sites):
+                urls_by_event.setdefault(url, set()).add(eid)
+    ce_ids = sorted(ce_owner)
+    for i in range(0, len(ce_ids), 1000):
+        chunk = ce_ids[i:i + 1000]
+        cursor.execute("SELECT es.crawl_event_id, e.id, e.name FROM event_sources es "
+                       "JOIN events e ON e.id = es.event_id "
+                       "WHERE e.archived = 1 AND e.suppressed = 0 "
+                       f"AND es.crawl_event_id IN ({_in(chunk)})", chunk)
+        for ce, pid, pname in cursor.fetchall():
+            for eid in ce_owner.get(ce, ()):
+                _add(eid, pid, pname, 'source')
+    # Every holder of a URL is read, so a URL that carries more distinct names
+    # than an event page should (a library branch calendar shared by
+    # unrelated programs) is judged a listing even when its other holders are
+    # archived -- the merge's own name counts see only in-window rows.
+    urls = sorted(urls_by_event)
+    holders = {}
+    for i in range(0, len(urls), 1000):
+        chunk = urls[i:i + 1000]
+        cursor.execute("SELECT eu.url, e.id, e.name, e.archived, e.suppressed "
+                       "FROM event_urls eu JOIN events e ON e.id = eu.event_id "
+                       f"WHERE eu.url IN ({_in(chunk)})", chunk)
+        for row in cursor.fetchall():
+            holders.setdefault(row[0], []).append(row[1:])
+    for url, rows in holders.items():
+        names = {normalize_name_for_dedup(pname or '') for _pid, pname, _a, _s in rows}
+        if len(names) > URL_IDENTITY_MAX_DISTINCT_NAMES:
+            continue
+        for pid, pname, archived, suppressed in rows:
+            if archived and not suppressed:
+                for eid in urls_by_event.get(url, ()):
+                    _add(eid, pid, pname, 'url')
+
+    report = []
+    for eid in ids:
+        if eid not in partners:
+            continue
+        found = sorted((pid, pname, '+'.join(sorted(kinds)))
+                       for pid, (pname, kinds) in partners[eid].items())
+        report.append((eid, found))
+        sources = ', '.join(f'ce{ce}' for ce, _w in landings[eid]['sources'])
+        keepers = '; '.join(f'e{pid} "{pname}" ({kinds})' for pid, pname, kinds in found[:5])
+        more = f' (+{len(found) - 5} more)' if len(found) > 5 else ''
+        print(f"  DEAD-KEEPER e{eid} \"{landings[eid]['name']}\" (suppressed, no redirect) "
+              f"took {sources}; archived keeper(s): {keepers}{more}")
+    return report
+
+
 def _visible_url_twin(suppressed_id, name, url, website_id, crawl_event_id,
                       dates_overlap, existing_by_url, url_name_counts,
                       listing_url_keys, roster, dismissed_pairs,
@@ -4907,6 +5000,406 @@ def _run_archival_tail(cursor, connection, website_ids, audit_context, empty_con
     if total_upcoming_flagged > 0:
         print(f"  ⚠️  Total current/upcoming events archived: {total_upcoming_flagged} (review recommended)")
 
+    # Season / series umbrellas whose dated programs now have their own rows
+    # (BL23 R1). An editorial hide, so a failure here never blocks the merge.
+    try:
+        hide_covered_umbrellas(cursor, connection, website_ids,
+                               edit_logger=_merge_edit_logger(
+                                   cursor, connection, audit_context,
+                                   suppression_reason='covered_umbrella'))
+    except mysql.connector.Error as e:
+        connection.rollback()
+        print(f"  ⚠️ Umbrella hide step failed ({type(e).__name__}: {e}); continuing without it")
+
+
+# ── BL23 R1: hide season / program umbrellas covered by dated rows ──
+# User ruling 2026-10-23 (decisions.md#season-umbrellas-hidden-2026-10-23):
+# when a team season or a program series has individually dated rows, the
+# untimed season / series umbrella is hidden (suppressed=1, reviewed=1).
+# Precision over recall: every test below must hold, and each hide is logged.
+UMBRELLA_MIN_SPAN_DAYS = 7     # inclusive days; an untimed run this long is an envelope
+UMBRELLA_EDGE_DAYS = 3         # children's dates must reach both ends of the remaining window
+UMBRELLA_MIN_CHILDREN = 2
+# Without edge coverage (the Kou shape: a fall-season card whose dated programs
+# sit mid-season), this many future rows from the umbrella's own website carry
+# its programs.
+UMBRELLA_DECLARED_MIN_CHILDREN = 3
+# An umbrella must DECLARE itself: a span alone also describes a show's run, a
+# month-long library activity or a comedy club residency (the 2026-10-23
+# replay without this test hid 43 such rows). "Season" needs a season word or
+# a year before it, so "Spooky Season" and "Season's Greetings" do not count.
+_SEASON_DECL_RE = re.compile(
+    r"\b(?:fall|autumn|spring|summer|winter|holiday|\d{4}(?:[-–/]\d{2,4})?)"
+    r"\s+season\b(?!['’]s)", re.I)
+_SERIES_DECL_RE = re.compile(r"\bseries\b(?!['’]s)", re.I)
+_TEAM_SEASON_RE = re.compile(
+    r'^(.+) (?:Football|Basketball|Baseball|Hockey|Soccer|Softball|Lacrosse)$', re.I)
+# Festival umbrellas always stay visible (user ruling 2026-10-23: a festival's
+# marquee row is its entry point even when every show has its own row).
+# No leading \b, so "NewFest" / "Oktoberfest" count as festivals too.
+_FESTIVAL_NAME_RE = re.compile(r'fest(?:ival)?s?\b', re.I)
+_UMBRELLA_LIST_RE = re.compile(r'\b(?:including|featuring)\b:?\s+([^.;\n]+)', re.I)
+_UMBRELLA_LIST_FILLER = frozenset({'more', 'many more', 'much more', 'others', 'many others'})
+# Series identity (2026-10-23 false positive: Film Forum "Rossellini 120", a
+# declared series naming no titles, was "covered" by the venue's unrelated
+# Lubitsch / McCarey screenings). When the description names no titles, every
+# covering row must carry the umbrella's identity: the distinctive words of its
+# name's head, with the venue, season words, years and anniversary numbers
+# dropped ("Kou Records at Blank Forms—Fall 2026 season" -> "kou records";
+# "Area Coded: American Regionalism in Film" -> "area coded").
+_UMBRELLA_HEAD_SPLIT_RE = re.compile(r'\s*(?::|—|–|\s-\s|\|)\s*')
+_UMBRELLA_IDENTITY_STOPWORDS = frozenset({
+    'a', 'an', 'the', 'at', 'of', 'in', 'on', 'for', 'and', 'presents', 'present',
+    'season', 'seasons', 'series', 'fall', 'autumn', 'spring', 'summer', 'winter',
+    'holiday', 'annual', 'film', 'films'})
+
+
+def _umbrella_aggregator_settings():
+    """Extra aggregator website ids from the city config (optional).
+
+    `merge.umbrella_aggregator_website_ids` adds to the websites whose
+    source_type is 'aggregator'; a missing key or config means none."""
+    try:
+        import city_config
+        cfg = city_config.get_config().get('merge') or {}
+    except Exception:
+        cfg = {}
+    return {int(w) for w in (cfg.get('umbrella_aggregator_website_ids') or ())}
+
+
+def _umbrella_listed_titles(description):
+    """Titles an umbrella's description names after "including" / "featuring"."""
+    titles = []
+    for m in _UMBRELLA_LIST_RE.finditer(description or ''):
+        items = [s.strip() for s in m.group(1).split(',')]
+        if len(items) > 1 and re.search(r'\s+and\s+', items[-1]):
+            items[-1:] = re.split(r'\s+and\s+', items[-1], maxsplit=1)
+        for item in items:
+            item = re.sub(r'^(?:and|&)\s+', '', item, flags=re.I).strip()
+            norm = normalize_name_for_dedup(item)
+            if norm and norm not in _UMBRELLA_LIST_FILLER:
+                titles.append((item, norm))
+    return titles
+
+
+def _umbrella_title_matches(title_norm, names):
+    """True when a normalized listed title and one of `names` contain each other."""
+    padded = f' {title_norm} '
+    for name in names:
+        other = normalize_name_for_dedup(name or '')
+        if len(min(other, title_norm, key=len)) < 4:
+            continue
+        if f' {other} ' in padded or padded in f' {other} ':
+            return True
+    return False
+
+
+def _umbrella_identity(umbrella):
+    """(kind, phrase) naming what a covering row must carry for this umbrella.
+
+    'venue': the name is the venue plus season words ("New York City Center
+    Fall Season"), so sharing the location is the identity; 'phrase': a
+    normalized phrase (a team-season card uses the team's last word, "Knicks");
+    'none': nothing distinctive is left ("Film Series"), so no row can carry it.
+    """
+    name = umbrella.get('name') or ''
+    team = _TEAM_SEASON_RE.match(name)
+    if team:
+        words = normalize_name_for_dedup(team.group(1)).split()
+        return ('phrase', words[-1]) if words else ('none', None)
+    head = next((part for part in _UMBRELLA_HEAD_SPLIT_RE.split(name) if part.strip()), name)
+    padded = f' {normalize_name_for_dedup(head)} '
+    venue_named = False
+    venues = {normalize_name_for_dedup(v) for v in umbrella.get('location_names') or () if v}
+    for venue in sorted(venues, key=len, reverse=True):
+        if venue and f' {venue} ' in padded:
+            padded = padded.replace(f' {venue} ', ' ')
+            venue_named = True
+    words = [w for w in padded.split()
+             if w not in _UMBRELLA_IDENTITY_STOPWORDS and not w.isdigit()]
+    if words:
+        return 'phrase', ' '.join(words)
+    return ('venue', None) if venue_named else ('none', None)
+
+
+def _url_path_slug(url):
+    """Lower-case, accent-free URL path with every non-alphanumeric run as '-'."""
+    path = unquote(urlsplit(url or '').path)
+    ascii_path = ''.join(c for c in unicodedata.normalize('NFKD', path)
+                         if not unicodedata.combining(c))
+    return '-' + re.sub(r'[^a-z0-9]+', '-', ascii_path.lower()).strip('-') + '-'
+
+
+def _carries_umbrella_identity(child, phrase):
+    """True when a row's title, description, section or URL path names `phrase`."""
+    text = ' '.join(str(child.get(k) or '') for k in ('name', 'description', 'section'))
+    # Uncached: descriptions are long and would only churn the name cache.
+    if f' {phrase} ' in f' {normalize_name_for_dedup.__wrapped__(text)} ':
+        return True
+    slug = '-' + phrase.replace(' ', '-') + '-'
+    return any(slug in _url_path_slug(url) for url in child.get('urls') or ())
+
+
+def _occ_end(occ):
+    return occ[2] or occ[0]
+
+
+def _declares_umbrella(text, team=False):
+    """True when `text` calls itself a dated season or a series."""
+    text = text or ''
+    return bool(_SEASON_DECL_RE.search(text) or _SERIES_DECL_RE.search(text)
+                or (team and _TEAM_SEASON_RE.match(text)))
+
+
+def plan_umbrella_hide(umbrella, children, today, horizon, past_names=(),
+                       aggregator=False):
+    """Decide one candidate umbrella (BL23 R1). Pure; no database access.
+
+    `umbrella`: dict with id, name, description, event_type, occurrences and
+    optional location_names (the venue's names, for the identity test).
+    `children`: visible rows at the umbrella's location from its own website
+    (any website for an aggregator umbrella), each a dict with id, name,
+    event_type, website_id, occurrences and optional description, section,
+    urls; `aggregator` marks an aggregator's
+    umbrella, whose covering rows may have any format. `past_names`: names of the same
+    publisher's other rows at that location in any state, used only to
+    accept a title the description names that has already screened.
+    Occurrences are (start_date, start_time, end_date, end_time).
+
+    Returns (action, detail): ('hide', [child ids]), ('keep', reason) when an
+    umbrella is otherwise covered but a named title has no row or -- when it
+    names no titles -- the covering rows do not carry its series identity, or
+    (None, reason) when the row is not a covered umbrella.
+    """
+    occs = umbrella['occurrences']
+    name = umbrella['name'] or ''
+    if not occs or umbrella.get('event_type') == 'Exhibition':
+        return None, 'not a candidate'
+    if any(o[1] or o[3] for o in occs):
+        return None, 'timed occurrence'
+    # Only envelopes: a row that also carries its own single days (IFC "Optic
+    # Nerve", one untimed date per screening day beside its Oct 28 – Nov 3
+    # span) is a hybrid series row, left for per-row review by the ruling.
+    if any(_occ_end(o) == o[0] for o in occs):
+        return None, 'carries its own dated days'
+    u_start = min(o[0] for o in occs)
+    u_end = max(_occ_end(o) for o in occs)
+    if u_end < today:
+        return None, 'past'
+    u_span = max((_occ_end(o) - o[0]).days + 1 for o in occs)
+    if _declares_umbrella(name, team=True):
+        pass
+    elif u_span < UMBRELLA_MIN_SPAN_DAYS or not _declares_umbrella(umbrella.get('description')):
+        return None, 'not a declared season / series envelope'
+    if _FESTIVAL_NAME_RE.search(name):
+        return None, 'festival (always kept visible)'
+
+    # Covering rows: dated single days inside the window, a shorter run than the
+    # umbrella's, and -- unless the umbrella is an aggregator's card (NYC Tourism
+    # "City Center Fall Season" typed Festival over the venue's Theater Shows) --
+    # the umbrella's own format, so a series of screenings is never "covered" by
+    # the same venue's talks, classes or theater runs.
+    covering = []
+    for child in children:
+        c_occs = child['occurrences']
+        if not c_occs or child['id'] == umbrella['id']:
+            continue
+        if not aggregator and child.get('event_type') != umbrella.get('event_type'):
+            continue
+        c_span = max((_occ_end(o) - o[0]).days + 1 for o in c_occs)
+        days = sorted({o[0] for o in c_occs
+                       if _occ_end(o) == o[0] and u_start <= o[0] <= u_end})
+        if days and c_span < u_span:
+            covering.append((child, days))
+    rem_start, rem_end = max(today, u_start), min(u_end, horizon)
+
+    def uncovered(rows):
+        """Why `rows` do not cover the umbrella's remaining window, or None."""
+        if len(rows) < UMBRELLA_MIN_CHILDREN:
+            return f'{len(rows)} dated child row(s)'
+        remaining = sorted({d for _, days in rows for d in days if rem_start <= d <= rem_end})
+        edge = timedelta(days=UMBRELLA_EDGE_DAYS)
+        if remaining and remaining[0] <= rem_start + edge and remaining[-1] >= rem_end - edge:
+            return None
+        # A declared season / series whose programs sit mid-window (a fall
+        # season Oct 16 – Dec 5 with programs Nov 10–14) is still covered when
+        # enough of its own publisher's rows carry future programs.
+        own_future = [c for c, days in rows
+                      if c.get('website_id') == umbrella.get('website_id')
+                      and any(rem_start <= d <= rem_end for d in days)]
+        if len(own_future) < UMBRELLA_DECLARED_MIN_CHILDREN:
+            return 'dated rows do not reach both ends of its window'
+        return None
+
+    reason = uncovered(covering)
+    if reason:
+        return None, reason
+
+    listed = _umbrella_listed_titles(umbrella.get('description'))
+    if listed:
+        names = [c['name'] for c in children if c['id'] != umbrella['id']] + list(past_names)
+        for title, norm in listed:
+            if not _umbrella_title_matches(norm, names):
+                return 'keep', f'missing {title}'
+    else:
+        # No titles named: only rows that carry the series' identity cover it
+        # (a venue season is identified by the shared location itself).
+        kind, phrase = _umbrella_identity(umbrella)
+        if kind != 'venue':
+            carrying = [(c, days) for c, days in covering
+                        if phrase and _carries_umbrella_identity(c, phrase)]
+            if uncovered(carrying):
+                lacking = [c['id'] for c, _ in covering
+                           if not any(c is k for k, _ in carrying)]
+                shown = ', '.join(f'e{i}' for i in lacking[:6])
+                more = f' (+{len(lacking) - 6} more)' if len(lacking) > 6 else ''
+                label = f'"{phrase}"' if phrase else '(none derivable)'
+                return 'keep', f'no series identity {label} in {shown}{more}'
+            covering = carrying
+    return 'hide', sorted(c['id'] for c, _ in covering)
+
+
+def _umbrella_candidates(cursor, website_ids, aggregator_ids, today, extra_ids=()):
+    """Visible, unreviewed, non-exhibition rows with a future untimed envelope.
+
+    Scoped to `website_ids` (None = every website) plus aggregator rows, whose
+    covering rows come from any publisher. `extra_ids` is a read-only replay
+    hook: those rows are considered whatever their suppressed/reviewed state.
+    """
+    # Envelope-only rows: every occurrence untimed and multi-day, one in the
+    # future. Two statements so each references event_occurrences once (a
+    # TEMPORARY table cannot be reopened within one statement).
+    query = """
+        SELECT e.id, e.name, e.description, e.event_type, e.website_id, e.location_id
+        FROM events e JOIN event_occurrences o ON o.event_id = e.id
+        WHERE e.archived = 0 AND e.location_id IS NOT NULL
+          AND COALESCE(e.event_type, '') <> 'Exhibition'
+    """
+    params = []
+    visible = "(e.suppressed = 0 AND e.reviewed = 0)"
+    if extra_ids:
+        visible = f"({visible} OR e.id IN ({','.join(['%s'] * len(extra_ids))}))"
+        params.extend(extra_ids)
+    query += f" AND {visible}"
+    if website_ids is not None:
+        scope = sorted(set(website_ids) | set(aggregator_ids))
+        if not scope:
+            return []
+        query += f" AND e.website_id IN ({','.join(['%s'] * len(scope))})"
+        params.extend(scope)
+    query += """
+        GROUP BY e.id
+        HAVING MAX(COALESCE(o.end_date, o.start_date)) >= %s
+           AND MIN(COALESCE(o.end_date, o.start_date) > o.start_date) = 1
+           AND MAX(COALESCE(o.start_time, '') <> '' OR COALESCE(o.end_time, '') <> '') = 0
+    """
+    params.append(today)
+    cursor.execute(query, params)
+    by_id = {eid: {'id': eid, 'name': name, 'description': desc, 'event_type': etype,
+                   'website_id': wid, 'location_id': loc, 'occurrences': []}
+             for eid, name, desc, etype, wid, loc in cursor.fetchall()}
+    ids = sorted(by_id)
+    for i in range(0, len(ids), 1000):
+        chunk = ids[i:i + 1000]
+        cursor.execute("SELECT event_id, start_date, start_time, end_date, end_time "
+                       "FROM event_occurrences WHERE event_id IN ("
+                       + ','.join(['%s'] * len(chunk)) + ")", chunk)
+        for eid, *occ in cursor.fetchall():
+            by_id[eid]['occurrences'].append(tuple(occ))
+    loc_ids = sorted({u['location_id'] for u in by_id.values()})
+    loc_names = {}
+    for i in range(0, len(loc_ids), 1000):
+        chunk = loc_ids[i:i + 1000]
+        cursor.execute("SELECT id, name, short_name, very_short_name FROM locations "
+                       "WHERE id IN (" + ','.join(['%s'] * len(chunk)) + ")", chunk)
+        for lid, *names in cursor.fetchall():
+            loc_names[lid] = [n for n in names if n]
+    for u in by_id.values():
+        u['location_names'] = loc_names.get(u['location_id'], [])
+    return [by_id[k] for k in sorted(by_id)]
+
+
+def _umbrella_children(cursor, umbrella, aggregator):
+    """(visible covering-candidate rows, past names) for one umbrella."""
+    query = """
+        SELECT e.id, e.name, e.event_type, e.website_id, e.archived, e.suppressed,
+               e.description, e.section,
+               o.start_date, o.start_time, o.end_date, o.end_time
+        FROM events e LEFT JOIN event_occurrences o ON o.event_id = e.id
+        WHERE e.location_id = %s AND e.id <> %s
+    """
+    params = [umbrella['location_id'], umbrella['id']]
+    if not aggregator:
+        query += " AND e.website_id = %s"
+        params.append(umbrella['website_id'])
+    cursor.execute(query, params)
+    children, past = {}, set()
+    for eid, name, etype, wid, archived, suppressed, desc, section, *occ in cursor.fetchall():
+        if archived or suppressed:
+            if not suppressed:
+                past.add(name)
+            continue
+        row = children.setdefault(eid, {'id': eid, 'name': name, 'event_type': etype,
+                                        'website_id': wid, 'description': desc,
+                                        'section': section, 'urls': [], 'occurrences': []})
+        if occ[0] is not None:
+            row['occurrences'].append(tuple(occ))
+    ids = sorted(children)
+    for i in range(0, len(ids), 1000):
+        chunk = ids[i:i + 1000]
+        cursor.execute("SELECT event_id, url FROM event_urls WHERE event_id IN ("
+                       + ','.join(['%s'] * len(chunk)) + ")", chunk)
+        for eid, url in cursor.fetchall():
+            children[eid]['urls'].append(url)
+    return [children[k] for k in ids], sorted(past)
+
+
+def hide_covered_umbrellas(cursor, connection, website_ids, *, apply=True,
+                           edit_logger=None, today=None, horizon=None, extra_ids=()):
+    """BL23 R1 merge-tail step: hide season / series umbrellas that dated rows cover.
+
+    Runs after archival under the merge tail's lock. Candidates and the
+    coverage test are in plan_umbrella_hide. A hidden umbrella gets
+    suppressed=1, reviewed=1 (the ruling's representation, and what makes the
+    hide durable: the match ladder only reaches a suppressed row when no
+    visible one qualifies). Logs `UMBRELLA-HIDDEN e<U> covered by e<C…>` and
+    `UMBRELLA-KEEP-UNCOVERED e<U> missing <title>` for /run-pipeline triage.
+    `apply=False` plans without writing. Returns [(event_id, action, detail)].
+    """
+    if today is None or horizon is None:
+        today, horizon = get_active_date_window()
+    extra_aggregators = _umbrella_aggregator_settings()
+    cursor.execute("SELECT id FROM websites WHERE source_type = 'aggregator'")
+    aggregator_ids = {row[0] for row in cursor.fetchall()} | extra_aggregators
+    decisions = []
+    for umbrella in _umbrella_candidates(cursor, website_ids, aggregator_ids, today, extra_ids):
+        aggregator = umbrella['website_id'] in aggregator_ids
+        if website_ids is not None and not aggregator \
+                and umbrella['website_id'] not in website_ids:
+            continue
+        children, past = _umbrella_children(cursor, umbrella, aggregator)
+        action, detail = plan_umbrella_hide(umbrella, children, today, horizon, past,
+                                            aggregator=aggregator)
+        if action is None:
+            continue
+        decisions.append((umbrella['id'], action, detail))
+        if action == 'keep':
+            print(f"  UMBRELLA-KEEP-UNCOVERED e{umbrella['id']} {detail}")
+            continue
+        print(f"  UMBRELLA-HIDDEN e{umbrella['id']} \"{umbrella['name']}\" covered by "
+              + ', '.join(f'e{c}' for c in detail))
+        if not apply:
+            continue
+        cursor.execute("UPDATE events SET suppressed = 1, reviewed = 1 WHERE id = %s "
+                       "AND archived = 0 AND suppressed = 0 AND reviewed = 0",
+                       (umbrella['id'],))
+        if cursor.rowcount and edit_logger is not None:
+            edit_logger.log_update('events', umbrella['id'], 'suppressed', 0, 1)
+            edit_logger.log_update('events', umbrella['id'], 'reviewed', 0, 1)
+    if apply and any(a == 'hide' for _, a, _ in decisions):
+        _retry_on_deadlock(connection.commit)
+    return decisions
+
 
 def _horizon_only_unmerged_results(cursor, future_limit_date, website_ids=None):
     """Unstamped processed crawl_results carrying a row dated past the horizon.
@@ -5253,6 +5746,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     dismissed_home_handoffs = 0
     redirect_routes = 0
     redirect_survivor_states = {}  # survivor id -> state dict (lazy, see redirect_route_target)
+    dead_keeper_landings = {}  # suppressed id -> sources it took (see report_dead_keepers)
     dismissed_session_routes = 0
 
     # Explicit human decisions the suppressed URL-twin handoff must respect.
@@ -6442,6 +6936,15 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             program_profile_cache.pop(matched_event_id, None)
             if matched_event_id in new_event_format_hints:
                 new_event_format_hints[matched_event_id].update(tags)
+            # BL13 dead-keeper tripwire: a hidden row with no redirect decision
+            # took this source; report_dead_keepers checks it after the loop.
+            if (matched_event_id in suppressed_event_ids
+                    and matched_event_id not in url_twin_redirect_survivors
+                    and matched_event_id != reviewed_match_id
+                    and matched_event_id not in url_twin_reviewed_owners):
+                dead_keeper_landings.setdefault(matched_event_id, {
+                    'name': event_names_by_id.get(matched_event_id, ''), 'sources': [],
+                })['sources'].append((ce_id, website_id))
 
         else:
             # Create new event
@@ -6562,6 +7065,15 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     print(f"  Added {new_events_count} new events, merged {merged_count} duplicates")
     if redirect_routes:
         print(f"  Redirected duplicates: {redirect_routes} source(s) routed to their survivor")
+    try:
+        dead_keepers = report_dead_keepers(cursor, dead_keeper_landings,
+                                           listing_url_keys, url_key_name_counts)
+    except mysql.connector.Error as e:
+        dead_keepers = []
+        print(f"  ⚠️ Dead-keeper check failed ({type(e).__name__}: {e}); continuing")
+    if dead_keepers:
+        print(f"  Dead-keeper tripwire: {len(dead_keepers)} hidden row(s) without a redirect "
+              "took sources an archived visible row shares (review: un-suppress or redirect)")
     if dismissed_home_skips or dismissed_home_handoffs:
         print(f"  Dismissed-pair veto: {dismissed_home_skips} candidate(s) skipped, "
               f"{dismissed_home_handoffs} source(s) handed to their listing's home")

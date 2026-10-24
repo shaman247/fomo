@@ -52,7 +52,8 @@ class MergeAuditContextTests(unittest.TestCase):
             self.assertEqual(merger.merge_crawl_events(
                 cursor, MagicMock(), crawl_run_id=crawl_run_id, website_ids=[101, 202]), (1, 0))
 
-            self.assertEqual(len(loggers), 6)
+            # 7th: the BL23 R1 umbrella hide step (hide_covered_umbrellas).
+            self.assertEqual(len(loggers), 7)
             loggers[0].log_insert.assert_called_once()
             self.assertIs(db.prune_superseded_dates.call_args.kwargs['edit_logger'], loggers[1])
             self.assertEqual(db.prune_superseded_dates.call_args.args[2], [101, 202])
@@ -77,6 +78,7 @@ class MergeAuditContextTests(unittest.TestCase):
                                          trigger_website_id=202))
         self.assertEqual(contexts[4], dict(base, archival_reason='all_sources_disabled'))
         self.assertEqual(contexts[5], dict(base, archival_reason='no_sources'))
+        self.assertEqual(contexts[6], dict(base, suppression_reason='covered_umbrella'))
         for logger in loggers:
             self.assertLessEqual(len(logger.editor_info), 500)
         return base

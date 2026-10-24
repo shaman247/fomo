@@ -4165,6 +4165,59 @@ def normalize_event_name_caps(event_name):
     return event_name
 
 
+def _grouping_norm(name):
+    no_punct = re.sub(r'[^\w\s]', '', (name or '').replace('_', '').strip().lower())
+    return re.sub(r'\s+', ' ', no_punct).strip()
+
+
+_ROMAN_I_TO_X = r'(?:ix|iv|v?i{1,3}|v|x)'
+_SEQUENCE_MARKER_TAIL_RE = re.compile(
+    r'(?:part|level|book|session)\s+(?:\d{1,2}|' + _ROMAN_I_TO_X + r'|one|two|three|four|five)'
+    r'|\d{1,2}|(' + _ROMAN_I_TO_X + r')')
+
+
+def _trailing_sequence_marker_only(left, right):
+    """BL25 A1: one title is the other plus only a trailing sequence marker.
+
+    "Animation Fundamentals" vs "Animation Fundamentals II" (w2439, cr 134373):
+    the gcal feed lists the bare course name without a URL, and the
+    containment branch let it absorb every URL-less "…II" date and then the
+    "…I" row's URL — 14 rows became 2 groups and II's six dates landed on the
+    I event. A Roman numeral I–X, a 1–2 digit number, or "Part / Level / Book /
+    Session N" after the full shorter title names a different course level or
+    sequel. Complements `trailing_roman_ordinal_mismatch`, which needs a
+    numeral on both sides. A bare Roman numeral must be uppercase in the raw
+    title ("Party X", not "… with x"); a four-digit year is not a marker.
+    """
+    a, b = _grouping_norm(left), _grouping_norm(right)
+    if len(a) == len(b):
+        return False
+    (short, _), (long_norm, long_raw) = sorted(((a, left), (b, right)), key=lambda p: len(p[0]))
+    if not short or not long_norm.startswith(short + ' '):
+        return False
+    match = _SEQUENCE_MARKER_TAIL_RE.fullmatch(long_norm[len(short) + 1:])
+    if not match:
+        return False
+    if match[1]:
+        return bool(re.search(r'(?<!\w)' + match[1].upper() + r'\W*$', long_raw or ''))
+    return True
+
+
+_DELIVERY_FILLER_RE = re.compile(
+    r'\b(?:online|virtual(?:ly)?|zoom|webinars?|live\s*stream(?:ed|ing)?|'
+    r'livestream(?:ed|ing)?|streaming|remote(?:ly)?|microsoft|ms|teams|google|'
+    r'meet|webex|hangouts?|via|on|events?|only|platform|meetings?|sessions?|links?)\b')
+
+
+def _delivery_only_location(location):
+    """BL25 A2: the location string is only a delivery label ("Online",
+    "Zoom", "Virtual Event", "Livestream") and names no physical place.
+    A hybrid ("Online and Pratt Manhattan …") or a "Zoom Room" gym is not."""
+    if not virtual_tags_for_location(location):
+        return False
+    return not re.sub(r'[\W_]+', '', _DELIVERY_FILLER_RE.sub(' ', location.lower()))
+
+
 def group_event_occurrences(rows, source_url=None, location_refs=None):
     """Groups event rows by name and consolidates their occurrences.
 
@@ -4283,6 +4336,29 @@ def group_event_occurrences(rows, source_url=None, location_refs=None):
             return True
         return row_url in existing_urls
 
+    def delivery_mode_split(row_loc_text, existing_key):
+        """BL25 A2: exactly one side is a delivery-only label ("Online") and
+        the other names a physical place. Callers pair it with a URL mismatch:
+        Pratt w536 lists "GCPE Graduate Admissions Information Session" twice,
+        in person at Higgins Hall (`…-session-2/`) and Online (`…-session/`).
+        An unresolved "Online" is not venue-shaped, so the exact-name MIXED
+        branch grouped it with the resolved in-person row. Only the MIXED
+        branch asks this: when both rows resolve to the same id (cr 134005 on
+        10-20, where "Online" and Higgins Hall both fell back to loc 1786), the
+        pair reads as a per-date series of one venue — Riverside Church and
+        library programs alternate Online and in-person dates on per-date
+        URLs — and splitting those is a broader BL12 question."""
+        texts = [(r.get('location') or '').strip()
+                 for r in grouped_rows.get(existing_key, ())]
+        texts = [t for t in texts if t]
+        row_text = (row_loc_text or '').strip()
+        if not row_text or not texts:
+            return False
+        existing_online = [_delivery_only_location(t) for t in texts]
+        if _delivery_only_location(row_text):
+            return not any(existing_online)
+        return all(existing_online)
+
     def find_matching_group_key(event_name, row_loc, row_url, grouped_events,
                                 normalized_group_keys, group_event_urls,
                                 row_name_loc='', row_profile=None):
@@ -4381,6 +4457,11 @@ def group_event_occurrences(rows, source_url=None, location_refs=None):
                             and comma_rival_session(row_loc, existing_loc,
                                                     row_name_loc, loc_name(existing))):
                         continue
+                    # BL25 A2: nor is an online session on its own URL a
+                    # date of the same-titled in-person event.
+                    if (not urls_compatible(row_url, group_event_urls.get(existing_key))
+                            and delivery_mode_split(row_name_loc, existing_key)):
+                        continue
                     return existing_key
                 # Signal 2: the event URL. Two listings carrying different
                 # event URLs are different events — the same reasoning
@@ -4394,6 +4475,9 @@ def group_event_occurrences(rows, source_url=None, location_refs=None):
             if len(normalized_event) >= 5 and len(normalized_existing) >= 5:
                 if normalized_event in normalized_existing or normalized_existing in normalized_event:
                     if not urls_compatible(row_url, group_event_urls.get(existing_key)):
+                        continue
+                    # BL25 A1: "<course> II" is not a date of "<course>".
+                    if _trailing_sequence_marker_only(event_name, existing.get('name', '')):
                         continue
                     return existing_key
         # No location-compatible group matched. If the plain name is already a
