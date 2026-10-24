@@ -18,6 +18,7 @@ frontend:
   emoji: "🗽"                     # menu / feedback decoration
   timezone: "America/New_York"   # utils.js: "today" + event-time parsing
   sw_enabled: true               # offline service worker (false emits a self-unregistering sw.js)
+  native_app_ua: "FomoApp"       # UA marker the iOS/Android WebViews append ("FomoApp/1.0"); beacons report them as app platforms
   # Selector-only grouping and ordering; the database supplies the neighborhoods.
   # Groups relocate members in this menu only. Directional borough sections are
   # browsing conventions, not official boundaries; unlisted children stay visible.

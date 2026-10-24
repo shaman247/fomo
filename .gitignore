@@ -126,6 +126,7 @@ scripts/*
 !scripts/upload_public_html.py
 !scripts/frontend_smoke.py
 !scripts/client_errors.py
+!scripts/analytics_report.py
 !scripts/build_similarity.py
 !scripts/geocode.php
 # /run-pipeline pipeline + cleanup scripts

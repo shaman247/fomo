@@ -86,6 +86,7 @@ function cityPrelude(fe, isDev) {
         venueSelector: fe.venue_selector || {},
         filterRoots: fe.filter_roots || {},
         domain: fe.domain,
+        nativeAppUa: fe.native_app_ua || '',
         // Service worker opt-out: config frontend.sw_enabled: false, or any dev
         // build (dev also emits the self-unregistering sw.js — see emitServiceWorker).
         swEnabled: !isDev && fe.sw_enabled !== false,

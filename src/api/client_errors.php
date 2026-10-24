@@ -15,87 +15,50 @@
  * the log rotates once at LOG_MAX_BYTES. No IP addresses are written.
  */
 
+require __DIR__ . '/beacon_lib.php';
+
 const MAX_BODY_BYTES = 8192;
 const PER_CLIENT_PER_HOUR = 20;
 const GLOBAL_PER_HOUR = 500;
 const LOG_MAX_BYTES = 5 * 1024 * 1024;
 
-header('Cache-Control: no-store');
-
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    exit;
-}
-
-// Beacons are same-origin; refuse cross-site posts when the browser says so.
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-$host = strtolower(preg_replace('/:\d+$/', '', $_SERVER['HTTP_HOST'] ?? ''));
-if ($origin !== '' && $origin !== 'null' && strtolower((string)parse_url($origin, PHP_URL_HOST)) !== $host) {
-    http_response_code(403);
-    exit;
-}
-
-$raw = file_get_contents('php://input', false, null, 0, MAX_BODY_BYTES + 1);
-if ($raw === false || strlen($raw) > MAX_BODY_BYTES) {
-    http_response_code(413);
-    exit;
-}
-$data = json_decode($raw, true);
-if (!is_array($data) || !isset($data['message']) || !is_string($data['message'])) {
+beacon_require_same_origin_post();
+$data = beacon_read_json(MAX_BODY_BYTES);
+if (!isset($data['message']) || !is_string($data['message'])) {
     http_response_code(400);
     exit;
-}
-
-/** Cut any URL to its file name (keeping :line:col), strip control chars, truncate. */
-function clean_text($value, $max, $multiline = false) {
-    if (!is_string($value)) return '';
-    $value = preg_replace_callback('~\b(?:https?|file|blob|webpack|[a-z]+-extension)://[^\s()\'"<>]*~i', function ($m) {
-        $url = $m[0];
-        $suffix = preg_match('/[?#].*?((?::\d+){1,2})$/', $url, $pos) ? $pos[1] : '';
-        $url = preg_replace('/[?#].*$/', '', $url) . $suffix;
-        return substr($url, strrpos($url, '/') + 1);
-    }, $value);
-    $value = preg_replace($multiline ? '/[^\P{C}\n]+/u' : '/\p{C}+/u', ' ', $value) ?? '';
-    return mb_substr($value, 0, $max);
 }
 
 $entry = [
     't' => gmdate('Y-m-d\TH:i:s\Z'),
     'kind' => in_array($data['kind'] ?? '', ['error', 'rejection', 'console'], true) ? $data['kind'] : 'other',
-    'message' => clean_text($data['message'], 300),
-    'source' => clean_text($data['source'] ?? '', 120),
-    'stack' => clean_text($data['stack'] ?? '', 800, true),
+    'message' => beacon_clean_text($data['message'], 300),
+    'source' => beacon_clean_text($data['source'] ?? '', 120),
+    'stack' => beacon_clean_text($data['stack'] ?? '', 800, true),
     'bundle' => preg_match('/^[\w.-]{1,16}$/', $data['bundle'] ?? '') ? $data['bundle'] : '',
+    'platform' => preg_match('/^[a-z-]{1,16}$/', $data['platform'] ?? '') ? $data['platform'] : '',
     'dpr' => is_numeric($data['dpr'] ?? null) ? round((float)$data['dpr'], 3) : null,
     'tz' => preg_match('~^[\w+\-/]{1,64}$~', $data['tz'] ?? '') ? $data['tz'] : '',
     'viewport' => preg_match('/^\d{1,5}x\d{1,5}$/', $data['viewport'] ?? '') ? $data['viewport'] : '',
-    'ua' => clean_text($_SERVER['HTTP_USER_AGENT'] ?? '', 300),
-    'path' => clean_text($data['path'] ?? '', 100),
+    'ua' => beacon_clean_text($_SERVER['HTTP_USER_AGENT'] ?? '', 300),
+    'path' => beacon_clean_text($data['path'] ?? '', 100),
 ];
 if ($entry['message'] === '') {
     http_response_code(400);
     exit;
 }
 
-$docRoot = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', '/');
-$logDir = getenv('FOMO_CLIENT_ERROR_DIR') ?: ($docRoot !== '' ? dirname($docRoot) . '/client_errors' : '');
-if ($logDir === '' || (!is_dir($logDir) && !@mkdir($logDir, 0700, true))) {
-    error_log('client_errors.php: log directory unavailable');
-    http_response_code(204);
-    exit;
-}
-
-// One lock serializes the rate-limit state and the append.
-$lock = @fopen("$logDir/.lock", 'c');
-if (!$lock || !flock($lock, LOCK_EX)) {
+$logDir = beacon_data_dir('FOMO_CLIENT_ERROR_DIR', 'client_errors');
+$lock = $logDir !== '' ? beacon_lock($logDir) : null;
+if (!$lock) {
     http_response_code(204);
     exit;
 }
 
 $hour = gmdate('YmdH');
 $statePath = "$logDir/ratelimit.json";
-$state = json_decode((string)@file_get_contents($statePath), true);
-if (!is_array($state) || ($state['hour'] ?? '') !== $hour) {
+$state = beacon_read_state($statePath, []);
+if (($state['hour'] ?? '') !== $hour) {
     $state = ['hour' => $hour, 'total' => 0, 'clients' => []];
 }
 // Hourly-salted hash: rate-limits a client without keeping its address.
@@ -113,6 +76,5 @@ if ($state['total'] < GLOBAL_PER_HOUR && $clientCount < PER_CLIENT_PER_HOUR) {
     @file_put_contents($statePath, json_encode($state));
 }
 
-flock($lock, LOCK_UN);
-fclose($lock);
+beacon_unlock($lock);
 http_response_code(204);
