@@ -22,7 +22,7 @@ const MapManager = (() => {
 
         // Bidirectional lookups between locationKey and feature ID
         locationKeyToFeatureId: new Map(),
-        locationKeyToLabelFeatureId: new Map(),
+        locationKeyToLabelFeatureIds: new Map(),
         featureIdToLocationKey: new Map(),
 
         // All artwork uses the same lazy, themed sprite cache.
@@ -44,6 +44,8 @@ const MapManager = (() => {
         rankedPlaces: [],
         promotedPlaces: new Set(),
         promotedSignature: null,
+        symbolSignature: null,
+        measureContext: null,
 
         // Popup content callbacks by locationKey
         popupContentCallbacks: new Map()
@@ -95,6 +97,7 @@ const MapManager = (() => {
 
         state.layersAdded = false;
         state.promotedSignature = null;
+        state.symbolSignature = null;
         _cancelIconFades();
         state.loadedIcons.clear();
         _addSourceAndLayers();
@@ -243,6 +246,7 @@ const MapManager = (() => {
             if (!bounds.contains(c.coordinates)) return false;
             const p = map.project(c.coordinates);
             const x = p.x + rect.left, y = p.y + rect.top;
+            c.labelRoom = right - x;
             c.distance = Math.hypot(x - (left + right) / 2, y - (top + bottom) / 2);
             if (x < left + 12 || y < top + 12 || x > right - 12 || y > bottom - 12) return false;
             return !cover.some(r => x >= r.left && x <= r.right && y >= r.top && y <= r.bottom);
@@ -279,15 +283,60 @@ const MapManager = (() => {
         // Pinning can change Set order without changing membership. Keep the
         // filter stable so hovering an existing icon never re-lays out symbols.
         const promotedKeys = [...chosen].sort();
+        const minTiers = _minLabelTiers(promotedKeys, candidates);
+        const symbolSignature = JSON.stringify([promotedKeys, minTiers]);
+        if (symbolSignature !== state.symbolSignature) {
+            state.symbolSignature = symbolSignature;
+            const keyFilter = ['in', ['get', 'locationKey'], ['literal', promotedKeys]];
+            const pairs = Object.entries(minTiers).flat();
+            map.setFilter('marker-symbols', pairs.length === 0 ? keyFilter : ['all', keyFilter,
+                ['any', ['!=', ['get', 'labelType'], 'expanded'],
+                    ['>=', ['get', 'labelTier'], ['match', ['get', 'locationKey'], ...pairs, 0]]]]);
+        }
         const signature = JSON.stringify(promotedKeys);
         if (signature !== state.promotedSignature) {
             state.promotedSignature = signature;
-            map.setFilter('marker-symbols', ['in', ['get', 'locationKey'], ['literal', promotedKeys]]);
             map.setFilter('marker-hit-targets', ['all', ['==', ['get', 'labelType'], 'icon'],
                 ['in', ['get', 'locationKey'], ['literal', [...chosen]]]]);
             map.setFilter('marker-dots', ['all', ['==', ['get', 'labelType'], 'icon'],
                 ['!', ['in', ['get', 'locationKey'], ['literal', [...chosen]]]]]);
         }
+    }
+
+    // MapLibre collides labels with each other but not with the window edge,
+    // so a long tier next to the right edge would run off screen. Returns
+    // {locationKey: lowest label tier that fits} for promoted labels whose
+    // longer tiers overflow the visible map; the shortest tier always stays.
+    function _minLabelTiers(keys, candidates) {
+        const room = new Map(candidates.map(c => [c.key, c.labelRoom]));
+        const minTiers = {};
+        for (const key of keys) {
+            const ids = state.locationKeyToLabelFeatureIds.get(key);
+            if (!room.has(key) || !ids || ids.length < 2) continue;
+            // Labels start text-offset (1.8em) right of the point.
+            const space = room.get(key) - 1.8 * _getLabelSize() - 4;
+            let i = 0;
+            while (i < ids.length - 1 && _labelWidth(state.sourceDataCache.features[ids[i]].properties) > space) i++;
+            if (i > 0) minTiers[key] = state.sourceDataCache.features[ids[i]].properties.labelTier;
+        }
+        return minTiers;
+    }
+
+    const _labelWidths = new Map();
+
+    /** Rendered width of a label's text, measured in the map-label webfont. */
+    function _labelWidth({ eventLabel, eventLabelExtra }) {
+        const size = _getLabelSize(), text = eventLabel + eventLabelExtra;
+        const cacheKey = `${size}|${text}`;
+        let width = _labelWidths.get(cacheKey);
+        if (width !== undefined) return width;
+        state.measureContext ??= document.createElement?.('canvas')?.getContext('2d') || null;
+        if (!state.measureContext) return 0;
+        state.measureContext.font = `${size}px "Inter Regular"`;
+        width = state.measureContext.measureText(text).width;
+        if (_labelWidths.size >= 4096) _labelWidths.clear();
+        _labelWidths.set(cacheKey, width);
+        return width;
     }
 
     function _getIconSize() {
@@ -356,34 +405,47 @@ const MapManager = (() => {
         return result;
     }
 
+    // Label lengths tried, longest first. A name longer than the first is
+    // capped there; the main layer then places the longest one that fits.
+    const LABEL_TIER_LENGTHS = [56, 46, 38, 31, 26, 22];
+
     /**
      * Builds the event label parts.
-     * Returns the first event's name (truncated with ellipsis) and a separate
-     * " +N" suffix string when there are additional matching events at the
-     * location. Split into two parts so the format expression can color them
-     * independently — the name uses the marker's hue, the count is neutral.
+     * Returns the first event's name as `tiers` — the full name (capped at
+     * the longest tier length), then shorter ellipsized variants — plus a
+     * separate " +N" suffix string when there are additional matching events
+     * at the location. `name` is the longest tier. Split into two parts so
+     * the format expression can color them independently — the name uses the
+     * marker's hue, the count is neutral.
      */
     function _buildEventLabel(events) {
-        if (!events || events.length === 0) return { name: '', extra: '' };
+        if (!events || events.length === 0) return { name: '', tiers: [], extra: '' };
         const first = events[0];
         // Strip country-flag emoji on every platform: the SDF label font has no
         // glyph for regional-indicator pairs, so they render as tofu in labels.
         // Compose accents before SDF glyph layout and truncation: decomposed
         // names such as "Simo\u0301n" otherwise give the accent its own advance.
         const rawName = Utils.stripCountryFlagEmoji((first && (first.short_name || first.name)) || '').normalize('NFC');
-        if (!rawName) return { name: '', extra: '' };
+        if (!rawName) return { name: '', tiers: [], extra: '' };
 
         // Only truncate when it actually saves space — slicing 23 chars down
         // to "22 chars + …" leaves the label the same length but less readable.
-        const MAX_LEN = 22;
         const MIN_SAVINGS = 3;
-        const name = rawName.length > MAX_LEN + MIN_SAVINGS
-            ? rawName.slice(0, MAX_LEN).trimEnd() + '…'
-            : rawName;
+        const tiers = [];
+        if (rawName.length <= LABEL_TIER_LENGTHS[0] + MIN_SAVINGS) tiers.push(rawName);
+        for (const len of LABEL_TIER_LENGTHS) {
+            if (rawName.length <= len + MIN_SAVINGS) continue;
+            // Prefer ending on a whole word when one ends close to the cut.
+            let cut = rawName.slice(0, len);
+            const space = cut.lastIndexOf(' ');
+            if (rawName[len] !== ' ' && space >= len - 8) cut = cut.slice(0, space);
+            const tier = cut.replace(/[\s,:;&/|+–—-]+$/, '') + '…';
+            if (tier !== tiers.at(-1)) tiers.push(tier);
+        }
 
         const extras = events.length - 1;
         const extra = extras > 0 ? ` +${extras}` : '';
-        return { name, extra };
+        return { name: tiers[0], tiers, extra };
     }
 
     // ========================================
@@ -588,7 +650,7 @@ const MapManager = (() => {
         const expandedLabelFeatures = [];
         state.rankedPlaces = [];
         state.locationKeyToFeatureId.clear();
-        state.locationKeyToLabelFeatureId.clear();
+        state.locationKeyToLabelFeatureIds.clear();
         state.featureIdToLocationKey.clear();
 
         for (const locationKey in filteredLocations) {
@@ -606,7 +668,7 @@ const MapManager = (() => {
             const ranked = [...(matchingLocations[locationKey] || events)].sort((a, b) =>
                 DiscoveryRanking.score(b, locationInfo) - DiscoveryRanking.score(a, locationInfo) || Number(a.id) - Number(b.id));
             const { iconImageId, color, formatCategory } = _eventIcon(ranked[0]);
-            const { name: eventLabel, extra: eventLabelExtra } = _buildEventLabel(ranked);
+            const { tiers: eventLabelTiers, extra: eventLabelExtra } = _buildEventLabel(ranked);
             state.rankedPlaces.push({ key: locationKey, coordinates: [lng, lat], formatCategory,
                 score: ranked.length ? DiscoveryRanking.score(ranked[0], locationInfo) : 0 });
 
@@ -625,27 +687,32 @@ const MapManager = (() => {
                 }
             });
 
-            // Only emit a label when an event name exists.
-            if (eventLabel) {
+            // One label feature per length tier, all on the same anchor, so
+            // they always collide with each other. The tier offset is far
+            // below any real latitude gap: each location tries its own tiers
+            // longest first, and the first that clears its neighbours wins.
+            eventLabelTiers.forEach((eventLabel, labelTier) => {
                 expandedLabelFeatures.push({
                     type: 'Feature',
                     geometry: { type: 'Point', coordinates: [lng, lat] },
                     properties: {
                         locationKey,
                         labelType: 'expanded',
+                        labelTier,
                         eventLabel,
                         eventLabelExtra,
                         color,
-                        sortKey: -5000 - lat
+                        sortKey: -5000 - lat + labelTier * 1e-7
                     }
                 });
-            }
+            });
         }
 
         // Order: icons, then expanded labels. Icons map 1:1 to locations
         // (0..N-1) and own the feature-state for hover/active rings. Expanded
-        // labels are sparse (only when a non-empty event label exists), so we
-        // record their feature IDs explicitly while building the array.
+        // labels are sparse (none without an event label, several with a
+        // long one), so we record their feature IDs explicitly while
+        // building the array.
         const features = [];
         iconFeatures.forEach((f, i) => {
             features.push(f);
@@ -657,7 +724,7 @@ const MapManager = (() => {
             const id = features.length;
             features.push(f);
             state.featureIdToLocationKey.set(id, f.properties.locationKey);
-            state.locationKeyToLabelFeatureId.set(f.properties.locationKey, id);
+            _addLabelFeatureId(f.properties.locationKey, id);
         });
 
         const geojson = { type: 'FeatureCollection', features };
@@ -694,7 +761,7 @@ const MapManager = (() => {
 
         // Rebuild lookup maps — icons are emitted first; labelType disambiguates
         state.locationKeyToFeatureId.clear();
-        state.locationKeyToLabelFeatureId.clear();
+        state.locationKeyToLabelFeatureIds.clear();
         state.featureIdToLocationKey.clear();
         state.sourceDataCache.features.forEach((f, i) => {
             const locKey = f.properties.locationKey;
@@ -702,7 +769,7 @@ const MapManager = (() => {
             if (f.properties.labelType === 'icon') {
                 state.locationKeyToFeatureId.set(locKey, i);
             } else {
-                state.locationKeyToLabelFeatureId.set(locKey, i);
+                _addLabelFeatureId(locKey, i);
             }
         });
 
@@ -757,7 +824,9 @@ const MapManager = (() => {
             keyFilter = ['in', ['get', 'locationKey'], ['literal', [...keys]]];
         }
 
-        map.setFilter('marker-symbols-hover', keyFilter);
+        // Hover overlaps freely, so it shows the longest label tier only.
+        map.setFilter('marker-symbols-hover', ['all', keyFilter,
+            ['==', ['coalesce', ['get', 'labelTier'], 0], 0]]);
         refreshPromotedMarkers();
     }
 
@@ -828,11 +897,16 @@ const MapManager = (() => {
         if (map && map.getSource('markers')) {
             map.setFeatureState({ source: 'markers', id }, value);
             const key = state.featureIdToLocationKey.get(id);
-            const labelId = state.locationKeyToLabelFeatureId.get(key);
-            if (labelId !== undefined && labelId !== id) {
-                map.setFeatureState({ source: 'markers', id: labelId }, value);
+            for (const labelId of state.locationKeyToLabelFeatureIds.get(key) || []) {
+                if (labelId !== id) map.setFeatureState({ source: 'markers', id: labelId }, value);
             }
         }
+    }
+
+    function _addLabelFeatureId(locationKey, id) {
+        const ids = state.locationKeyToLabelFeatureIds.get(locationKey);
+        if (ids) ids.push(id);
+        else state.locationKeyToLabelFeatureIds.set(locationKey, [id]);
     }
 
     function _setHoveredIcon(iconFid) {

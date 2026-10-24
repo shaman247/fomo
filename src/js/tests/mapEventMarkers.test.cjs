@@ -9,14 +9,14 @@ function harness({ reducedMotion = true } = {}) {
     const dataUpdates = [];
     const animationFrames = new Map();
     let now = 0, nextFrame = 0;
-    let data, theme = 'light';
+    let data, theme = 'light', projectX = 500;
     const rect = { left: 0, top: 0, right: 1000, bottom: 700 };
     const source = { setData: value => { data = value; dataUpdates.push(value); } };
     const map = {
         on() {}, isStyleLoaded: () => true, getSource: () => source, addSource() {},
         addLayer: layer => layers.set(layer.id, layer), getLayer: id => layers.get(id),
         setPaintProperty() {}, getCanvas: () => ({ getBoundingClientRect: () => rect }),
-        getBounds: () => ({ contains: () => true }), project: () => ({ x: 500, y: 350 }),
+        getBounds: () => ({ contains: () => true }), project: () => ({ x: projectX, y: 350 }),
         hasImage: id => images.has(id), listImages: () => [...images.keys()],
         addImage: (id, pixels) => images.set(id, pixels), updateImage: (id, pixels) => images.set(id, pixels),
         removeImage: id => images.delete(id),
@@ -29,7 +29,8 @@ function harness({ reducedMotion = true } = {}) {
         performance: { now: () => now },
         requestAnimationFrame: fn => { animationFrames.set(++nextFrame, fn); return nextFrame; },
         cancelAnimationFrame: id => animationFrames.delete(id),
-        document: { getElementById: id => id === 'map-container' ? { getBoundingClientRect: () => rect } : null },
+        document: { getElementById: id => id === 'map-container' ? { getBoundingClientRect: () => rect } : null,
+            createElement: () => ({ getContext: () => ({ measureText: text => ({ width: text.length * 8 }) }) }) },
         Utils: { isMobileLayout: () => false,
             getCurrentTheme: () => theme,
             stripCountryFlagEmoji: value => value,
@@ -54,6 +55,7 @@ function harness({ reducedMotion = true } = {}) {
     const key = '40.7,-74', locations = { [key]: { name: 'Venue', emoji: '🏛️' } };
     return { manager, images, requests, hoverRequests, layouts, layers, filters, filterCalls, featureStates, dataUpdates, key, locations, data: () => data,
         setTheme: value => { theme = value; },
+        setProjectX: value => { projectX = value; },
         animationFrames,
         advance: ms => {
             now += ms;
@@ -272,4 +274,41 @@ test('ranked format follows filtering, rekeys shared artwork, and reaches hover 
     assert.equal(h.data().features[0].properties.iconImageId, 'icon-music-1-format-participatory');
     const dotPaint = JSON.stringify(h.layers.get('marker-dots').paint['circle-color']);
     assert.ok(dotPaint.includes('formatCategory'));
+});
+test('long names emit full-to-short label tiers that the hover layer narrows to the longest', () => {
+    const h = harness(), name = 'Brooklyn Botanic Garden Chili Pepper Fiesta';
+    h.render([{ id: 1, name }]);
+    const labels = h.data().features.filter(f => f.properties.labelType === 'expanded').map(f => f.properties);
+    assert.deepEqual([...labels.map(l => l.eventLabel)],
+        [name, 'Brooklyn Botanic Garden Chili Pepper…', 'Brooklyn Botanic Garden Chili…',
+            'Brooklyn Botanic Garden…', 'Brooklyn Botanic…']);
+    assert.deepEqual([...labels.map(l => l.labelTier)], [0, 1, 2, 3, 4]);
+    // Each location tries its tiers longest first, before any further-south location.
+    for (let i = 1; i < labels.length; i++) assert.ok(labels[i].sortKey > labels[i - 1].sortKey);
+    assert.ok(labels.at(-1).sortKey < -5000 - 40.69);
+    h.manager.highlightLocationByKey(h.key);
+    assert.ok(JSON.stringify(h.filters.get('marker-symbols-hover')).includes('labelTier'));
+    h.data().features.forEach((f, id) => assert.equal(h.featureStates.get(id).hover, true));
+});
+test('short names keep one label and very long names are capped', () => {
+    const h = harness();
+    h.render([{ id: 1, name: 'Twenty-five characters ok' }]);
+    assert.deepEqual([...h.data().features.slice(1).map(f => f.properties.eventLabel)], ['Twenty-five characters ok']);
+    h.render([{ id: 1, name: 'Salsa, Bachata & Kizomba Social Night' }]);
+    assert.equal(h.data().features.at(-1).properties.eventLabel, 'Salsa, Bachata…', 'cuts drop trailing punctuation');
+    h.render([{ id: 1, name: 'x'.repeat(80) }]);
+    const labels = h.data().features.slice(1).map(f => f.properties.eventLabel);
+    assert.equal(labels[0], 'x'.repeat(56) + '…');
+    assert.equal(labels.at(-1), 'x'.repeat(22) + '…');
+});
+test('labels near the right edge skip tiers that would run off screen', () => {
+    const h = harness();
+    h.render([{ id: 1, name: 'Brooklyn Botanic Garden Chili Pepper Fiesta' }]);
+    assert.ok(!JSON.stringify(h.filters.get('marker-symbols')).includes('labelTier'), 'centered labels may use every tier');
+    // 300px of room minus the 1.8em text offset fits 30 of the stub's 8px characters.
+    h.setProjectX(700); h.manager.refreshPromotedMarkers();
+    const filter = JSON.stringify(h.filters.get('marker-symbols'));
+    assert.ok(filter.includes(`["match",["get","locationKey"],"${h.key}",2,0]`), filter);
+    h.setProjectX(500); h.manager.refreshPromotedMarkers();
+    assert.ok(!JSON.stringify(h.filters.get('marker-symbols')).includes('labelTier'));
 });
