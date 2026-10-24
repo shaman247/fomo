@@ -206,7 +206,7 @@ test('applying marker theme paint does not replace the data source', () => {
 test('late artwork fades its pixels over 150ms without touching marker placement', async () => {
     const h = harness({ reducedMotion: false });
     h.render([{ id: 1, name: 'Painting', icon_id: 'paint' }]);
-    const pixels = { width: 64, height: 64, data: new Uint8Array(64 * 64 * 4) };
+    const pixels = { width: 78, height: 78, data: new Uint8Array(78 * 78 * 4) };
     pixels.data.set([100, 150, 200, 255]);
     const updates = h.dataUpdates.length, filters = h.filterCalls.length;
     h.requests[0].done({ pixels, accent: '#123456' });
@@ -225,7 +225,7 @@ test('late artwork fades its pixels over 150ms without touching marker placement
 test('theme reload cancels an in-flight artwork fade', async () => {
     const h = harness({ reducedMotion: false });
     h.render([{ name: 'Painting', icon_id: 'paint' }]);
-    const pixels = { width: 64, height: 64, data: new Uint8Array(64 * 64 * 4).fill(255) };
+    const pixels = { width: 78, height: 78, data: new Uint8Array(78 * 78 * 4).fill(255) };
     h.requests[0].done({ pixels, accent: '#123456' });
     await Promise.resolve();
     h.advance(75);
@@ -240,7 +240,7 @@ test('a newly promoted marker fades even when another marker already uses its ca
     const h = harness({ reducedMotion: false });
     const event = { name: 'Painting', icon_id: 'paint' };
     h.render([event]);
-    const pixels = { width: 64, height: 64, data: new Uint8Array(64 * 64 * 4).fill(255) };
+    const pixels = { width: 78, height: 78, data: new Uint8Array(78 * 78 * 4).fill(255) };
     h.requests[0].done({ pixels, accent: '#123456' });
     await Promise.resolve();
     h.advance(150);

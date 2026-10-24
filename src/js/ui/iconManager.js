@@ -21,7 +21,10 @@ const IconManager = (() => {
     // UI artwork (popups, chips) is rasterized on a plain 64px canvas.
     const HOVER_SPRITE = Object.freeze({ ...MAP_SPRITE, ring: 3 });
     const UI_SPRITE_SIZE = 64;
-    const mapSpriteSize = hover => (hover ? HOVER_SPRITE : MAP_SPRITE).size;
+    // Device-pixel side of a map sprite. Rounded: a fractional DPR (browser
+    // zoom, 125% display scaling) would otherwise give a fractional slot that
+    // MapLibre rejects, while the canvas silently truncates its own width.
+    const mapSpriteSize = (hover, dpr = 1) => Math.round((hover ? HOVER_SPRITE : MAP_SPRITE).size * dpr);
     const discColors = (category, theme) => FormatColors.discColors(category, theme);
     const own = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
     const canonical = value => (typeof value === 'string' ? value : '').trim().replace(/[\uFE0E\uFE0F]/g, '');
@@ -146,7 +149,7 @@ const IconManager = (() => {
         const hover = mapSprite === 'hover';
         const geometry = hover ? HOVER_SPRITE : MAP_SPRITE;
         const promise = loadArtwork(descriptor).catch(() => load(IconCatalog.fallbackUrl)).then(img => {
-            const size = (mapSprite ? geometry.size : UI_SPRITE_SIZE) * dpr;
+            const size = mapSprite ? mapSpriteSize(hover, dpr) : Math.round(UI_SPRITE_SIZE * dpr);
             const canvas = document.createElement('canvas');
             canvas.width = canvas.height = size;
             const ctx = canvas.getContext('2d', { willReadFrequently: true });

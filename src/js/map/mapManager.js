@@ -416,14 +416,19 @@ const MapManager = (() => {
         const hover = imageId.endsWith(HOVER_SUFFIX);
         const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
         // Must match the sprite IconManager.prepare draws: updateImage rejects a size change.
-        const size = IconManager.mapSpriteSize(hover) * pixelRatio;
+        const size = IconManager.mapSpriteSize(hover, pixelRatio);
         // A fixed transparent slot prevents missing-image warnings during decode.
         if (!map.hasImage(imageId)) map.addImage(imageId,
             { width: size, height: size, data: new Uint8Array(size * size * 4) }, { pixelRatio });
         state.pendingIcons.add(imageId);
         IconManager.prepare(descriptor, theme, hover ? 'hover' : true, descriptor.formatCategory).then(result => {
             if (state.iconEpoch !== epoch || !map.hasImage(imageId)) return;
-            _fadeInIconImage(imageId, result.pixels);
+            if (result.pixels.width === size) _fadeInIconImage(imageId, result.pixels);
+            else {
+                // The DPR changed mid-decode (window moved to another display).
+                map.removeImage(imageId);
+                map.addImage(imageId, result.pixels, { pixelRatio: result.pixelRatio });
+            }
             state.pendingIcons.delete(imageId);
             state.loadedIcons.add(imageId);
             if (state.loadedIcons.size > 128) {

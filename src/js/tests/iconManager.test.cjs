@@ -145,3 +145,24 @@ test('map sprites composite a tinted disc under the artwork without polluting th
     assert.equal(hovered.pixels.args[2], manager.mapSpriteSize(true));
     assert.equal(manager.mapSpriteSize(true), 78); assert.equal(manager.mapSpriteSize(false), 78);
 });
+test('fractional device pixel ratios get a whole-pixel sprite matching the slot', async () => {
+    const requests = [], canvases = [];
+    const ctx = {
+        drawImage() {}, beginPath() {}, arc() {}, stroke() {}, fill() {},
+        getImageData: (x, y, w, h) => ({ width: Math.trunc(w), height: Math.trunc(h), data: new Uint8Array(4) })
+    };
+    const { manager } = setup({
+        window: { devicePixelRatio: 1.1 },
+        Image: class { set src(value) { this._src = value; requests.push(this); } get src() { return this._src; } },
+        Utils: { getCurrentTheme: () => 'dark' },
+        TagColorManager: { extractColorFromPixels: () => '#d02020' },
+        document: { createElement: () => { const canvas = { getContext: () => ctx }; canvases.push(canvas); return canvas; } }
+    });
+    const promise = manager.prepare(manager.resolve({ icon_id: 'game-go' }), 'dark', true, 'Social');
+    requests[0].onload();
+    const { pixels } = await promise;
+    const slot = manager.mapSpriteSize(false, 1.1);
+    assert.ok(Number.isInteger(slot), '78 × 1.1 must not allocate a fractional slot');
+    assert.equal(canvases[0].width, slot);
+    assert.equal(pixels.width, slot, 'MapLibre updateImage rejects any size change');
+});
