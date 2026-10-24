@@ -124,6 +124,8 @@ scripts/*
 !scripts/add_locations.php
 !scripts/add_websites.php
 !scripts/upload_public_html.py
+!scripts/frontend_smoke.py
+!scripts/client_errors.py
 !scripts/build_similarity.py
 !scripts/geocode.php
 # /run-pipeline pipeline + cleanup scripts

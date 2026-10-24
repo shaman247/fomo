@@ -45,7 +45,11 @@ npm run build                          # Build to dist/
 python scripts/upload_public_html.py   # Upload dist/ to server via FTP
 ```
 
-The upload script tracks file content hashes (MD5) in `scripts/upload_state.json` and only uploads changed files. Use `--force` to upload everything. It never uploads `dist/data/similarity/`: a similarity model generation goes live only through the gated `pipeline/similarity_publish.py` (procedure in `pipeline/similarity.md`).
+The upload script tracks file content hashes (MD5) in `scripts/upload_state.json` and only uploads changed files. Use `--force` to upload everything.
+
+**Frontend gate**: when the app bundle changed since the last upload (a new `app.<hash>.js` name, or a different `index.html` hash), the upload first runs `npm test` (every `src/js/tests/*.test.cjs`) and `scripts/frontend_smoke.py` (headless Chromium over DPR 0.9–2, three device timezones and a mobile viewport: fails on any page/console error, blank map sprites, event times that differ from a New-York-device run, or a missing ErrorReporter beacon) and uploads nothing if either fails. Data-only uploads skip it. `--skip-frontend-checks` overrides. Run the smoke alone with `./venv/bin/python scripts/frontend_smoke.py [--dist DIR] [--only dpr-1.25,tz-london]`.
+
+**Client error reporting**: `src/js/core/errorReporter.js` (first app module) beacons uncaught errors, unhandled rejections and `console.error` calls (max 5 per page load, deduped per session, URLs cut to file names) to `api/client_errors.php`, which appends to a log outside the web root. Summarize with `./venv/bin/python scripts/client_errors.py [--days N] [--bundle HASH]`. It never uploads `dist/data/similarity/`: a similarity model generation goes live only through the gated `pipeline/similarity_publish.py` (procedure in `pipeline/similarity.md`).
 
 ## Service worker emission
 

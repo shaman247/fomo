@@ -3,6 +3,7 @@
   "scripts": {
     "dev": "node build.js --dev",
     "build": "node build.js",
+    "test": "node --test src/js/tests/*.test.cjs",
     "test:discovery": "node --test src/js/tests/discoveryRanking.test.cjs"
   },
   "devDependencies": {

@@ -9,6 +9,9 @@ Smart Upload:
 - Only uploads files whose content has changed since the last upload
 - Use --force to upload all files regardless of state
 - Use --skip-build to skip the build step
+- Gates a changed app bundle (app.*.js or index.html differs from the last
+  upload) on `npm test` + scripts/frontend_smoke.py; data-only uploads skip it.
+  --skip-frontend-checks overrides the gate.
 
 The similarity model (dist/data/similarity/) is never uploaded here: a new
 generation goes live only through the gated `pipeline/similarity_publish.py`.
@@ -21,6 +24,7 @@ Usage:
     python upload_public_html.py                # Build + upload changed files
     python upload_public_html.py --force        # Build + upload all files
     python upload_public_html.py --skip-build   # Upload only (no build)
+    python upload_public_html.py --skip-frontend-checks  # Upload a changed bundle untested
 """
 
 import hashlib
@@ -37,6 +41,7 @@ from dotenv import load_dotenv
 # Get the directory where this script is located
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 STATE_FILE = os.path.join(SCRIPT_DIR, 'upload_state.json')
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
 # Published only by pipeline/similarity_publish.py, after its release gates pass.
 GATED_DIRS = ('data/similarity',)
 
@@ -225,7 +230,44 @@ def run_build():
     return True
 
 
-def main(remote_dir=None, use_tls=False, force=False, skip_build=False):
+def bundle_changed(local_dir, previous_state, remote_dir):
+    """True when the app bundle (app.*.js or index.html) differs from the last upload.
+
+    Bundle filenames are content-hashed, so a new app.<hash>.js name means new
+    code; index.html covers markup and the bundle reference. Data, images and
+    other assets don't count — daily data uploads stay fast.
+    """
+    prefix = f"{remote_dir}/" if remote_dir else ''
+    local_path = Path(local_dir)
+    local_bundles = {f"{prefix}{p.name}" for p in local_path.glob('app.*.js')}
+    uploaded_bundles = {k for k in previous_state
+                        if k.startswith(f"{prefix}app.") and k.endswith('.js') and '/' not in k[len(prefix):]}
+    if local_bundles != uploaded_bundles:
+        return True
+    index = local_path / 'index.html'
+    return index.exists() and previous_state.get(f"{prefix}index.html") != get_file_hash(index)
+
+
+def run_frontend_checks(local_dir):
+    """Run the JS unit tests and the browser smoke matrix; True if both pass."""
+    venv_python = os.path.join(PROJECT_ROOT, 'venv', 'bin', 'python')
+    python = venv_python if os.path.exists(venv_python) else sys.executable
+    checks = [
+        ('JS unit tests', ['npm', 'test', '--silent']),
+        ('browser smoke matrix', [python, os.path.join(SCRIPT_DIR, 'frontend_smoke.py'), '--dist', local_dir]),
+    ]
+    for label, command in checks:
+        print(f"Frontend gate: {label}...")
+        if subprocess.run(command, cwd=PROJECT_ROOT).returncode != 0:
+            print(f"\nFrontend gate FAILED ({label}); nothing uploaded.")
+            print("Fix it, or re-run with --skip-frontend-checks to upload anyway.")
+            return False
+        print()
+    print("Frontend gate passed.\n")
+    return True
+
+
+def main(remote_dir=None, use_tls=False, force=False, skip_build=False, skip_frontend_checks=False):
     """
     Build the project and upload dist/ contents to the server via FTP.
 
@@ -234,6 +276,7 @@ def main(remote_dir=None, use_tls=False, force=False, skip_build=False):
         use_tls: Whether to use FTPS (FTP over TLS) instead of plain FTP
         force: If True, upload all files regardless of modification time
         skip_build: If True, skip the build step
+        skip_frontend_checks: If True, upload a changed bundle without the test gate
 
     Returns:
         bool: True if upload was successful, False otherwise
@@ -265,6 +308,14 @@ def main(remote_dir=None, use_tls=False, force=False, skip_build=False):
         except (json.JSONDecodeError, IOError):
             pass
     new_state = {}
+
+    if bundle_changed(local_dir, previous_state, ftp_remote_dir):
+        if skip_frontend_checks:
+            print("App bundle changed; frontend gate SKIPPED (--skip-frontend-checks)\n")
+        elif not run_frontend_checks(local_dir):
+            return False
+    else:
+        print("App bundle unchanged since last upload; frontend gate not needed")
 
     if force:
         print("Force mode: uploading all files")
@@ -351,6 +402,11 @@ if __name__ == "__main__":
         help='Skip the build step (upload existing dist/ as-is)'
     )
     parser.add_argument(
+        '--skip-frontend-checks',
+        action='store_true',
+        help='Upload a changed app bundle without running npm test + the browser smoke matrix'
+    )
+    parser.add_argument(
         '--tls',
         action='store_true',
         help='Use FTPS (FTP over TLS) instead of plain FTP'
@@ -362,5 +418,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    success = main(remote_dir=args.remote_dir, use_tls=args.tls, force=args.force, skip_build=args.skip_build)
+    success = main(remote_dir=args.remote_dir, use_tls=args.tls, force=args.force, skip_build=args.skip_build,
+                   skip_frontend_checks=args.skip_frontend_checks)
     sys.exit(0 if success else 1)
