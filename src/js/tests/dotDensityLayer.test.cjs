@@ -70,13 +70,15 @@ test('dark dots carry each place format hue and exclude promoted/offscreen place
     ];
     h.set({ places, promoted: new Set(['promoted']) }); h.layer.prerender();
     assert.equal(h.draws[0].count, 2);
-    assert.deepEqual(h.buffers[0].slice(0, 4), [0, 0, 1, 0]);
+    const unit = hue => [Math.cos(hue * Math.PI / 180), Math.sin(hue * Math.PI / 180)];
+    const near = (actual, expected) => expected.forEach((v, i) => assert.ok(Math.abs(actual[i] - v) < 1e-6));
+    near(h.buffers[0].slice(0, 4), [0, 0, ...unit(335)]);
     assert.deepEqual(h.buffers[0].slice(6, 8), [0, 0]);
     h.layer.prerender();
     assert.equal(h.buffers.length, 1, 'unchanged data reuses the density buffer');
     h.set({ places: [{ ...places[0], formatCategory: 'Browsable' }], promoted: new Set() });
     h.layer.prerender();
-    assert.equal(h.buffers[1][2], -1, 'format changes invalidate the cached hue');
+    near(h.buffers[1].slice(2, 4), unit(215)); // format changes invalidate the cached hue
     h.layer.render(); h.layer.onRemove();
 });
 test('zooming out expands the heat halo while bounding its size', () => {

@@ -24,7 +24,7 @@ test('only the canonical format controls hue, including shared topic names and m
 });
 test('all six category colors preserve their hues across themes and unknown formats are neutral', () => {
     const { palette, color } = setup();
-    for (const [category, hue] of Object.entries({ Performance: 300, Social: 0, Participatory: 60, Outing: 120, Browsable: 180, Gathering: 240 })) {
+    for (const [category, hue] of Object.entries({ Performance: 29, Social: 335, Participatory: 92, Outing: 148, Browsable: 215, Gathering: 262 })) {
         for (const theme of ['light', 'dark']) {
             const disc = palette.discColors(category, theme);
             if (theme === 'dark') assert.equal(disc.fill, '#222222');
