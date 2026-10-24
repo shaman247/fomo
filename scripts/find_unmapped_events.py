@@ -466,6 +466,25 @@ SKIP_LOCATION_NAMES = {
     'apollo bakery', '200 vesey st. lobby',
     #   Venue withheld / roving org / unknowable office: pinned to the borough or org generic.
     'hearth', 'gallim', 'green tile social club', 'capital one - corporate office',
+    # 2026-10-22 unmapped/generic sweep. Each event was researched against its source page and is
+    # already pinned to the best row that will exist.
+    #   Venue withheld until RSVP/ticket, or not yet announced: borough/neighborhood generic.
+    'see rsvp page', 'shared with rsvp', 'location is tbd', 'les rooftop, nyc',
+    #   Org names emitted as the venue: online talks (Zoom) pinned per the virtual-events policy,
+    #   an unannounced fundraiser venue, and La MaMa's Puppet Festival run of a touring company.
+    'nyc lgbt historic sites project', 'long island arts alliance', 'the committee of 100',
+    'quintet of the americas', 'loco7 dance puppet theatre',
+    #   Office with no public street address (Richmond Hill ZIP only).
+    'jahajee office',
+    #   Private apartments / residential or multi-tenant buildings with no public business.
+    '318 w 85th st', '16 robinson ave', '206 w 109th st, new york, ny 10025',
+    '257 varet st, brooklyn, ny 11206', '87 george st, brooklyn, ny 11206',
+    "the armory men's shelter",
+    #   Route points / meeting corners / sub-areas of an already-pinned park.
+    '2211 1st avenue', 'east 75th street and first avenue', '459 central park w, new york, ny 10025',
+    'parking lot (cars follow park drive to the end)', "st. mary's playground west",
+    #   A precinct trunk-or-treat held in a municipal garage (pinned to the garage, not the station house).
+    'nypd 103rd precinct',
 }
 
 # Websites whose feed emits the HOST/PARTNER ORG as `location_name` for every
