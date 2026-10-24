@@ -5,14 +5,17 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 function setup() {
+    // Real date helpers (city-timezone day math); the DOM-bound helpers stay stubbed.
+    const utilsContext = vm.createContext({});
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '../core/utils.js'), 'utf8'), utilsContext);
     const context = vm.createContext({console, performance, setTimeout, Utils: {
+        ...vm.runInContext('Utils', utilsContext),
         decodeHtml: s => s,
-        parseDateInZone: (d, t) => d ? new Date(`${d}T${t || '00:00:00'}`) : null,
         eventFilterTags: (e, l) => [...(e.tags || []), ...(l?.tags || [])],
     }});
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../data/dataManager.js'), 'utf8'), context);
     return {manager: vm.runInContext('DataManager', context), state: {},
-        config: {START_DATE: new Date('2026-09-09'), END_DATE: new Date('2026-12-09')}};
+        config: {START_DATE: new Date(2026, 8, 9), END_DATE: new Date(2026, 11, 9)}};
 }
 const building = {id: 2163, name: '120 Walker St', lat: 40.7, lng: -74, tags: ['venue:attraction']};
 const loft = {id: 7002, name: 'The Walker Loft', lat: 40.7, lng: -74,

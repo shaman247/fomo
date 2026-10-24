@@ -45,9 +45,15 @@ const Utils = (() => {
         return string && (string.startsWith('http://') || string.startsWith('https://'));
     }
 
-    // Shared date/time formatting options
-    const DATE_OPTIONS = { month: 'short', day: 'numeric' };
-    const TIME_OPTIONS = { hour: 'numeric', minute: 'numeric', hour12: true };
+    // The app's timezone, injected by build.js (window.__CITY__.timezone). Used to
+    // interpret event dates/times and "today" regardless of the user's local zone.
+    const APP_TIMEZONE = (typeof window !== 'undefined' && window.__CITY__ && window.__CITY__.timezone) || 'America/New_York';
+
+    // Event instants are always shown in APP_TIMEZONE: a 7pm show reads 7pm on a
+    // visitor's laptop in London too, not as the device-local 11pm.
+    const _dateFormatter = new Intl.DateTimeFormat('en-US', { timeZone: APP_TIMEZONE, month: 'short', day: 'numeric' });
+    const _timeFormatter = new Intl.DateTimeFormat('en-US', { timeZone: APP_TIMEZONE, hour: 'numeric', minute: 'numeric', hour12: true });
+    const formatDateShort = date => _dateFormatter.format(date);
 
     /**
      * Formats a time string in compact form (e.g., "7pm" instead of "7:00 PM")
@@ -55,7 +61,7 @@ const Utils = (() => {
      * @returns {string} Formatted time string
      */
     function formatTimeCompact(date) {
-        return date.toLocaleTimeString('en-US', TIME_OPTIONS)
+        return _timeFormatter.format(date)
             .replace(':00', '')
             .replace(' AM', 'am')
             .replace(' PM', 'pm')
@@ -114,9 +120,9 @@ const Utils = (() => {
         const hasStartTime = originalStartTime && originalStartTime.trim() !== '';
         const hasEndTime = originalEndTime && originalEndTime.trim() !== '';
 
-        const startDateStr = start.toLocaleDateString('en-US', DATE_OPTIONS);
-        const endDateStr = end.toLocaleDateString('en-US', DATE_OPTIONS);
-        const isSameDay = start.toDateString() === end.toDateString();
+        const startDateStr = formatDateShort(start);
+        const endDateStr = formatDateShort(end);
+        const isSameDay = dayIndexInZone(start) === dayIndexInZone(end);
 
         // Endpoints the pipeline synthesized are not published dates: an
         // end-only run's start is the crawl date, an open run's end a rolling
@@ -162,7 +168,7 @@ const Utils = (() => {
             if (!(start instanceof Date) || isNaN(start)) return;
 
             const hasEnd = end instanceof Date && !isNaN(end);
-            const isMultiDay = hasEnd && start.toDateString() !== end.toDateString();
+            const isMultiDay = hasEnd && dayIndexInZone(start) !== dayIndexInZone(end);
 
             // Multi-day spans (e.g. exhibition runs) render as their own "start – end"
             // range so the end date isn't lost when grouping by start date.
@@ -173,12 +179,12 @@ const Utils = (() => {
                 return;
             }
 
-            // Key by local calendar date so grouping matches the rendered
-            // displayDate (the ISO/UTC date is the next day for evening events).
-            const dateKey = start.toDateString();
+            // Key by the APP_TIMEZONE calendar day so grouping matches the
+            // rendered displayDate (the UTC date is the next day for evening events).
+            const dateKey = dayIndexInZone(start);
             let segment = groupByDate[dateKey];
             if (!segment) {
-                segment = { displayDate: start.toLocaleDateString('en-US', DATE_OPTIONS), times: new Set() };
+                segment = { displayDate: formatDateShort(start), times: new Set() };
                 groupByDate[dateKey] = segment;
                 segments.push(segment);
             }
@@ -227,10 +233,6 @@ const Utils = (() => {
         return { hours, minutes, seconds: 0 };
     }
 
-    // The app's timezone, injected by build.js (window.__CITY__.timezone). Used to
-    // interpret event dates/times and "today" regardless of the user's local zone.
-    const APP_TIMEZONE = (typeof window !== 'undefined' && window.__CITY__ && window.__CITY__.timezone) || 'America/New_York';
-
     // UTC offset (e.g. "-04:00") for APP_TIMEZONE at the given date. Driven by the
     // IANA database via Intl, so it's correct for any zone's DST rules — not just US.
     const _offsetFormatter = new Intl.DateTimeFormat('en-US', {
@@ -243,48 +245,73 @@ const Utils = (() => {
         return m ? m[1] : '+00:00'; // "GMT" (no suffix) => UTC
     }
 
-    // The zone offset depends only on the calendar date (tempDate is pinned to noon),
-    // so cache it per dateStr — parseDateInZone runs ~2x per occurrence in the Phase 2 merge.
-    const _zoneOffsetByDate = new Map();
-
+    // A wall-clock date and time in APP_TIMEZONE, as an instant. The offset is
+    // looked up at the instant itself, so times either side of a DST change on
+    // its day (12:30am vs 7pm on a fall-back Sunday) each get their own, on any
+    // device. Runs ~2x per occurrence in the Phase 2 merge; offsetMsAt is a
+    // cached lookup.
     function parseDateInZone(dateStr, timeStr) {
         if (!dateStr) return null;
 
-        let offset = _zoneOffsetByDate.get(dateStr);
-        if (offset === undefined) {
-            const tempDate = new Date(dateStr.replace(/-/g, '/') + ' 12:00:00');
-            if (isNaN(tempDate.getTime())) return null;
-            offset = getZoneOffset(tempDate);
-            _zoneOffsetByDate.set(dateStr, offset);
-        }
-
         const timeParts = parseTime(timeStr);
-        const isoString = `${dateStr}T${String(timeParts.hours).padStart(2, '0')}:${String(timeParts.minutes).padStart(2, '0')}:${String(timeParts.seconds).padStart(2, '0')}${offset}`;
-        const finalDate = new Date(isoString);
-
-        return isNaN(finalDate.getTime()) ? null : finalDate;
+        const wallUtc = Date.parse(`${dateStr}T${String(timeParts.hours).padStart(2, '0')}:${String(timeParts.minutes).padStart(2, '0')}:${String(timeParts.seconds).padStart(2, '0')}Z`);
+        if (isNaN(wallUtc)) return null;
+        return new Date(wallUtc - offsetMsAt(wallUtc - offsetMsAt(wallUtc)));
     }
 
-    // Calendar-day index (days since epoch) of a Date in APP_TIMEZONE. Lets hot
-    // paths bucket timestamps by local day with plain arithmetic instead of Intl
-    // formatting. The zone offset only changes at DST transitions, so it's
-    // cached per UTC day (probed at that day's noon UTC, like parseDateInZone);
-    // events within an hour of local midnight on a transition day may bucket
-    // one day off — harmless for ranking.
+    // APP_TIMEZONE's offset from UTC (ms) at an epoch-ms instant. Lets hot paths
+    // do day math with plain arithmetic instead of Intl formatting. Cached per
+    // UTC day; a day whose offset changes (a DST transition) is resolved per
+    // quarter hour instead, so day boundaries stay exact.
     const MS_PER_DAY = 86400000;
-    const _dayOffsetMsByUtcDay = new Map();
+    const QUARTER_HOUR = 900000;
+    const _offsetMsByUtcDay = new Map(), _offsetMsByQuarter = new Map();
+    function _probeOffsetMs(ms) {
+        const m = getZoneOffset(new Date(ms)).match(/([+-])(\d{2}):(\d{2})/);
+        return m ? (m[1] === '-' ? -1 : 1) * ((+m[2]) * 60 + +m[3]) * 60000 : 0;
+    }
+    function offsetMsAt(ms) {
+        const utcDay = Math.floor(ms / MS_PER_DAY);
+        let offsetMs = _offsetMsByUtcDay.get(utcDay);
+        if (offsetMs === undefined) {
+            const first = _probeOffsetMs(utcDay * MS_PER_DAY);
+            offsetMs = first === _probeOffsetMs((utcDay + 1) * MS_PER_DAY - 1) ? first : null;
+            _offsetMsByUtcDay.set(utcDay, offsetMs);
+        }
+        if (offsetMs !== null) return offsetMs;
+        const quarter = Math.floor(ms / QUARTER_HOUR);
+        offsetMs = _offsetMsByQuarter.get(quarter);
+        if (offsetMs === undefined) {
+            offsetMs = _probeOffsetMs(quarter * QUARTER_HOUR);
+            _offsetMsByQuarter.set(quarter, offsetMs);
+        }
+        return offsetMs;
+    }
+
+    // Calendar-day index (days since epoch) of an instant in APP_TIMEZONE.
     function dayIndexInZone(date) {
         const ms = date.getTime();
         if (isNaN(ms)) return NaN;
-        const utcDay = Math.floor(ms / MS_PER_DAY);
-        let offsetMs = _dayOffsetMsByUtcDay.get(utcDay);
-        if (offsetMs === undefined) {
-            const probe = new Date(utcDay * MS_PER_DAY + MS_PER_DAY / 2);
-            const m = getZoneOffset(probe).match(/([+-])(\d{2}):(\d{2})/);
-            offsetMs = m ? (m[1] === '-' ? -1 : 1) * ((+m[2]) * 60 + +m[3]) * 60000 : 0;
-            _dayOffsetMsByUtcDay.set(utcDay, offsetMs);
-        }
-        return Math.floor((ms + offsetMs) / MS_PER_DAY);
+        return Math.floor((ms + offsetMsAt(ms)) / MS_PER_DAY);
+    }
+
+    // Hour of the day (0-23) of an instant in APP_TIMEZONE.
+    function hourInZone(date) {
+        const ms = date.getTime();
+        return Math.floor((((ms + offsetMsAt(ms)) % MS_PER_DAY) + MS_PER_DAY) % MS_PER_DAY / 3600000);
+    }
+
+    // Epoch ms of 00:00 in APP_TIMEZONE starting the given calendar-day index.
+    function dayStartMsInZone(dayIndex) {
+        const utcMidnight = dayIndex * MS_PER_DAY;
+        return utcMidnight - offsetMsAt(utcMidnight - offsetMsAt(utcMidnight));
+    }
+
+    // Calendar days picked in the UI (date picker, presets, URL params) are
+    // Dates at the device's local midnight; only their local Y-M-D is meant.
+    // This is that day's index, for dayStartMsInZone.
+    function calendarDayIndex(day) {
+        return Math.round(Date.UTC(day.getFullYear(), day.getMonth(), day.getDate()) / MS_PER_DAY);
     }
 
     // Today's date in the app timezone as YYYY-MM-DD. Used to pick the matching
@@ -295,6 +322,12 @@ const Utils = (() => {
     });
     function getTodayInZone() {
         return _todayFormatter.format(new Date());
+    }
+
+    // Today in APP_TIMEZONE as a UI calendar day (a Date at device-local midnight).
+    function todayInZone() {
+        const [year, month, day] = getTodayInZone().split('-').map(Number);
+        return new Date(year, month - 1, day);
     }
 
     // Current UI theme. Reads the DOM as source of truth ('data-theme' is set
@@ -650,7 +683,11 @@ const Utils = (() => {
         buildEventDateTime,
         parseDateInZone,
         dayIndexInZone,
+        hourInZone,
+        dayStartMsInZone,
+        calendarDayIndex,
         getTodayInZone,
+        todayInZone,
         getCurrentTheme,
         isMobileLayout,
         isCountryFlagEmoji,

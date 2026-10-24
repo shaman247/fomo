@@ -18,6 +18,7 @@ function harness() {
             async buildSearchIndexAsync() {}
         }
     });
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '../core/utils.js'), 'utf8'), context);
     const source = fs.readFileSync(path.join(__dirname, '../script.js'), 'utf8');
     vm.runInContext(source.replace('    App.init();', '    globalThis.App = App;'), context);
     const app = context.App;
@@ -100,6 +101,7 @@ test('the yielding first render runs the same steps in the same order, scoring m
             DiscoveryRanking: { details: (e, place) => log.push(`score${e.id}:${place.id}`) },
             DataManager: { yieldToMain: async () => { yields++; } }
         });
+        vm.runInContext(fs.readFileSync(path.join(__dirname, '../core/utils.js'), 'utf8'), context);
         const source = fs.readFileSync(path.join(__dirname, '../script.js'), 'utf8');
         vm.runInContext(source.replace('    App.init();', '    globalThis.App = App;'), context);
         const app = context.App;

@@ -117,9 +117,10 @@ test('format selections intersect date and required topic membership', () => {
         const symbol=name==='FM'?'FilterManager':name;
         vm.runInContext(fs.readFileSync(path.join(__dirname,'..',file),'utf8')+`\nthis.${name}=${symbol};`,ctx);
     }
-    const day=new Date(2026,8,8), later=new Date(2026,8,9);
-    const e=(id,format,date)=>({id,event_type:format,occurrences:[{start:date,end:date}]});
-    const state={allEvents:[e(1,'Game',day),e(2,'Concert',day),e(3,'Game',later),e(4,'Game',day)],eventTagIndex:{Kids:[1,2,3]}};
+    // Picked days are device-local calendar days; event times are city instants.
+    const day=new Date(2026,8,8), at=date=>ctx.Utils.parseDateInZone(date,'19:00');
+    const e=(id,format,date)=>({id,event_type:format,occurrences:[{start:at(date),end:at(date)}]});
+    const state={allEvents:[e(1,'Game','2026-09-08'),e(2,'Concert','2026-09-08'),e(3,'Game','2026-09-09'),e(4,'Game','2026-09-08')],eventTagIndex:{Kids:[1,2,3]}};
     ctx.FM.init({appState:state,config:{START_DATE:day,END_DATE:day}});
     const s=selector();s.setSelection(['Game']);
     const result=ctx.FM.filterEventsByTags({Kids:'required'},ctx.FM.filterEventsByDateRange(day,day).filter(s.matches));

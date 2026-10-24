@@ -93,6 +93,7 @@ function load(idb, { files = FILES, online = true, subtle = true } = {}) {
     for (const file of ['data/dataCache.js', 'data/dataManager.js']) {
         vm.runInContext(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), context);
     }
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '../core/utils.js'), 'utf8'), context);
     const source = fs.readFileSync(path.join(__dirname, '../script.js'), 'utf8');
     vm.runInContext(source.replace('    App.init();', '    globalThis.App = App;'), context);
     const app = context.App;

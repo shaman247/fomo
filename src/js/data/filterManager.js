@@ -28,38 +28,36 @@ const FilterManager = (() => {
     // ========================================
 
     /**
-     * Gets the effective end date for filtering, applying early morning cutoff.
+     * Gets the effective end (epoch ms) for filtering, applying early morning cutoff.
      * For overnight events ending before 5 AM, treats them as ending on the previous day.
+     * Days and hours are the city's (Utils.*InZone), not the device's.
      * @param {Object} occurrence - Occurrence with start and end dates
-     * @returns {Date} The effective end date for filtering
+     * @returns {number} The effective end for filtering, in epoch ms
      */
-    function getEffectiveEndDate(occurrence) {
-        const isOvernightEvent = occurrence.end.getDate() !== occurrence.start.getDate();
-        const endsBeforeCutoff = occurrence.end.getHours() < Constants.TIME.EARLY_MORNING_CUTOFF_HOUR;
+    function getEffectiveEndMs(occurrence) {
+        const endDay = Utils.dayIndexInZone(occurrence.end);
+        const isOvernightEvent = endDay !== Utils.dayIndexInZone(occurrence.start);
+        const endsBeforeCutoff = Utils.hourInZone(occurrence.end) < Constants.TIME.EARLY_MORNING_CUTOFF_HOUR;
 
-        if (isOvernightEvent && endsBeforeCutoff) {
-            const effectiveEnd = new Date(occurrence.end);
-            effectiveEnd.setDate(effectiveEnd.getDate() - 1);
-            effectiveEnd.setHours(23, 59, 59, 999);
-            return effectiveEnd;
-        }
-        return occurrence.end;
+        if (isOvernightEvent && endsBeforeCutoff) return Utils.dayStartMsInZone(endDay) - 1;
+        return occurrence.end.getTime();
     }
 
     /**
-     * Normalizes date filter parameters, applying defaults and setting end-of-day for endDate
+     * Normalizes date filter parameters to the instants bounding those calendar
+     * days in the city's timezone, applying defaults.
      * @param {Date} startDate - Start date (may be null/invalid)
      * @param {Date} endDate - End date (may be null/invalid)
-     * @returns {Object} Object with startFilter and endFilter dates
+     * @returns {Object} Object with startFilterMs and endFilterMs (inclusive, epoch ms)
      */
     function normalizeDateFilters(startDate, endDate) {
         const startFilter = (startDate instanceof Date && !isNaN(startDate)) ? startDate : state.config.START_DATE;
-        let endFilter = (endDate instanceof Date && !isNaN(endDate)) ? endDate : state.config.END_DATE;
+        const endFilter = (endDate instanceof Date && !isNaN(endDate)) ? endDate : state.config.END_DATE;
 
-        endFilter = new Date(endFilter);
-        endFilter.setHours(23, 59, 59, 999);
-
-        return { startFilter, endFilter };
+        return {
+            startFilterMs: Utils.dayStartMsInZone(Utils.calendarDayIndex(startFilter)),
+            endFilterMs: Utils.dayStartMsInZone(Utils.calendarDayIndex(endFilter) + 1) - 1
+        };
     }
 
     /**
@@ -74,7 +72,7 @@ const FilterManager = (() => {
     function occurrenceOverlapsRange(occurrence, startFilterMs, endFilterMs) {
         if (occurrence.effectiveEndMs === undefined) {
             occurrence.startMs = occurrence.start.getTime();
-            occurrence.effectiveEndMs = getEffectiveEndDate(occurrence).getTime();
+            occurrence.effectiveEndMs = getEffectiveEndMs(occurrence);
         }
         return occurrence.startMs <= endFilterMs && occurrence.effectiveEndMs >= startFilterMs;
     }
@@ -86,9 +84,7 @@ const FilterManager = (() => {
      * @returns {Array} Filtered events with matching_occurrences property
      */
     function filterEventsByDateRange(startDate, endDate) {
-        const { startFilter, endFilter } = normalizeDateFilters(startDate, endDate);
-        const startFilterMs = startFilter.getTime();
-        const endFilterMs = endFilter.getTime();
+        const { startFilterMs, endFilterMs } = normalizeDateFilters(startDate, endDate);
         const filteredEvents = [];
 
         for (const event of state.appState.allEvents) {

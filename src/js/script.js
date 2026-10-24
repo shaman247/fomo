@@ -125,8 +125,10 @@ document.addEventListener('DOMContentLoaded', () => {
             TAG_HIERARCHY_URL: 'data/tag_hierarchy.json',
             ORGANIZERS_URL: 'data/organizers.json',
 
-            START_DATE: new Date(new Date().setHours(0, 0, 0, 0)),
-            END_DATE: new Date(new Date().setHours(0, 0, 0, 0) + 90 * 24 * 60 * 60 * 1000),
+            // Calendar days (device-local midnight Dates) counted from the
+            // city's today; FilterManager maps them to the city's day bounds.
+            START_DATE: Utils.todayInZone(),
+            END_DATE: (today => new Date(today.getFullYear(), today.getMonth(), today.getDate() + 90))(Utils.todayInZone()),
             TAG_COLOR_PALETTE_DARK: [
                 '#b03540', '#3d8578', '#c07030', '#3d70a0', '#5da035',
                 '#a04570', '#7da030', '#3d5ca8', '#b58030', '#3d7580', '#a03d78',

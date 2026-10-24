@@ -595,8 +595,10 @@ const DataManager = (() => {
      * @returns {boolean} True if event is in date range
      */
     function isEventInAppDateRange(occurrences, config) {
+        const startMs = Utils.dayStartMsInZone(Utils.calendarDayIndex(config.START_DATE));
+        const endMs = Utils.dayStartMsInZone(Utils.calendarDayIndex(config.END_DATE) + 1) - 1;
         return occurrences.some(occ =>
-            occ.start <= config.END_DATE && occ.end >= config.START_DATE
+            occ.start.getTime() <= endMs && occ.end.getTime() >= startMs
         );
     }
 

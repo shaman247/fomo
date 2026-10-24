@@ -33,8 +33,9 @@ const UIManager = (() => {
     // ========================================
 
     function getDatePresets() {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        // The city's today, not the device's (a visitor abroad may already be
+        // on tomorrow).
+        const today = Utils.todayInZone();
 
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
@@ -129,8 +130,7 @@ const UIManager = (() => {
      * @param {Object} callbacks - Callback functions
      */
     function initDatePicker(elements, config, state, callbacks) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const today = Utils.todayInZone();
 
         // Destroy existing instance to prevent memory leaks
         destroyDatePicker(state);
