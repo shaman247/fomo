@@ -21,10 +21,6 @@ const PopupContentBuilder = (() => {
     // a "+N other dates" toggle expands them on demand.
     const INLINE_OTHER_DATES_THRESHOLD = 2;
 
-    // Max organizer chips to render per event card. Merged events can have many
-    // source websites (incl. over-merge noise); cap keeps the card readable.
-    const ORGANIZER_CHIP_CAP = 5;
-
     // Section display order: Events first, Ongoing second, custom alphabetical
     const SECTION_ORDER = { 'Events': 0, 'Ongoing': 1 };
 
@@ -386,24 +382,7 @@ const PopupContentBuilder = (() => {
                 : tagsToShow).filter(tag => tag !== event.event_type)
             : [];
 
-        // Organizers render as first-class, interactive tag chips (namespaced
-        // pseudo-tags) so they filter identically to topic tags. A merged event
-        // can have several organizers — show one chip per KNOWN organizer
-        // (aggregators/unknowns are dropped), deduped by display name and capped.
-        const organizerTags = [];
-        if (state.createInteractiveTagButton) {
-            const seenOrgNames = new Set();
-            for (const t of Utils.organizerTagsForEvent(event)) {
-                if (!Utils.isKnownOrganizerTag(t)) continue;
-                const label = Utils.getTagDisplayName(t);
-                if (seenOrgNames.has(label)) continue;  // collapse duplicate venue website rows
-                seenOrgNames.add(label);
-                organizerTags.push(t);
-                if (organizerTags.length >= ORGANIZER_CHIP_CAP) break;
-            }
-        }
-
-        if (event.event_type || curatedTags.length > 0 || organizerTags.length > 0) {
+        if (event.event_type || curatedTags.length > 0) {
             const tagsContainer = document.createElement('div');
             tagsContainer.className = 'tag-tags-container popup-tags-container';
 
@@ -411,10 +390,6 @@ const PopupContentBuilder = (() => {
             curatedTags.forEach(tag => {
                 const el = createTagElement(tag);
                 if (el) tagsContainer.appendChild(el);
-            });
-            organizerTags.forEach(t => {
-                const orgEl = state.createInteractiveTagButton(t);
-                if (orgEl) tagsContainer.appendChild(orgEl);
             });
 
             if (tagsContainer.children.length > 0) {
