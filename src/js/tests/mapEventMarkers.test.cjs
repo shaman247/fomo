@@ -16,6 +16,7 @@ function harness({ reducedMotion = true } = {}) {
     const source = { setData: value => { data = value; dataUpdates.push(value); } };
     const map = {
         on: (name, fn) => handlers.set(name, [...(handlers.get(name) || []), fn]), isStyleLoaded: () => true, getSource: () => source, addSource() {},
+        off: (name, fn) => handlers.set(name, (handlers.get(name) || []).filter(other => other !== fn)),
         addLayer: layer => layers.set(layer.id, layer), getLayer: id => layers.get(id),
         setPaintProperty() {}, getCanvas: () => ({ getBoundingClientRect: () => rect }),
         getBounds: () => ({ contains: () => true }), project: () => ({ x: projectX, y: 350 }),
@@ -60,7 +61,7 @@ function harness({ reducedMotion = true } = {}) {
     return { manager, images, requests, hoverRequests, layouts, layers, filters, filterCalls, featureStates, dataUpdates, key, locations, data: () => data,
         setTheme: value => { theme = value; },
         setProjectX: value => { projectX = value; },
-        fire: name => (handlers.get(name) || []).forEach(fn => fn()),
+        fire: (name, event) => (handlers.get(name) || []).forEach(fn => fn(event)),
         runTimers: () => { const pending = [...timers.values()]; timers.clear(); pending.forEach(fn => fn()); },
         animationFrames,
         advance: ms => {
@@ -329,4 +330,20 @@ test('promotion refreshes once the camera settles, without waiting for moveend',
     h.filterCalls.length = 0;
     h.fire('move'); h.fire('moveend'); h.runTimers();
     assert.ok(!h.filterCalls.includes('marker-symbols'), 'moveend cancels the pending settle and refilters nothing new');
+});
+test('a tile that throws while applying feature state is contained and healed with one clean reload', () => {
+    const h = harness();
+    h.render([{ id: 1, name: 'Painting', icon_id: 'paint' }]);
+    class Tile { setFeatureState() { throw new Error('feature index out of bounds'); } }
+    const tile = new Tile();
+    h.fire('sourcedata', { sourceId: 'basemap', tile: {} });
+    assert.throws(() => tile.setFeatureState({}), /out of bounds/, 'only a markers tile installs the guard');
+    h.fire('sourcedata', { sourceId: 'markers', tile });
+    const reloads = h.dataUpdates.length;
+    assert.doesNotThrow(() => { tile.setFeatureState({}); tile.setFeatureState({}); });
+    h.runTimers();
+    assert.equal(h.dataUpdates.length, reloads + 1, 'two failures in one frame heal with a single setData');
+    assert.equal(h.dataUpdates.at(-1), h.data(), 'the heal reloads the current marker data');
+    h.fire('sourcedata', { sourceId: 'markers', tile: new Tile() });
+    assert.doesNotThrow(() => new Tile().setFeatureState({}), 'the shared prototype is guarded once');
 });

@@ -18,6 +18,7 @@ function setup(responses) {
             calls.push({ url, options });
             assert.ok(responses.length, 'unexpected extra request');
             const next = responses.shift();
+            if (next.networkError) throw new TypeError(next.networkError);
             return { ok: !next.status, status: next.status || 200, text: async () => next.body };
         }
     });
@@ -88,4 +89,17 @@ test('HTTP failures keep their specific error without a JSON retry', async () =>
     const { manager, calls } = setup([{ status: 404 }]);
     await assert.rejects(manager.fetchData('data/missing.json'), /404/);
     assert.equal(calls.length, 1);
+});
+
+test('a dropped connection is retried before the load gives up', async () => {
+    const { manager, calls } = setup([{ networkError: 'Load failed' }, { body: '[{"id":2}]' }]);
+    assert.equal((await manager.fetchData('data/events.day0.json'))[0].id, 2);
+    assert.equal(calls.length, 2);
+});
+
+test('a connection that keeps failing reports a friendly error after two retries', async () => {
+    const failures = [1, 2, 3].map(() => ({ networkError: 'Load failed' }));
+    const { manager, calls } = setup(failures);
+    await assert.rejects(manager.fetchData('data/events.day0.json'), /Unable to connect to the server/);
+    assert.equal(calls.length, 3);
 });

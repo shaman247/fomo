@@ -94,3 +94,33 @@ function beacon_write_state($path, $state) {
         @rename($tmp, $path);
     }
 }
+
+/** Width of a "WxH" string, or 0. */
+function beacon_width($size) {
+    return is_string($size) && preg_match('/^(\d{1,5})x\d{1,5}$/', $size, $m) ? (int)$m[1] : 0;
+}
+
+/**
+ * Classify a beacon's sender as real or automated traffic. Both are kept;
+ * callers store automated traffic separately so it can't skew real numbers.
+ *
+ * Automated means: no user agent; a crawler/headless/tool user agent; a browser
+ * under automation (navigator.webdriver); or a phone user agent with a viewport
+ * or screen wider than any phone, which is what link-preview and screenshot
+ * renderers that borrow an iPhone UA look like (1920x1080 at DPR 3).
+ * scripts/client_errors.py mirrors this to classify older log lines; keep the
+ * two in step.
+ *
+ * @return array [$class ('real'|'automated'), $reason ('' for real)]
+ */
+function beacon_traffic($ua, $data) {
+    if ($ua === '') return ['automated', 'no-ua'];
+    if (preg_match('/(?<!cu)bot\b|bot\/|crawl|spider|slurp|headless|lighthouse|phantomjs|puppeteer|playwright|selenium|python|curl|wget|httpclient|preview|facebookexternalhit|bytespider/i', $ua)) {
+        return ['automated', 'bot-ua'];
+    }
+    if (($data['wd'] ?? false) === true) return ['automated', 'webdriver'];
+    $phone = preg_match('/iPhone|iPod/', $ua) || preg_match('/Android.*Mobile/', $ua);
+    $widest = max(beacon_width($data['viewport'] ?? ''), beacon_width($data['screen'] ?? ''));
+    if ($phone && $widest >= 1024) return ['automated', 'phone-ua-desktop-size'];
+    return ['real', ''];
+}

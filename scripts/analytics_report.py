@@ -11,6 +11,12 @@ and prints the current window against the one before it.
 There are no visitor counts by design: views are page loads, and "views with X"
 counts page loads in which X happened at least once.
 
+Automated traffic (crawlers, webdriver, link-preview renderers borrowing a phone
+UA at desktop size; see beacon_traffic() in src/api/beacon_lib.php) is stored in
+each day file's "automated" section and reported apart from the real numbers.
+Day files from before that split count it as real traffic; the report says how
+many days in the window predate it.
+
 Usage:
     ./venv/bin/python scripts/analytics_report.py              # last 7 days vs the 7 before
     ./venv/bin/python scripts/analytics_report.py --days 28
@@ -61,6 +67,7 @@ ACTIONS = {
 MILESTONES = {'engaged_10s': '10 s', 'engaged_60s': '1 min', 'engaged_5m': '5 min'}
 BREAKDOWNS = ['platform', 'device', 'browser', 'os', 'referrer', 'utm_source', 'shared_link',
               'dpr', 'tz', 'lang', 'hour', 'bundle', 'path']
+AUTOMATED_BREAKDOWNS = ['reason', 'browser', 'os', 'device', 'tz', 'referrer', 'bundle']
 
 
 def fetch_remote():
@@ -100,17 +107,32 @@ def read_local(directory):
 
 def empty_totals():
     return {'views': 0, 'bots': 0, 'seconds': 0, 'actions': Counter(), 'views_with': Counter(),
-            'dims': {name: Counter() for name in BREAKDOWNS + ['seconds_by_platform']}}
+            'dims': {name: Counter() for name in BREAKDOWNS + ['seconds_by_platform']},
+            'automated': {'views': 0, 'engage_beacons': 0, 'dims': {name: Counter() for name in AUTOMATED_BREAKDOWNS}},
+            'unsplit_days': 0}
+
+
+def as_dict(value):
+    """PHP writes an empty array as [] rather than {}."""
+    return value if isinstance(value, dict) else {}
 
 
 def add_day(totals, day):
     totals['views'] += day.get('views', 0)
     totals['bots'] += day.get('bots', 0)
+    automated = day.get('automated')
+    if automated is None:
+        totals['unsplit_days'] += 1
+    else:
+        totals['automated']['views'] += automated.get('views', 0)
+        totals['automated']['engage_beacons'] += automated.get('engage_beacons', 0)
+        for name, values in as_dict(automated.get('dims')).items():
+            totals['automated']['dims'].setdefault(name, Counter()).update(as_dict(values))
     totals['seconds'] += day.get('seconds', 0)
-    totals['actions'].update(day.get('actions', {}).get('all', {}))
-    totals['views_with'].update(day.get('views_with', {}).get('all', {}))
-    for name, values in day.get('dims', {}).items():
-        totals['dims'].setdefault(name, Counter()).update(values)
+    totals['actions'].update(as_dict(as_dict(day.get('actions')).get('all')))
+    totals['views_with'].update(as_dict(as_dict(day.get('views_with')).get('all')))
+    for name, values in as_dict(day.get('dims')).items():
+        totals['dims'].setdefault(name, Counter()).update(as_dict(values))
 
 
 def summarize(days, start, end):
@@ -141,7 +163,8 @@ def headline(totals):
         'filter_changes': filters,
         'shared_link_arrivals': totals['dims'].get('shared_link', Counter())['yes'],
         'app_views': sum(totals['dims'].get('platform', Counter())[p] for p in ('ios-app', 'android-app')),
-        'bots': totals['bots'],
+        'automated_views': totals['automated']['views'],
+        'legacy_bot_beacons': totals['bots'],
     }
 
 
@@ -265,6 +288,16 @@ def render_dashboard(dataset, history, notes, site):
     breakdown_html = ''.join(
         f'<section class="card"><h3>{esc(title)}</h3>{bar_rows([(b["value"], b["views"]) for b in dataset["breakdowns"].get(name, [])[:8]], views)}</section>'
         for name, title in titles.items())
+    auto = dataset['automated']
+    auto_titles = {'reason': 'Why it counts as automated', 'browser': 'Browser', 'os': 'Operating system', 'tz': 'Device time zone'}
+    auto_total = sum(b['count'] for b in auto['breakdowns'].get('reason', [])) or auto['views']
+    automated_html = (
+        f'<p class="meta">{auto["views"]:,} views and {auto["engage_beacons"]:,} engage beacons from crawlers, automated browsers '
+        'and link-preview renderers, kept out of every number above.'
+        + (f' {auto["unsplit_days"]} day(s) in this window predate the split and count them as real traffic.' if auto['unsplit_days'] else '')
+        + '</p><div class="grid3">' + ''.join(
+            f'<div><h3>{esc(title)}</h3>{bar_rows([(b["value"], b["count"]) for b in auto["breakdowns"].get(name, [])[:6]], auto_total if name == "reason" else max(auto["views"], 1))}</div>'
+            for name, title in auto_titles.items()) + '</div>')
     notes_html = ''.join(f'<li><time>{esc(n["date"])}</time> {esc(n["note"])}</li>' for n in reversed(notes[-12:])) \
         or '<li class="empty">No review notes yet. Add one with <code>--note</code>.</li>'
 
@@ -341,8 +374,9 @@ code {{ font-size: 12px; }}
 </div>
 <section class="card"><h2>Feature use</h2>{feature_html}</section>
 <section><h2>Who and where</h2><div class="grid3">{breakdown_html}</div></section>
+<section class="card"><h2>Automated traffic</h2>{automated_html}</section>
 <section class="card"><h2>Review notes</h2><ul class="notes">{notes_html}</ul></section>
-<footer>Views are page loads; there are no visitor counts by design. Bot beacons ignored in this window: {h['bots']:,}.
+<footer>Views are page loads; there are no visitor counts by design. Automated traffic is counted separately (see above).
 Regenerate with <code>./venv/bin/python scripts/analytics_report.py --html</code>.</footer>
 </main>
 </body>
@@ -389,7 +423,7 @@ def main():
         ('Filter changes', 'filter_changes', '{:,.0f}'),
         ('Shared-link arrivals', 'shared_link_arrivals', '{:,.0f}'),
         ('App views (iOS + Android)', 'app_views', '{:,.0f}'),
-        ('Bot beacons (ignored)', 'bots', '{:,.0f}'),
+        ('Automated views (kept apart)', 'automated_views', '{:,.0f}'),
     ]
     for label, key, fmt in rows:
         print(f'  {label:<28} {fmt.format(now_h[key]):>10}   prev {fmt.format(prev_h[key]):>10}  {delta(now_h[key], prev_h[key])}')
@@ -421,6 +455,18 @@ def main():
         shown = ', '.join(f'{k} {rate(v, total):.0%}' for k, v in items)
         print(f'  {name}: {shown}' + ('' if name == 'hour' or len(counter) <= args.top else f' (+{len(counter) - args.top} more)'))
 
+    auto = current['automated']
+    print(f"\n  Automated traffic: {auto['views']:,} views, {auto['engage_beacons']:,} engage beacons (not in the numbers above)")
+    for name in AUTOMATED_BREAKDOWNS:
+        counter = auto['dims'].get(name, Counter())
+        if counter:
+            print(f"  {name}: {', '.join(f'{k} {v}' for k, v in counter.most_common(args.top))}")
+    if current['bots']:
+        print(f"  plus {current['bots']:,} bot beacons counted before the split")
+    if current['unsplit_days']:
+        print(f"  Note: {current['unsplit_days']} day(s) in this window predate the automated-traffic split; "
+              "their automated renderers are counted as real traffic.")
+
     if args.json or args.html:
         dataset = {
             'generated_at': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
@@ -435,6 +481,10 @@ def main():
                         for a, label in ACTIONS.items()],
             'engagement': [{'milestone': label, 'views': current['views_with'][m], 'view_rate': rate(current['views_with'][m], current['views'])}
                            for m, label in MILESTONES.items()],
+            'automated': {'views': auto['views'], 'engage_beacons': auto['engage_beacons'],
+                          'legacy_bot_beacons': current['bots'], 'unsplit_days': current['unsplit_days'],
+                          'breakdowns': {name: [{'value': k, 'count': v} for k, v in auto['dims'][name].most_common(10)]
+                                         for name in AUTOMATED_BREAKDOWNS if auto['dims'].get(name)}},
             'breakdowns': {name: [{'value': k, 'views': v} for k, v in
                                   (sorted(current['dims'][name].items()) if name == 'hour' else current['dims'][name].most_common(20))]
                            for name in BREAKDOWNS if current['dims'].get(name)},

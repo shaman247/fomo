@@ -27,24 +27,49 @@ const DataManager = (() => {
      * @returns {Promise<string>} The raw response body text
      * @throws {Error} Network, timeout, or HTTP errors with user-friendly messages
      */
+    // Phones drop connections mid-load (Safari reports "TypeError: Load failed"),
+    // and a fetch cut off by switching away from the page fails the same way.
+    // Network failures (not timeouts or HTTP errors) are retried after these
+    // pauses, each once the page is visible again.
+    const NETWORK_RETRY_DELAYS_MS = [500, 1500];
+
+    function _whenVisible() {
+        if (typeof document === 'undefined' || document.visibilityState !== 'hidden') return Promise.resolve();
+        return new Promise(resolve => {
+            const onChange = () => {
+                if (document.visibilityState === 'hidden') return;
+                document.removeEventListener('visibilitychange', onChange);
+                resolve();
+            };
+            document.addEventListener('visibilitychange', onChange);
+        });
+    }
+
     async function _fetchText(url, timeout, fetchOptions) {
-        // Create an AbortController for timeout handling
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
-
         let response;
-        try {
-            response = await fetch(url, { ...(fetchOptions || {}), signal: controller.signal });
-            clearTimeout(timeoutId);
-        } catch (fetchError) {
-            clearTimeout(timeoutId);
+        for (let attempt = 0; ; attempt++) {
+            // Create an AbortController for timeout handling
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            try {
+                response = await fetch(url, { ...(fetchOptions || {}), signal: controller.signal });
+                clearTimeout(timeoutId);
+                break;
+            } catch (fetchError) {
+                clearTimeout(timeoutId);
 
-            // Handle different types of fetch errors
-            if (fetchError.name === 'AbortError') {
-                throw new Error(`Request timed out after ${timeout/1000} seconds. Please check your internet connection and try again.`);
-            } else if (fetchError.message.includes('Failed to fetch') || fetchError.message.includes('NetworkError')) {
-                throw new Error('Unable to connect to the server. Please check your internet connection and try again.');
-            } else {
+                // Handle different types of fetch errors
+                if (fetchError.name === 'AbortError') {
+                    throw new Error(`Request timed out after ${timeout/1000} seconds. Please check your internet connection and try again.`);
+                }
+                if (attempt < NETWORK_RETRY_DELAYS_MS.length) {
+                    await _whenVisible();
+                    await new Promise(resolve => setTimeout(resolve, NETWORK_RETRY_DELAYS_MS[attempt]));
+                    continue;
+                }
+                if (/Failed to fetch|NetworkError|Load failed/.test(fetchError.message)) {
+                    throw new Error('Unable to connect to the server. Please check your internet connection and try again.');
+                }
                 throw new Error(`Network error: ${fetchError.message}`);
             }
         }

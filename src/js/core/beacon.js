@@ -28,12 +28,16 @@ const Beacon = (() => {
         try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { return ''; }
     }
 
+    // viewport/screen/wd also let the server tell real visitors from automated
+    // renderers (beacon_traffic() in api/beacon_lib.php).
     const context = () => ({
         bundle,
         platform: platform(),
         dpr: window.devicePixelRatio || 1,
         tz: timezone(),
         viewport: `${window.innerWidth}x${window.innerHeight}`,
+        screen: window.screen ? `${screen.width}x${screen.height}` : '',
+        wd: navigator.webdriver === true,
         path: location.pathname.slice(0, 100)
     });
 

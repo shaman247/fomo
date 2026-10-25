@@ -34,7 +34,10 @@ const ErrorReporter = (() => {
             message: scrub(message, 300),
             source: scrub(source, 120),
             stack: scrub(stack, 800).split('\n').slice(0, 6).join('\n'),
-            ...Beacon.context()
+            ...Beacon.context(),
+            // A fetch cut off because the visitor left reads like a network failure.
+            hidden: document.visibilityState === 'hidden',
+            sinceLoad: Math.round(performance.now())
         };
         const signature = `${kind}|${payload.message}|${payload.source}`;
         if (seen.has(signature)) return;
@@ -56,7 +59,15 @@ const ErrorReporter = (() => {
 
     window.addEventListener('unhandledrejection', event => {
         const reason = event.reason;
-        const message = reason instanceof Error ? `${reason.name}: ${reason.message}` : typeof reason === 'string' ? reason : 'Unhandled rejection';
+        // Non-Error reasons still say what they were (type, constructor, message) without dumping the object.
+        const describe = value => {
+            if (value === null || value === undefined) return String(value);
+            if (typeof value !== 'object') return `${typeof value} ${String(value).slice(0, 80)}`;
+            const name = (value.constructor && value.constructor.name) || 'Object';
+            return typeof value.message === 'string' ? `${name}: ${value.message}` : name;
+        };
+        const message = reason instanceof Error ? `${reason.name}: ${reason.message}`
+            : typeof reason === 'string' ? reason : `Unhandled rejection (${describe(reason)})`;
         report('rejection', message, '', reason instanceof Error ? reason.stack : '');
     });
 

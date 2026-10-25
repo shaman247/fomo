@@ -48,6 +48,10 @@ const MapManager = (() => {
         settleTimer: null,
         measureContext: null,
 
+        // Pending clean reload after MapLibre failed to apply feature state
+        // to a tile (see _guardTileFeatureState).
+        featureStateHealTimer: null,
+
         // Popup content callbacks by locationKey
         popupContentCallbacks: new Map()
     };
@@ -86,6 +90,7 @@ const MapManager = (() => {
             refreshPromotedMarkers();
         });
         mapInstance.on('resize', refreshPromotedMarkers);
+        _guardTileFeatureState(mapInstance);
 
         // Try immediate setup if style is already loaded
         if (mapInstance.isStyleLoaded()) {
@@ -912,6 +917,44 @@ const MapManager = (() => {
                 if (labelId !== id) map.setFeatureState({ source: 'markers', id: labelId }, value);
             }
         }
+    }
+
+    // MapLibre 5.x applies feature state to tiles during render, and a markers
+    // tile can be left pairing a reloaded feature index with older raw tile data
+    // (a stale reload response landing after a newer setData). Applying state to
+    // that tile then throws "feature index out of bounds" from the render loop,
+    // and the half-updated bucket makes the next placement throw "Length of new
+    // data is N, which doesn't match current length of 0". Contain the throw at
+    // the tile and heal it with one clean reload of the current data. The tile
+    // class isn't exported, so its prototype is taken from the first loaded tile;
+    // if a future MapLibre changes this shape the guard simply does nothing.
+    function _guardTileFeatureState(map) {
+        const onTile = (event) => {
+            const tileProto = event && event.sourceId === 'markers' && event.tile && Object.getPrototypeOf(event.tile);
+            if (!tileProto || typeof tileProto.setFeatureState !== 'function') return;
+            map.off('sourcedata', onTile);
+            if (tileProto.__fomoFeatureStateGuard) return;
+            const apply = tileProto.setFeatureState;
+            tileProto.setFeatureState = function (...args) {
+                try {
+                    return apply.apply(this, args);
+                } catch (error) {
+                    _scheduleFeatureStateHeal();
+                    return undefined;
+                }
+            };
+            tileProto.__fomoFeatureStateGuard = true;
+        };
+        map.on('sourcedata', onTile);
+    }
+
+    function _scheduleFeatureStateHeal() {
+        if (state.featureStateHealTimer !== null) return;
+        state.featureStateHealTimer = setTimeout(() => {
+            state.featureStateHealTimer = null;
+            const source = state.mapInstance && state.mapInstance.getSource('markers');
+            if (source && state.sourceDataCache) source.setData(state.sourceDataCache);
+        }, 0);
     }
 
     function _addLabelFeatureId(locationKey, id) {

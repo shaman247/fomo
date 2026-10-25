@@ -9,14 +9,18 @@
  * scripts/analytics_report.py.
  *
  * POST /api/analytics.php   (text/plain JSON body, as sendBeacon sends it)
- *   {type: "view", platform, dpr, tz, viewport, path, bundle, ctz, ref, utm, shared, lang}
- *   {type: "engage", ctz, platform, seconds, counts: {action: n}, firsts: [action]}
+ *   {type: "view", platform, dpr, tz, viewport, screen, wd, path, bundle, ctz, ref, utm, shared, lang}
+ *   {type: "engage", ctz, platform, viewport, screen, wd, seconds, counts: {action: n}, firsts: [action]}
  * Response: 204 for accepted/dropped beacons.
  *
  * Only counters are stored: no per-visit rows, no IP addresses, no visitor IDs.
- * The user agent is reduced to browser/OS family on arrival; known bots are
- * counted separately and otherwise ignored. Each dimension keeps at most
- * MAX_KEYS values (the rest fold into "(other)"), so a day file stays small.
+ * The user agent is reduced to browser/OS family on arrival. Automated traffic
+ * (beacon_traffic(): crawlers, webdriver, phone-UA renderers with desktop-size
+ * viewports) is kept, but in its own "automated" section with the same shape
+ * plus a "reason" breakdown, so it never mixes into the real totals. Each
+ * dimension keeps at most MAX_KEYS values (the rest fold into "(other)"), so a
+ * day file stays small. Day files written before 2026-10-25 counted known bots
+ * only, in a top-level "bots" number.
  */
 
 require __DIR__ . '/beacon_lib.php';
@@ -41,7 +45,7 @@ if (!in_array($type, ['view', 'engage'], true)) {
 }
 
 $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
-$isBot = $ua === '' || preg_match('/bot|crawl|spider|slurp|headless|lighthouse|phantomjs|puppeteer|python|curl|wget|httpclient|preview/i', $ua);
+[$traffic, $trafficReason] = beacon_traffic($ua, $data);
 
 // Days follow the city's timezone (sent by the bundle from config), not UTC.
 $zone = in_array($data['ctz'] ?? '', DateTimeZone::listIdentifiers(), true) ? $data['ctz'] : 'UTC';
@@ -67,8 +71,9 @@ $limit['total']++;
 beacon_write_state("$dir/ratelimit.json", $limit);
 
 $path = "$dir/$day.json";
-$stats = beacon_read_state($path, ['date' => $day, 'timezone' => $zone, 'views' => 0, 'bots' => 0,
-    'engage_beacons' => 0, 'seconds' => 0, 'dims' => [], 'actions' => [], 'views_with' => []]);
+$section_skeleton = ['views' => 0, 'engage_beacons' => 0, 'seconds' => 0, 'dims' => [], 'actions' => [], 'views_with' => []];
+$stats = beacon_read_state($path, ['date' => $day, 'timezone' => $zone] + $section_skeleton);
+$stats['automated'] = ($stats['automated'] ?? []) + $section_skeleton;
 
 /** Increment $stats[$group][$dim][$key], folding new keys past MAX_KEYS into "(other)". */
 function bump(&$stats, $group, $dim, $key, $by = 1) {
@@ -95,42 +100,49 @@ function ua_family($ua) {
 
 $platform = in_array($data['platform'] ?? '', PLATFORMS, true) ? $data['platform'] : 'web';
 
-if ($isBot) {
-    $stats['bots']++;
-} elseif ($type === 'view') {
-    $stats['views']++;
+// Real and automated traffic share one shape; only the section differs.
+if ($traffic === 'automated') {
+    $section = &$stats['automated'];
+    bump($section, 'dims', 'reason', $trafficReason);
+} else {
+    $section = &$stats;
+}
+
+if ($type === 'view') {
+    $section['views']++;
     [$browser, $os] = ua_family($ua);
     $width = preg_match('/^(\d{1,5})x\d{1,5}$/', $data['viewport'] ?? '', $m) ? (int)$m[1] : 0;
     $dpr = is_numeric($data['dpr'] ?? null) ? round((float)$data['dpr'], 2) : 0;
-    bump($stats, 'dims', 'platform', $platform);
-    bump($stats, 'dims', 'device', $width === 0 ? 'unknown' : ($width < 600 ? 'phone' : ($width < 1024 ? 'tablet' : 'desktop')));
-    bump($stats, 'dims', 'browser', $browser);
-    bump($stats, 'dims', 'os', $os);
-    bump($stats, 'dims', 'dpr', $dpr ? rtrim(rtrim(number_format($dpr, 2, '.', ''), '0'), '.') : 'unknown');
-    bump($stats, 'dims', 'tz', pick($data['tz'] ?? '', '~^[\w+\-/]{1,64}$~', 'unknown'));
-    bump($stats, 'dims', 'lang', pick($data['lang'] ?? '', '/^[a-z]{2}$/', 'unknown'));
-    bump($stats, 'dims', 'referrer', strtolower(pick($data['ref'] ?? '', '/^[A-Za-z0-9.-]{1,100}$/')));
-    bump($stats, 'dims', 'utm_source', strtolower(pick($data['utm'] ?? '', '/^[\w.-]{1,40}$/')));
-    bump($stats, 'dims', 'path', beacon_clean_text($data['path'] ?? '', 100));
-    bump($stats, 'dims', 'bundle', pick($data['bundle'] ?? '', '/^[\w.-]{1,16}$/', 'unknown'));
-    bump($stats, 'dims', 'hour', $now->format('H'));
-    bump($stats, 'dims', 'shared_link', empty($data['shared']) ? 'no' : 'yes');
+    bump($section, 'dims', 'platform', $platform);
+    bump($section, 'dims', 'device', $width === 0 ? 'unknown' : ($width < 600 ? 'phone' : ($width < 1024 ? 'tablet' : 'desktop')));
+    bump($section, 'dims', 'browser', $browser);
+    bump($section, 'dims', 'os', $os);
+    bump($section, 'dims', 'dpr', $dpr ? rtrim(rtrim(number_format($dpr, 2, '.', ''), '0'), '.') : 'unknown');
+    bump($section, 'dims', 'tz', pick($data['tz'] ?? '', '~^[\w+\-/]{1,64}$~', 'unknown'));
+    bump($section, 'dims', 'lang', pick($data['lang'] ?? '', '/^[a-z]{2}$/', 'unknown'));
+    bump($section, 'dims', 'referrer', strtolower(pick($data['ref'] ?? '', '/^[A-Za-z0-9.-]{1,100}$/')));
+    bump($section, 'dims', 'utm_source', strtolower(pick($data['utm'] ?? '', '/^[\w.-]{1,40}$/')));
+    bump($section, 'dims', 'path', beacon_clean_text($data['path'] ?? '', 100));
+    bump($section, 'dims', 'bundle', pick($data['bundle'] ?? '', '/^[\w.-]{1,16}$/', 'unknown'));
+    bump($section, 'dims', 'hour', $now->format('H'));
+    bump($section, 'dims', 'shared_link', empty($data['shared']) ? 'no' : 'yes');
 } else {
-    $stats['engage_beacons']++;
+    $section['engage_beacons']++;
     $seconds = is_numeric($data['seconds'] ?? null) ? (int)$data['seconds'] : 0;
     $seconds = max(0, min($seconds, MAX_SECONDS_PER_BEACON));
-    $stats['seconds'] += $seconds;
-    bump($stats, 'dims', 'seconds_by_platform', $platform, $seconds);
+    $section['seconds'] += $seconds;
+    bump($section, 'dims', 'seconds_by_platform', $platform, $seconds);
     foreach ((is_array($data['counts'] ?? null) ? $data['counts'] : []) as $action => $n) {
         if (in_array($action, ACTIONS, true) && is_numeric($n)) {
-            bump($stats, 'actions', 'all', $action, max(0, min((int)$n, 500)));
+            bump($section, 'actions', 'all', $action, max(0, min((int)$n, 500)));
         }
     }
     foreach ((is_array($data['firsts'] ?? null) ? array_unique($data['firsts']) : []) as $action) {
-        if (in_array($action, ACTIONS, true)) bump($stats, 'views_with', 'all', $action);
+        if (in_array($action, ACTIONS, true)) bump($section, 'views_with', 'all', $action);
     }
 }
 
+unset($section);
 beacon_write_state($path, $stats);
 beacon_unlock($lock);
 http_response_code(204);

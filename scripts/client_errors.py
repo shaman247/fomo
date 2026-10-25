@@ -17,12 +17,18 @@ in a local triage file (default .claude/client-error-triage.json):
              at triage time resurface it as RECURRED
 
 Untriaged and recurred errors are shown by default; --all shows everything.
+
+Reports from automated traffic (crawlers, webdriver, link-preview renderers
+borrowing a phone UA at desktop size) are kept but tagged; only real traffic is
+shown unless --traffic automated|all. Lines logged before the tag existed are
+classified here with the same rule as beacon_traffic() in src/api/beacon_lib.php.
 The weekly review procedure lives in .claude/recurring-checks.md.
 
 Usage:
     ./venv/bin/python scripts/client_errors.py                  # last 7 days, needs-attention only
     ./venv/bin/python scripts/client_errors.py --days 30 --all
     ./venv/bin/python scripts/client_errors.py --bundle 631d680d
+    ./venv/bin/python scripts/client_errors.py --traffic automated   # what crawlers and renderers hit
     ./venv/bin/python scripts/client_errors.py --show 3f2a9c1b0d    # stacks + bundle code around the frame
     ./venv/bin/python scripts/client_errors.py --mark 3f2a9c1b0d --verdict fixed --note "e421e41"
     ./venv/bin/python scripts/client_errors.py --file path/to/client_errors.log
@@ -74,6 +80,30 @@ def signature(entry):
     source = re.sub(r'^app\.[0-9a-f]{8}\.js$', 'app.js', source)
     key = f"{entry.get('kind', '')}|{message}|{source}"
     return hashlib.sha1(key.encode()).hexdigest()[:10]
+
+
+BOT_UA = re.compile(r'(?<!cu)bot\b|bot/|crawl|spider|slurp|headless|lighthouse|phantomjs|puppeteer|playwright|selenium|'
+                    r'python|curl|wget|httpclient|preview|facebookexternalhit|bytespider', re.I)
+
+
+def width_of(size):
+    match = re.fullmatch(r'(\d{1,5})x\d{1,5}', size or '')
+    return int(match.group(1)) if match else 0
+
+
+def traffic_of(entry):
+    """(class, reason) — the logged tag, or the beacon_traffic() rule for older lines."""
+    if entry.get('traffic'):
+        return entry['traffic'], entry.get('traffic_reason', '')
+    ua = entry.get('ua', '')
+    if not ua:
+        return 'automated', 'no-ua'
+    if BOT_UA.search(ua):
+        return 'automated', 'bot-ua'
+    phone = re.search(r'iPhone|iPod', ua) or re.search(r'Android.*Mobile', ua)
+    if phone and max(width_of(entry.get('viewport')), width_of(entry.get('screen'))) >= 1024:
+        return 'automated', 'phone-ua-desktop-size'
+    return 'real', ''
 
 
 def browser_of(ua):
@@ -153,6 +183,8 @@ def main():
     parser.add_argument('--file', help='Read a local log instead of fetching over SSH')
     parser.add_argument('--days', type=float, default=7, help='Only reports from the last N days (default 7)')
     parser.add_argument('--bundle', help='Only reports from this bundle hash')
+    parser.add_argument('--traffic', choices=('real', 'automated', 'all'), default='real',
+                        help='Which traffic to show (default real; automated = crawlers and renderers)')
     parser.add_argument('--all', action='store_true', help='Include ignored, backlog and fixed errors')
     parser.add_argument('--show', metavar='SIG', help='Details for one signature: sample stacks + bundle code')
     parser.add_argument('--mark', metavar='SIG', help='Record a verdict for a signature (with --verdict)')
@@ -169,6 +201,7 @@ def main():
     since = datetime.now(timezone.utc) - timedelta(days=36500 if args.mark else args.days)
     groups = defaultdict(list)
     skipped = 0
+    by_traffic = Counter()
     for line in text.splitlines():
         try:
             entry = json.loads(line)
@@ -177,6 +210,10 @@ def main():
             skipped += 1
             continue
         if seen_at < since or (args.bundle and entry.get('bundle') != args.bundle):
+            continue
+        entry['_traffic'], entry['_reason'] = traffic_of(entry)
+        by_traffic[entry['_traffic']] += 1
+        if args.traffic != 'all' and entry['_traffic'] != args.traffic and not args.mark:
             continue
         entry['_at'] = seen_at
         groups[signature(entry)].append(entry)
@@ -216,9 +253,13 @@ def main():
 
     total = sum(len(v) for v in groups.values())
     attention = sum(1 for sig, entries in groups.items() if status_of(entries, triage.get(sig)) in ('new', 'recurred'))
-    print(f'{total} reports, {len(groups)} distinct errors in the last {args.days:g} days'
+    print(f"{args.traffic if args.traffic != 'all' else 'all'} traffic: "
+          f'{total} reports, {len(groups)} distinct errors in the last {args.days:g} days'
           + (f' (bundle {args.bundle})' if args.bundle else '')
           + f'; {attention} need attention' + (f'; {skipped} unparseable lines' if skipped else ''))
+    other = {'real': 'automated', 'automated': 'real'}.get(args.traffic)
+    if other and by_traffic[other]:
+        print(f'  ({by_traffic[other]} {other}-traffic reports hidden; --traffic {other} or all to see them)')
     if args.show and not rows:
         print(f'No reports with signature {args.show} in that window')
 
@@ -238,6 +279,9 @@ def main():
             print(f'       at {top(sources, 2)}')
         print(f"       {first:%m-%d %H:%M} → {last:%m-%d %H:%M} UTC | dpr {top(dprs)} | tz {top(zones)}")
         print(f"       {top(browsers)} | bundle {top(bundles)}")
+        if args.traffic != 'real':
+            reasons = Counter(e['_reason'] or 'real' for e in entries)
+            print(f"       traffic {top(reasons)}")
         if args.show:
             viewports = Counter(e.get('viewport') or '?' for e in entries)
             print(f"       viewport {top(viewports, 5)}")

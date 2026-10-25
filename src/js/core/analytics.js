@@ -72,7 +72,8 @@ const Analytics = (() => {
             }
         }
         if (!seconds && !firsts.size && !Object.keys(counts).length) return;
-        Beacon.send(ENDPOINT, { type: 'engage', ctz: CITY.timezone, platform: Beacon.context().platform, seconds, counts, firsts: [...firsts] });
+        const { platform, viewport, screen, wd } = Beacon.context();
+        Beacon.send(ENDPOINT, { type: 'engage', ctz: CITY.timezone, platform, viewport, screen, wd, seconds, counts, firsts: [...firsts] });
         counts = {};
         firsts = new Set();
     }
