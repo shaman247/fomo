@@ -13,8 +13,9 @@ in a local triage file (default .claude/client-error-triage.json):
 
     ignored  noise we accept (extensions, ancient browsers, network flakes)
     backlog  real, filed for later — `--note` names the backlog item
-    fixed    fixed and deployed; reports from a bundle newer than the ones seen
-             at triage time resurface it as RECURRED
+    fixed    fixed; every bundle already in the log (from any error) counts as
+             pre-fix, except --fixed-in <bundle>, so a report from the fixed
+             bundle or any bundle first seen later resurfaces it as RECURRED
 
 Untriaged and recurred errors are shown by default; --all shows everything.
 
@@ -30,7 +31,7 @@ Usage:
     ./venv/bin/python scripts/client_errors.py --bundle 631d680d
     ./venv/bin/python scripts/client_errors.py --traffic automated   # what crawlers and renderers hit
     ./venv/bin/python scripts/client_errors.py --show 3f2a9c1b0d    # stacks + bundle code around the frame
-    ./venv/bin/python scripts/client_errors.py --mark 3f2a9c1b0d --verdict fixed --note "e421e41"
+    ./venv/bin/python scripts/client_errors.py --mark 3f2a9c1b0d --verdict fixed --fixed-in 897bb182 --note "e421e41"
     ./venv/bin/python scripts/client_errors.py --file path/to/client_errors.log
 
 Exit status: 0 nothing needs attention, 1 new or recurred errors, 2 read failure.
@@ -190,6 +191,7 @@ def main():
     parser.add_argument('--mark', metavar='SIG', help='Record a verdict for a signature (with --verdict)')
     parser.add_argument('--verdict', choices=VERDICTS)
     parser.add_argument('--note', default='', help='Why / where (backlog item, fixing commit)')
+    parser.add_argument('--fixed-in', metavar='BUNDLE', help='With --verdict fixed: the bundle carrying the fix (never counted as pre-fix)')
     parser.add_argument('--triage-file', default=DEFAULT_TRIAGE, help='Verdict store (default %(default)s)')
     parser.add_argument('--verbose', '-v', action='store_true', help='Show a sample stack for each error')
     args = parser.parse_args()
@@ -230,8 +232,14 @@ def main():
             'verdict': args.verdict,
             'note': args.note,
             'date': date.today().isoformat(),
+            **({'fixed_in': args.fixed_in} if args.fixed_in else {}),
             'message': entries[-1]['message'] if entries else triage[args.mark].get('message', ''),
-            'bundles': sorted({e.get('bundle', '') for e in entries} | set(triage.get(args.mark, {}).get('bundles', []))),
+            # For a fix, every bundle already in the log (from any error) runs pre-fix code,
+            # except the one named by --fixed-in; only that bundle or a later one can recur.
+            'bundles': sorted((
+                ({e.get('bundle', '') for group in groups.values() for e in group} if args.verdict == 'fixed'
+                 else {e.get('bundle', '') for e in entries})
+                | set(triage.get(args.mark, {}).get('bundles', []))) - {args.fixed_in}),
         }
         os.makedirs(os.path.dirname(os.path.abspath(args.triage_file)), exist_ok=True)
         with open(args.triage_file, 'w', encoding='utf-8') as f:

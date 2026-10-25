@@ -19,7 +19,17 @@ function setup(responses) {
             assert.ok(responses.length, 'unexpected extra request');
             const next = responses.shift();
             if (next.networkError) throw new TypeError(next.networkError);
-            return { ok: !next.status, status: next.status || 200, text: async () => next.body };
+            // hang: never answers until the timeout aborts it; delay: answers after `delay` ms unless aborted first.
+            if (next.hang || next.delay) {
+                await new Promise((resolve, reject) => {
+                    const abort = () => reject(Object.assign(new Error('The operation was aborted.'), { name: 'AbortError' }));
+                    if (options.signal.aborted) return abort();
+                    options.signal.addEventListener('abort', abort);
+                    if (next.delay) setTimeout(resolve, next.delay);
+                });
+            }
+            const text = next.bodyError ? async () => { throw new TypeError(next.bodyError); } : async () => next.body;
+            return { ok: !next.status, status: next.status || 200, text };
         }
     });
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../data/dataManager.js'), 'utf8'), context);
@@ -102,4 +112,29 @@ test('a connection that keeps failing reports a friendly error after two retries
     const { manager, calls } = setup(failures);
     await assert.rejects(manager.fetchData('data/events.day0.json'), /Unable to connect to the server/);
     assert.equal(calls.length, 3);
+});
+
+test('a response body cut off mid-download is retried', async () => {
+    const { manager, calls } = setup([{ bodyError: 'Load failed' }, { body: '[{"id":3}]' }]);
+    assert.equal((await manager.fetchData('data/events.day1.json'))[0].id, 3);
+    assert.equal(calls.length, 2);
+});
+
+test('a timeout is retried with a longer timeout', async () => {
+    // 90 ms is past the first 60 ms timeout but inside the doubled 120 ms one.
+    const { manager, calls } = setup([{ hang: true }, { delay: 90, body: '[{"id":4}]' }]);
+    assert.equal((await manager.fetchData('data/events.day1.json', 60))[0].id, 4);
+    assert.equal(calls.length, 2);
+});
+
+test('timeouts give up after two retries, reporting the last timeout', async () => {
+    const { manager, calls } = setup([{ hang: true }, { hang: true }, { hang: true }]);
+    await assert.rejects(manager.fetchData('data/events.day1.json', 20), /timed out after 0\.08 seconds/);
+    assert.equal(calls.length, 3);
+});
+
+test('server errors are answers, not dropped connections, and are not retried', async () => {
+    const { manager, calls } = setup([{ status: 503 }]);
+    await assert.rejects(manager.fetchData('data/events.day1.json'), /Server error \(503\)/);
+    assert.equal(calls.length, 1);
 });

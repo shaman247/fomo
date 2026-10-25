@@ -18,20 +18,13 @@ const DataManager = (() => {
     // DATA FETCHING
     // ========================================
 
-    /**
-     * Fetches the raw response text from the specified URL with comprehensive
-     * error handling. Shared by fetchData/fetchDataHashed.
-     * @param {string} url - The URL to fetch data from
-     * @param {number} timeout - Timeout in milliseconds
-     * @param {Object} [fetchOptions] - Extra fetch() options (e.g. {cache: 'no-cache'})
-     * @returns {Promise<string>} The raw response body text
-     * @throws {Error} Network, timeout, or HTTP errors with user-friendly messages
-     */
-    // Phones drop connections mid-load (Safari reports "TypeError: Load failed"),
-    // and a fetch cut off by switching away from the page fails the same way.
-    // Network failures (not timeouts or HTTP errors) are retried after these
-    // pauses, each once the page is visible again.
-    const NETWORK_RETRY_DELAYS_MS = [500, 1500];
+    // Phones drop connections mid-load. Safari reports "TypeError: Load failed"
+    // from fetch(), or from response.text() when the body is cut off, and a load
+    // interrupted by switching away from the page fails the same way. Network
+    // failures and timeouts (not HTTP errors) are retried after these pauses,
+    // each once the page is visible again, and each retry doubles the timeout so
+    // a slow connection can finish a large chunk.
+    const RETRY_DELAYS_MS = [500, 1500];
 
     function _whenVisible() {
         if (typeof document === 'undefined' || document.visibilityState !== 'hidden') return Promise.resolve();
@@ -45,37 +38,43 @@ const DataManager = (() => {
         });
     }
 
+    /**
+     * Fetches the raw response text from the specified URL with comprehensive
+     * error handling. Shared by fetchData/fetchDataHashed.
+     * @param {string} url - The URL to fetch data from
+     * @param {number} timeout - Timeout in milliseconds for the first attempt (doubled per retry)
+     * @param {Object} [fetchOptions] - Extra fetch() options (e.g. {cache: 'no-cache'})
+     * @returns {Promise<string>} The raw response body text
+     * @throws {Error} Network, timeout, or HTTP errors with user-friendly messages
+     */
     async function _fetchText(url, timeout, fetchOptions) {
-        let response;
         for (let attempt = 0; ; attempt++) {
-            // Create an AbortController for timeout handling
+            const attemptTimeout = timeout * 2 ** attempt;
+            // The timeout covers the body as well: a stalled body read times out too.
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            const timeoutId = setTimeout(() => controller.abort(), attemptTimeout);
+            let response;
             try {
                 response = await fetch(url, { ...(fetchOptions || {}), signal: controller.signal });
-                clearTimeout(timeoutId);
-                break;
-            } catch (fetchError) {
-                clearTimeout(timeoutId);
-
-                // Handle different types of fetch errors
-                if (fetchError.name === 'AbortError') {
-                    throw new Error(`Request timed out after ${timeout/1000} seconds. Please check your internet connection and try again.`);
-                }
-                if (attempt < NETWORK_RETRY_DELAYS_MS.length) {
+                if (response.ok) return await response.text();
+            } catch (error) {
+                if (attempt < RETRY_DELAYS_MS.length) {
                     await _whenVisible();
-                    await new Promise(resolve => setTimeout(resolve, NETWORK_RETRY_DELAYS_MS[attempt]));
+                    await new Promise(resolve => setTimeout(resolve, RETRY_DELAYS_MS[attempt]));
                     continue;
                 }
-                if (/Failed to fetch|NetworkError|Load failed/.test(fetchError.message)) {
+                if (error.name === 'AbortError') {
+                    throw new Error(`Request timed out after ${attemptTimeout / 1000} seconds. Please check your internet connection and try again.`);
+                }
+                if (/Failed to fetch|NetworkError|Load failed/.test(error.message)) {
                     throw new Error('Unable to connect to the server. Please check your internet connection and try again.');
                 }
-                throw new Error(`Network error: ${fetchError.message}`);
+                throw new Error(`Network error: ${error.message}`);
+            } finally {
+                clearTimeout(timeoutId);
             }
-        }
 
-        // Handle HTTP errors
-        if (!response.ok) {
+            // HTTP errors are answers from the server, not dropped connections: no retry.
             if (response.status === 404) {
                 throw new Error(`Data file not found (404). The requested resource may have been moved or deleted.`);
             } else if (response.status === 500) {
@@ -88,8 +87,6 @@ const DataManager = (() => {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
         }
-
-        return response.text();
     }
 
     /**
