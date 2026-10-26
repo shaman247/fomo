@@ -71,8 +71,8 @@ const MapManager = (() => {
         // fires well before the map's `load`/`idle` events (which wait on tile
         // downloads), so emoji markers can render early. Labels are drawn
         // locally via TinySDF from the Inter webfont — no glyph PBF downloads.
-        // In MapLibre v5 `style.load` fires on both initial load and
-        // setStyle() (theme switch).
+        // MapLibre fires `style.load` on both initial load and setStyle()
+        // (theme switch).
         mapInstance.on('style.load', _ensureLayers);
 
         // Ensure source/layers exist whenever the map becomes idle, too.
@@ -919,15 +919,16 @@ const MapManager = (() => {
         }
     }
 
-    // MapLibre 5.x applies feature state to tiles during render, and a markers
-    // tile can be left pairing a reloaded feature index with older raw tile data
-    // (a stale reload response landing after a newer setData). Applying state to
-    // that tile then throws "feature index out of bounds" from the render loop,
-    // and the half-updated bucket makes the next placement throw "Length of new
-    // data is N, which doesn't match current length of 0". Contain the throw at
-    // the tile and heal it with one clean reload of the current data. The tile
-    // class isn't exported, so its prototype is taken from the first loaded tile;
-    // if a future MapLibre changes this shape the guard simply does nothing.
+    // MapLibre applies feature state to tiles during render, and a markers tile
+    // can be left pairing a reloaded feature index with older raw tile data (a
+    // stale reload response landing after a newer setData). Applying state to
+    // that tile then throws "feature index out of bounds" from the render loop.
+    // On 5.x the half-updated bucket also makes the next placement throw "Length
+    // of new data is N, which doesn't match current length of 0". 6.16 still
+    // throws the first error (rarely, but reproducibly). Contain the throw at
+    // the tile and heal it with one clean reload of the current data. The tile class isn't exported, so its prototype is taken from the
+    // first loaded tile; if a future MapLibre changes this shape the guard simply
+    // does nothing. Re-check with .scratch/frontend_smoke/race.py before removing.
     function _guardTileFeatureState(map) {
         const onTile = (event) => {
             const tileProto = event && event.sourceId === 'markers' && event.tile && Object.getPrototypeOf(event.tile);

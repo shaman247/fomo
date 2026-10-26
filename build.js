@@ -106,6 +106,20 @@ function versionedFontUrl(relUrl) {
     return `${relUrl}?v=${h}`;
 }
 
+// index.html loads MapLibre as several URLs (module, worker, CSS, preload) that
+// each carry ?v=<version> to bust the 1-year cache. A partial bump would fetch
+// the module twice or pair a new main thread with a cached old worker, so fail
+// the build unless every one names the version vendored in src/vendor/.
+function checkMaplibreVersion(htmlSource) {
+    const banner = fs.readFileSync(path.join(SRC, 'vendor', 'maplibre-gl.mjs'), 'utf8').slice(0, 400);
+    const vendored = banner.match(/maplibre-gl-js\/blob\/v([\w.-]+)\//)?.[1];
+    const tagged = [...htmlSource.matchAll(/vendor\/maplibre-gl[\w.-]*\?v=([\w.-]+)/g)].map(m => m[1]);
+    const stale = tagged.filter(v => v !== vendored);
+    if (!vendored || tagged.length === 0 || stale.length) {
+        throw new Error(`index.html MapLibre ?v= tags (${tagged.join(', ')}) must all equal the vendored version ${vendored}`);
+    }
+}
+
 // Emit dist/sw.js from the src/sw.js template: inject the precache manifest
 // (split into immutable hashed/versioned URLs vs unversioned ones the SW must
 // revalidate at install) and a version hash so any shell change produces a
@@ -115,7 +129,8 @@ function versionedFontUrl(relUrl) {
 function emitServiceWorker({ htmlSource, frontend, jsBundleName, cssBundleName, isDev }) {
     const disabled = isDev || frontend.sw_enabled === false;
 
-    // Versioned vendor URLs exactly as index.html references them (?v=…).
+    // Versioned vendor URLs exactly as index.html references them (?v=…). The
+    // MapLibre worker is listed through its setWorkerUrl("vendor/…") argument.
     const vendorUrls = [...new Set(
         [...htmlSource.matchAll(/"(vendor\/[^"]+)"/g)].map(m => m[1])
     )];
@@ -220,6 +235,7 @@ async function build(isDev) {
 
     // Parse index.html to extract JS file list in load order
     const htmlSource = fs.readFileSync(path.join(SRC, 'index.html'), 'utf8');
+    checkMaplibreVersion(htmlSource);
     const jsFileRegex = /<script\s+src="(js\/[^"?]+)/g;
     const jsFiles = [];
     let match;

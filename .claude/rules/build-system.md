@@ -22,6 +22,7 @@ paths:
 - JS modules use IIFE pattern with globals — they are **concatenated** (not bundled) then minified via `esbuild.transform()`. esbuild's bundler mode would break global scope.
 - `build.js` reads `src/index.html` to determine JS file order — no separate manifest
 - flatpickr installed via npm, prepended to JS/CSS bundles; the `window.__CITY__` prelude sits before flatpickr
+- MapLibre is NOT in the bundle: `src/vendor/maplibre-gl.mjs` + `maplibre-gl-worker.mjs` (copied from the npm tarball's `dist/`; its `maplibre-gl-shared.mjs` is empty and not needed) load through an inline module script in `index.html`. To upgrade, replace both `.mjs` files and the CSS, then bump every `vendor/maplibre-gl*?v=` in `index.html`. `checkMaplibreVersion()` fails the build unless all of them equal the version in the vendored file's license banner, and `src/.htaccess` serves `.mjs` as `text/javascript` (module scripts and module workers need it).
 
 ## CSS Build
 

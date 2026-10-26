@@ -13,6 +13,9 @@
 # LiteSpeed compresses text/* by default but not application/json or binary types.
 # Remap JSON to text/json so it gets compressed automatically.
 AddType text/json .json
+# MapLibre's ES modules (vendor/*.mjs). Browsers refuse a module script or module
+# worker without a JavaScript MIME type, and older mime.types lack .mjs.
+AddType text/javascript .mjs
 
 # Google Play app-link verification requires Content-Type: application/json on
 # /.well-known/assetlinks.json — exempt it from the text/json remap above.
@@ -26,8 +29,8 @@ AddType text/json .json
     AddOutputFilterByType DEFLATE application/json
     AddOutputFilterByType DEFLATE application/javascript
     # Servers disagree on the .js MIME type (Apache/XAMPP: application/x-javascript;
-    # others: text/javascript). List every variant or the app bundle + maplibre-gl.js
-    # ship UNCOMPRESSED (~1 MB for maplibre vs ~250 KB gzipped — a big slow-link regression).
+    # others: text/javascript). List every variant or the app bundle + maplibre-gl*.mjs
+    # ship UNCOMPRESSED (~1.6 MB for maplibre vs ~440 KB gzipped — a big slow-link regression).
     AddOutputFilterByType DEFLATE text/javascript
     AddOutputFilterByType DEFLATE application/x-javascript
     AddOutputFilterByType DEFLATE text/css

@@ -13,7 +13,7 @@
          glyph rasterizes empty and the map shows no labels at all. Desktop works;
          iOS lacks main-thread OffscreenCanvas and already falls back to a DOM
          canvas. Probe the readback and, only when it's broken, drop the global so
-         MapLibre uses the DOM-canvas path too. Runs before maplibre-gl.js loads. -->
+         MapLibre uses the DOM-canvas path too. Runs before maplibre-gl.mjs loads. -->
     <script>
     (function () {
         if (typeof OffscreenCanvas === 'undefined') return;
@@ -50,7 +50,7 @@
 
     <!-- Start the render-critical fetches during HTML parse, before the
          bottom-of-body scripts download + execute and App.init() runs. -->
-    <link rel="preload" as="script" href="vendor/maplibre-gl.js?v=5.24.0">
+    <link rel="modulepreload" href="vendor/maplibre-gl.mjs?v=6.16.0">
     <!-- crossorigin is required on as=fetch preloads so the request's CORS mode
          matches fetch()'s default — without it the file is downloaded twice. -->
     <link rel="preload" as="fetch" href="data/manifest.json" crossorigin>
@@ -59,7 +59,7 @@
 
     <!-- Self-hosted (see src/vendor and src/css/fonts.css). ?v= busts the
          1-year cache when the pinned version changes. -->
-    <link rel="stylesheet" href="vendor/maplibre-gl.css?v=5.24.0"/>
+    <link rel="stylesheet" href="vendor/maplibre-gl.css?v=6.16.0"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" crossorigin="anonymous">
 </head>
 <body>
@@ -212,7 +212,17 @@
     </div>
     <link rel="stylesheet" href="css/index.css">
 
-    <script src="vendor/maplibre-gl.js?v=5.24.0"></script>
+    <!-- MapLibre 6 ships only ES modules. A module script runs after parsing
+         but before DOMContentLoaded, which is when App.init() first uses the
+         maplibregl global, so the classic app bundle below keeps working.
+         prewarm() starts the worker download now instead of at map creation.
+         Keep every ?v= on vendor/maplibre-gl* equal (build.js checks it). -->
+    <script type="module">
+        import * as maplibregl from "./vendor/maplibre-gl.mjs?v=6.16.0";
+        maplibregl.setWorkerUrl("vendor/maplibre-gl-worker.mjs?v=6.16.0");
+        maplibregl.prewarm();
+        window.maplibregl = maplibregl;
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr" crossorigin="anonymous"></script>
 
     <!-- Core -->

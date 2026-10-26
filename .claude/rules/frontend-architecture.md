@@ -10,7 +10,7 @@ paths:
 
 ## Stack
 
-- MapLibre GL JS v5.24.0 (self-hosted in `vendor/`) with Protomaps vector tiles
+- MapLibre GL JS v6.16.0 (self-hosted in `vendor/`) with Protomaps vector tiles. 6.x is ESM-only: an inline `<script type="module">` in `index.html` imports `vendor/maplibre-gl.mjs`, points it at `vendor/maplibre-gl-worker.mjs`, prewarms the worker and sets `window.maplibregl`. Module scripts run before `DOMContentLoaded`, so the IIFE bundle may reference `maplibregl` only from `App.init()` onward, never at evaluation time.
 - Vanilla JS with IIFE module pattern (no framework, no bundler)
 - CSS with `@import` chain (no preprocessor)
 
