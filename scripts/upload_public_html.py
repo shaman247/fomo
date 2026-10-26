@@ -46,6 +46,11 @@ PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
 GATED_DIRS = ('data/similarity',)
 
 
+# Never published, even if a stale dist/ still holds them: agent notes, READMEs, Finder metadata.
+def is_local_only(path):
+    return path.name.endswith('.md') or path.name == '.DS_Store'
+
+
 def get_file_hash(file_path):
     """Get MD5 hash of file contents."""
     h = hashlib.md5()
@@ -136,7 +141,7 @@ def upload_directory(ftp, local_dir, remote_dir, is_root=True,
 
     # Separate files and directories
     items = sorted(local_path.iterdir())
-    files = [item for item in items if item.is_file()]
+    files = [item for item in items if item.is_file() and not is_local_only(item)]
     directories = [item for item in items if item.is_dir() and not item.is_symlink()]
 
     excluded = {Path(path).resolve() for path in exclude}

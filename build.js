@@ -195,6 +195,8 @@ function copyDirSync(src, dest) {
     for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
         // Example files are a build-time fallback, not a shipped asset — keep them out of dist/.
         if (entry.name.endsWith('.example.json')) continue;
+        // Agent notes (CLAUDE.md), READMEs and Finder metadata are local-only; dist/ is published as-is.
+        if (entry.name.endsWith('.md') || entry.name === '.DS_Store') continue;
         const srcPath = path.join(src, entry.name);
         const destPath = path.join(dest, entry.name);
         if (entry.isDirectory()) {

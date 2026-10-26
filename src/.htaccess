@@ -9,6 +9,12 @@
     RewriteRule ^feedback/?$ /#feedback [NC,NE,QSD,R=302,L]
 </IfModule>
 
+# Never serve dotfiles (.DS_Store) or Markdown (CLAUDE.md, READMEs). build.js and the
+# uploader already keep them out; this covers anything that slips past both.
+<FilesMatch "(^\.|\.md$)">
+    Require all denied
+</FilesMatch>
+
 # MIME type fixes
 # LiteSpeed compresses text/* by default but not application/json or binary types.
 # Remap JSON to text/json so it gets compressed automatically.
