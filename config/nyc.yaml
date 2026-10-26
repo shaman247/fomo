@@ -18,6 +18,9 @@ frontend:
   emoji: "🗽"                     # menu / feedback decoration
   description: "A free, community-built map of upcoming events in the New York City area."  # <meta> description + link previews
   share_image: "images/share-card.png"  # link-preview image (og:image), 1200x630 PNG under src/; regenerate with scripts/generate_share_card.py
+  short_name: "Fomo NYC"         # home-screen label: manifest short_name + apple-mobile-web-app-title
+  theme_color: "#111"            # dark theme's --map-bg: manifest theme/background colour + <meta theme-color>
+  theme_color_light: "#c8c8c8"   # light theme's --map-bg: <meta theme-color> while the light theme is on
   timezone: "America/New_York"   # utils.js: "today" + event-time parsing
   sw_enabled: true               # offline service worker (false emits a self-unregistering sw.js)
   native_app_ua: "FomoApp"       # UA marker the iOS/Android WebViews append ("FomoApp/1.0"); beacons report them as app platforms

@@ -17,6 +17,14 @@ mobile/android/app/src/main/res/drawable/ic_launcher_foreground.xml
   - AppIcon.appiconset/icon-1024-tinted.png tinted: transparent bg, grayscale torch
   plus the matching Contents.json.
 
+  Web (home-screen / install icons; build.js links them and lists them in the
+  generated manifest.webmanifest):
+  - src/images/apple-touch-icon.png         180x180 opaque (iOS masks corners)
+  - src/images/app-icon-192.png, -512.png   rounded square on transparency
+                                            (manifest purpose "any")
+  - src/images/app-icon-maskable-512.png    full-bleed opaque, torch inside the
+                                            maskable safe-zone circle
+
 Usage: ./venv/bin/python scripts/generate_app_icons.py
 """
 import json
@@ -36,10 +44,14 @@ RES_DIR = os.path.join(ROOT, 'mobile/android/app/src/main/res')
 PLAY_ICON = os.path.join(ROOT, 'mobile/android/play-store-icon.png')
 APPICONSET = os.path.join(
     ROOT, 'mobile/ios/fomo/fomo/Assets.xcassets/AppIcon.appiconset')
+WEB_IMAGES = os.path.join(ROOT, 'src/images')
 
 BACKGROUND = '#1A1A2E'  # matches drawable/ic_launcher_background.xml
 SUPERSAMPLE = 4
 TORCH_FRAC = 0.75  # torch height as a fraction of the icon (Play keyline grid)
+# Maskable icons may be cropped to a circle of 80% diameter; at 0.7 the torch's
+# farthest point stays at radius ~0.36 of the icon, inside the 0.40 circle.
+MASKABLE_TORCH_FRAC = 0.7
 
 ANDROID_NS = '{http://schemas.android.com/apk/res/android}'
 
@@ -195,11 +207,29 @@ def generate_ios(paths, bbox):
     print('wrote AppIcon.appiconset/Contents.json')
 
 
+def generate_web(paths, bbox):
+    def save(img, filename):
+        out = os.path.join(WEB_IMAGES, filename)
+        img.save(out, 'PNG', optimize=True)
+        print(f'wrote {os.path.relpath(out, ROOT)} ({os.path.getsize(out) // 1024}KB)')
+
+    # iOS turns transparent touch-icon pixels black, so this one is opaque.
+    save(render_torch(180, TORCH_FRAC, paths, bbox).convert('RGB'), 'apple-touch-icon.png')
+    # "any" icons are shown unmasked (desktop installs, older launchers), so
+    # they get the legacy mipmaps' rounded square around the Play-icon torch.
+    for size in (192, 512):
+        save(mask_shape(render_torch(size, TORCH_FRAC, paths, bbox), 'square'),
+             f'app-icon-{size}.png')
+    save(render_torch(512, MASKABLE_TORCH_FRAC, paths, bbox).convert('RGB'),
+         'app-icon-maskable-512.png')
+
+
 def main():
     paths = load_paths()
     bbox = path_bbox(paths)
     generate_android(paths, bbox)
     generate_ios(paths, bbox)
+    generate_web(paths, bbox)
 
 
 if __name__ == '__main__':

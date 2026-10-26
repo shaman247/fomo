@@ -15,6 +15,7 @@ paths:
 
 - **Runtime JS** — a `;window.__CITY__ = {map, timezone};` prelude is **prepended** to the concatenated bundle (before flatpickr) so the global exists before any IIFE evaluates. `src/js/script.js` (`App.config` map fields) and `src/js/core/utils.js` (timezone) read it.
 - **Branding** — `applyBranding()` replaces `{{SITE_NAME}}`, `{{DOMAIN}}`, `{{EMOJI}}`, `{{WELCOME_MODAL}}`, `{{DESCRIPTION}}` and `{{SHARE_IMAGE}}` tokens in `src/index.html`. The last two feed the `<meta>` description and the Open Graph/Twitter link-preview tags, are HTML-escaped, and come from `frontend.description` and `frontend.share_image`, a 1200×630 PNG under `src/` regenerated from the live map by `scripts/generate_share_card.py`. `src/robots.txt` is copied as-is (crawlers are allowed everywhere except `/api/` and `/admin/`) (runs last; the build **fails** on any leftover `{{TOKEN}}`). `src/about.html` is copied as-is (not tokenized).
+- **Home-screen install** — `webManifest()` writes `dist/manifest.webmanifest` (name, `short_name`, relative `start_url`/`scope`/`id` so it works at the root and under XAMPP, `display: standalone`, `theme_color` as theme and background colour, icons). `{{SHORT_NAME}}` and `{{THEME_COLOR}}` fill the `apple-mobile-web-app-title` and `theme-color` tags in `index.html`. Icons are `src/images/apple-touch-icon.png` (180) and `app-icon-192/512.png` + `app-icon-maskable-512.png`, generated with the native app icons by `scripts/generate_app_icons.py`. Their URLs get `?v=<md5>` from `versionedAssetUrl()` (they would otherwise stick in the SW's cache-first runtime cache), and `checkIconSize()` fails the build on a missing or mis-sized icon. `apple-mobile-web-app-status-bar-style: black-translucent` runs the iOS standalone app edge to edge like the native app, so the panels' `env(safe-area-inset-*)` padding applies. The app's theme is user-chosen, not system-driven, so `themeManager.js` swaps `theme-color` to `frontend.theme_color_light` (via `window.__CITY__.themeColors`) while the light theme is on.
 - Dev watch includes `config/<FOMO_CITY>.yaml`, so config edits rebuild.
 
 ## JS Build
@@ -28,7 +29,7 @@ paths:
 
 - CSS `@import` chain resolved and minified via `esbuild.build()` with `bundle: true`
 - Font path rewrite: `../fonts/` → `fonts/` (CSS moves from subdir to root in bundle)
-- Font URL versioning: `versionedFontUrl()` appends `?v=<md5(content)>` to every `fonts/*.woff2|ttf` URL in the CSS bundle AND to the font entries in the SW precache manifest (same helper, always in sync). Font filenames are stable but 1-year-cached and SW-precached as immutable — without the version query, changed font bytes (e.g. re-frozen OpenType features via `scripts/freeze_inter_features.py`) would never reach returning visitors.
+- Font URL versioning: `versionedAssetUrl()` appends `?v=<md5(content)>` to every `fonts/*.woff2|ttf` URL in the CSS bundle AND to the font entries in the SW precache manifest (same helper, always in sync). Font filenames are stable but 1-year-cached and SW-precached as immutable — without the version query, changed font bytes (e.g. re-frozen OpenType features via `scripts/freeze_inter_features.py`) would never reach returning visitors.
 
 ## Dev vs Prod
 
@@ -56,7 +57,7 @@ The upload script tracks file content hashes (MD5) in `scripts/upload_state.json
 
 ## Service worker emission
 
-`build.js` `emitServiceWorker()` renders `src/sw.js` (a template — never served as-is) into `dist/sw.js`, injecting the precache manifest (hashed bundles + versioned vendor + fonts + map styles) and a version hash so any shell change reinstalls the precache. Data JSONs are deliberately NOT SW-cached — the page owns them in IndexedDB (`src/js/data/dataCache.js`). Controls:
+`build.js` `emitServiceWorker()` renders `src/sw.js` (a template — never served as-is) into `dist/sw.js`, injecting the precache manifest (hashed bundles + versioned vendor + fonts + map styles + `manifest.webmanifest`) and a version hash so any shell change reinstalls the precache. The web app manifest is revalidate-class and its bytes feed the version hash, because browsers re-read it to update an installed app; the install icons are versioned URLs but are not precached (only needed online, at install). Data JSONs are deliberately NOT SW-cached — the page owns them in IndexedDB (`src/js/data/dataCache.js`). Controls:
 
 - **Dev builds and `frontend.sw_enabled: false`** emit a self-unregistering "killer" sw.js (activate → wipe all SW caches + unregister; IndexedDB untouched) and set `window.__CITY__.swEnabled = false` so the page doesn't register. This is also the production rollback path — deploy a disabled build's sw.js, no app-store release needed.
 - `src/.htaccess` serves `sw.js` with `Cache-Control: no-cache` (mandatory — the blanket 1-year JS rule would otherwise freeze SW updates).

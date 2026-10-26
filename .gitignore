@@ -160,6 +160,8 @@ database/backups/
 screenshots/
 *.png
 !src/images/share-card.png
+!src/images/apple-touch-icon.png
+!src/images/app-icon-*.png
 !mobile/android/play-store-icon.png
 !mobile/ios/fomo/fomo/Assets.xcassets/AppIcon.appiconset/*.png
 *.jpeg

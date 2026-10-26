@@ -6,6 +6,20 @@
     <title>{{SITE_NAME}}</title>
     <link rel="icon" href="images/torch.svg" type="image/svg+xml">
 
+    <!-- Home-screen install. build.js generates manifest.webmanifest from the
+         city config and versions the icon URLs; the icons come from
+         scripts/generate_app_icons.py. black-translucent runs the standalone
+         iOS app edge to edge like the native app: the map fills behind the
+         status bar and the panels pad themselves by env(safe-area-inset-*).
+         themeManager.js swaps theme-color while the light theme is on. -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+    <meta name="theme-color" content="{{THEME_COLOR}}">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="{{SHORT_NAME}}">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <!-- Link previews (Messages, Slack, Discord, X, Facebook). Without these a
          preview has to load and run the whole app just to find a title. -->
     <meta name="description" content="{{DESCRIPTION}}">

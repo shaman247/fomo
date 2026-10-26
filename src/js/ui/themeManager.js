@@ -45,6 +45,12 @@ const ThemeManager = (() => {
         theme = theme === 'light' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', theme);
 
+        // Browser chrome (Safari's toolbar tint, Android's status bar) follows
+        // the in-app theme, not the system one, so update theme-color here.
+        const themeColors = globalThis.__CITY__?.themeColors;
+        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+        if (themeColors && themeColorMeta) themeColorMeta.setAttribute('content', themeColors[theme]);
+
         // Save theme preference to localStorage
         Utils.SafeStorage.setItem('theme', theme);
     }
