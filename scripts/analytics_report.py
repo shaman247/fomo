@@ -65,6 +65,9 @@ ACTIONS = {
     'outbound': 'Other outbound links',
 }
 MILESTONES = {'engaged_10s': '10 s', 'engaged_60s': '1 min', 'engaged_5m': '5 min'}
+# Time-to-markers buckets, as analytics.php writes them (markers_network / markers_cache).
+MARKER_BUCKETS = ['<1s', '1-2s', '2-4s', '4-6s', '6-8s', '8-12s', '12-20s', '20s+']
+MARKER_SOURCES = {'network': 'First visits (network)', 'cache': 'Repeat visits (offline cache)'}
 BREAKDOWNS = ['platform', 'device', 'browser', 'os', 'referrer', 'utm_source', 'shared_link',
               'dpr', 'tz', 'lang', 'hour', 'bundle', 'path']
 AUTOMATED_BREAKDOWNS = ['reason', 'browser', 'os', 'device', 'tz', 'referrer', 'bundle']
@@ -147,6 +150,17 @@ def rate(part, whole):
     return part / whole if whole else 0.0
 
 
+def median_bucket(counter):
+    """The bucket holding the middle time-to-markers sample, or '—'."""
+    total = sum(counter[b] for b in MARKER_BUCKETS)
+    seen = 0
+    for bucket in MARKER_BUCKETS:
+        seen += counter[bucket]
+        if total and seen * 2 >= total:
+            return bucket
+    return '—'
+
+
 def headline(totals):
     views = totals['views']
     with_ = totals['views_with']
@@ -164,6 +178,10 @@ def headline(totals):
         'shared_link_arrivals': totals['dims'].get('shared_link', Counter())['yes'],
         'app_views': sum(totals['dims'].get('platform', Counter())[p] for p in ('ios-app', 'android-app')),
         'automated_views': totals['automated']['views'],
+        'markers_median_network': median_bucket(totals['dims'].get('markers_network', Counter())),
+        'markers_median_cache': median_bucket(totals['dims'].get('markers_cache', Counter())),
+        'left_before_markers_rate': rate(totals['dims'].get('markers_outcome', Counter())['left before markers'],
+                                         sum(totals['dims'].get('markers_outcome', Counter()).values())),
         'legacy_bot_beacons': totals['bots'],
     }
 
@@ -276,6 +294,17 @@ def render_dashboard(dataset, history, notes, site):
         f'<td class="n">{ev:,}</td><td class="n pct">{rate(vw, views):.0%}</td></tr>' for label, ev, vw in feature_rows)
         + '</table>') if feature_rows else '<p class="empty">No feature use recorded in this window.</p>'
 
+    ttm = dataset['time_to_markers']
+    timed = sum(ttm['outcome'].values())
+    if timed:
+        timing_html = (f'<p class="meta">{timed:,} timed views; {rate(ttm["outcome"].get("left before markers", 0), timed):.0%} '
+                       'left before the markers appeared.</p><div class="cols">' + ''.join(
+            f'<div><h3>{esc(label)} · median {esc(median_bucket(Counter({r["bucket"]: r["views"] for r in ttm[source]})))}</h3>'
+            f'{bar_rows([(r["bucket"], r["views"]) for r in ttm[source]], max(sum(r["views"] for r in ttm[source]), 1))}</div>'
+            for source, label in MARKER_SOURCES.items()) + '</div>')
+    else:
+        timing_html = '<p class="empty">No load timings in this window yet.</p>'
+
     hours = dict((b['value'], b['views']) for b in dataset['breakdowns'].get('hour', []))
     hour_top = max(list(hours.values()) + [1])
     hour_html = '<div class="hours">' + ''.join(
@@ -372,6 +401,7 @@ code {{ font-size: 12px; }}
   <section class="card"><h2>Engagement</h2>{bar_rows(funnel, views)}</section>
   <section class="card"><h2>Views by hour ({esc(h.get('timezone', '') or 'city time')})</h2>{hour_html}</section>
 </div>
+<section class="card"><h2>Time to markers</h2>{timing_html}</section>
 <section class="card"><h2>Feature use</h2>{feature_html}</section>
 <section><h2>Who and where</h2><div class="grid3">{breakdown_html}</div></section>
 <section class="card"><h2>Automated traffic</h2>{automated_html}</section>
@@ -445,6 +475,16 @@ def main():
         if count or viewed:
             print(f"  {label:<28} {count:>6}   {rate(viewed, current['views']):>5.0%}")
 
+    outcome = current['dims'].get('markers_outcome', Counter())
+    if outcome:
+        print(f"\n  Time to markers ({sum(outcome.values())} timed views; "
+              f"{rate(outcome['left before markers'], sum(outcome.values())):.0%} left before markers appeared)")
+        for source, label in MARKER_SOURCES.items():
+            counter = current['dims'].get(f'markers_{source}', Counter())
+            if counter:
+                spread = ', '.join(f'{b} {counter[b]}' for b in MARKER_BUCKETS if counter[b])
+                print(f"  {label}: median {median_bucket(counter)} | {spread}")
+
     print('\n  Breakdown of views')
     for name in BREAKDOWNS:
         counter = current['dims'].get(name, Counter())
@@ -479,6 +519,11 @@ def main():
             'actions': [{'action': a, 'label': label, 'events': current['actions'][a],
                          'views_with': current['views_with'][a], 'view_rate': rate(current['views_with'][a], current['views'])}
                         for a, label in ACTIONS.items()],
+            'time_to_markers': {
+                'outcome': dict(current['dims'].get('markers_outcome', Counter())),
+                **{source: [{'bucket': b, 'views': current['dims'].get(f'markers_{source}', Counter())[b]} for b in MARKER_BUCKETS]
+                   for source in MARKER_SOURCES},
+            },
             'engagement': [{'milestone': label, 'views': current['views_with'][m], 'view_rate': rate(current['views_with'][m], current['views'])}
                            for m, label in MILESTONES.items()],
             'automated': {'views': auto['views'], 'engage_beacons': auto['engage_beacons'],

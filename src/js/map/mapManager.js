@@ -1266,6 +1266,27 @@ const MapManager = (() => {
         _updateHoverFilter();
     }
 
+    /**
+     * Calls `callback` once, on the first frame that actually draws marker
+     * symbols: time to markers as the visitor sees them (Analytics), which is
+     * later than handing the data to MapLibre. Each frame schedules one trailing
+     * check 100 ms later, so the cost stays small and the last frame is still seen.
+     */
+    function onFirstMarkersRendered(callback) {
+        const map = state.mapInstance;
+        if (!map) return;
+        let timer = null;
+        const check = () => {
+            timer = null;
+            if (!map.getLayer('marker-symbols') || !map.queryRenderedFeatures({ layers: ['marker-symbols'] }).length) return;
+            map.off('render', onRender);
+            callback();
+        };
+        const onRender = () => { if (timer === null) timer = setTimeout(check, 100); };
+        map.on('render', onRender);
+        onRender();
+    }
+
     // ========================================
     // PUBLIC API
     // ========================================
@@ -1286,6 +1307,7 @@ const MapManager = (() => {
         openPopupAtCoordinates,
         registerPopupCallback,
         highlightLocationByKey,
-        clearHoverHighlight
+        clearHoverHighlight,
+        onFirstMarkersRendered
     };
 })();

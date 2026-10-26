@@ -67,9 +67,12 @@
     <link rel="modulepreload" href="vendor/maplibre-gl.mjs?v=6.16.0">
     <!-- crossorigin is required on as=fetch preloads so the request's CORS mode
          matches fetch()'s default — without it the file is downloaded twice. -->
-    <link rel="preload" as="fetch" href="data/manifest.json" crossorigin>
-    <link rel="preload" as="fetch" href="data/tags.json" crossorigin>
-    <link rel="preload" as="fetch" href="data/tag_hierarchy.json" crossorigin>
+    <!-- Must be byte-identical to the URLs the app fetches, which carry the
+         DataCache schema version (DataManager.fetchDataHashed): a mismatch
+         downloads each file twice. tests/preloadUrls.test.cjs keeps them in step. -->
+    <link rel="preload" as="fetch" href="data/manifest.json?schema=4" crossorigin>
+    <link rel="preload" as="fetch" href="data/tags.json?schema=4" crossorigin>
+    <link rel="preload" as="fetch" href="data/tag_hierarchy.json?schema=4" crossorigin>
 
     <!-- Self-hosted (see src/vendor and src/css/fonts.css). ?v= busts the
          1-year cache when the pinned version changes. -->

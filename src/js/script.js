@@ -709,6 +709,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 this._setLoadingProgress(100);
                 this._showMainUI();
+                // Time to markers, for Analytics: marked on the first frame that
+                // draws them (startTime = ms since navigation).
+                const markerSource = this.state.dataFromCache ? 'cache' : 'network';
+                MapManager.onFirstMarkersRendered(() => {
+                    try {
+                        performance.mark('fomo:markers-visible', { detail: { source: markerSource } });
+                    } catch (error) { /* User Timing unavailable */ }
+                });
 
                 // Mark initial load as complete
                 this.state.isInitialLoad = false;

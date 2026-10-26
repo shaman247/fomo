@@ -11,6 +11,7 @@
  * POST /api/analytics.php   (text/plain JSON body, as sendBeacon sends it)
  *   {type: "view", platform, dpr, tz, viewport, screen, wd, path, bundle, ctz, ref, utm, shared, lang}
  *   {type: "engage", ctz, platform, viewport, screen, wd, seconds, counts: {action: n}, firsts: [action]}
+ *   {type: "timing", ctz, platform, viewport, screen, wd, markersMs (null = hidden before markers), source: network|cache}
  * Response: 204 for accepted/dropped beacons.
  *
  * Only counters are stored: no per-visit rows, no IP addresses, no visitor IDs.
@@ -35,11 +36,14 @@ const ACTIONS = [
     'share', 'feedback_open', 'engaged_10s', 'engaged_60s', 'engaged_5m',
 ];
 const PLATFORMS = ['web', 'pwa', 'ios-app', 'android-app'];
+// Time-to-markers buckets: [upper bound in ms, label].
+const MARKER_BUCKETS = [[1000, '<1s'], [2000, '1-2s'], [4000, '2-4s'], [6000, '4-6s'], [8000, '6-8s'],
+    [12000, '8-12s'], [20000, '12-20s'], [PHP_INT_MAX, '20s+']];
 
 beacon_require_same_origin_post();
 $data = beacon_read_json(MAX_BODY_BYTES);
 $type = $data['type'] ?? '';
-if (!in_array($type, ['view', 'engage'], true)) {
+if (!in_array($type, ['view', 'engage', 'timing'], true)) {
     http_response_code(400);
     exit;
 }
@@ -126,6 +130,20 @@ if ($type === 'view') {
     bump($section, 'dims', 'bundle', pick($data['bundle'] ?? '', '/^[\w.-]{1,16}$/', 'unknown'));
     bump($section, 'dims', 'hour', $now->format('H'));
     bump($section, 'dims', 'shared_link', empty($data['shared']) ? 'no' : 'yes');
+} elseif ($type === 'timing') {
+    // markers_<source>: how long first (network) and repeat (cache) visits took to show markers.
+    $ms = is_numeric($data['markersMs'] ?? null) ? (int)$data['markersMs'] : -1;
+    if ($ms < 0) {
+        bump($section, 'dims', 'markers_outcome', 'left before markers');
+    } else {
+        $source = in_array($data['source'] ?? '', ['network', 'cache'], true) ? $data['source'] : 'unknown';
+        $label = '20s+';
+        foreach (MARKER_BUCKETS as [$limit, $name]) {
+            if ($ms < $limit) { $label = $name; break; }
+        }
+        bump($section, 'dims', 'markers_outcome', 'shown');
+        bump($section, 'dims', "markers_$source", $label);
+    }
 } else {
     $section['engage_beacons']++;
     $seconds = is_numeric($data['seconds'] ?? null) ? (int)$data['seconds'] : 0;

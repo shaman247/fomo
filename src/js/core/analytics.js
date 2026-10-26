@@ -1,7 +1,8 @@
 const Analytics = (() => {
-    // First-party, aggregate usage counts. One beacon when the page loads, then
-    // one each time the page is hidden, carrying visible seconds and feature-use
-    // counts since the previous beacon. api/analytics.php only adds them to daily
+    // First-party, aggregate usage counts. One beacon when the page loads, one
+    // when the map's markers first appear (time to markers), then one each time
+    // the page is hidden, carrying visible seconds and feature-use counts since
+    // the previous beacon. api/analytics.php only adds them to daily
     // totals: no cookies, no device storage, no identifiers, and no visitor
     // counting. Off under Do Not Track / Global Privacy Control, and off on any
     // host but the production domain, so dev builds and smoke tests never count.
@@ -57,7 +58,41 @@ const Analytics = (() => {
         });
     }
 
+    // script.js marks this when the map and its markers are revealed; detail.source
+    // says whether the data came from the offline cache or the network.
+    const MARKERS_MARK = 'fomo:markers-visible';
+    let timingSent = false;
+
+    // Sent once: as soon as the markers show, or as "left before markers"
+    // (markersMs null) if the page is hidden first.
+    function sendTiming(entry) {
+        if (timingSent) return;
+        timingSent = true;
+        const { platform, viewport, screen, wd } = Beacon.context();
+        Beacon.send(ENDPOINT, {
+            type: 'timing', ctz: CITY.timezone, platform, viewport, screen, wd,
+            markersMs: entry ? Math.round(entry.startTime) : null,
+            source: (entry && entry.detail && entry.detail.source) || ''
+        });
+    }
+
+    function watchMarkers() {
+        const existing = performance.getEntriesByName(MARKERS_MARK)[0];
+        if (existing) return sendTiming(existing);
+        if (typeof PerformanceObserver === 'undefined') return;
+        try {
+            const observer = new PerformanceObserver(list => {
+                const entry = list.getEntriesByName(MARKERS_MARK)[0];
+                if (!entry) return;
+                observer.disconnect();
+                sendTiming(entry);
+            });
+            observer.observe({ type: 'mark', buffered: true });
+        } catch (e) { /* mark observation unsupported: no timing */ }
+    }
+
     function flush() {
+        if (!timingSent && !performance.getEntriesByName(MARKERS_MARK).length) sendTiming(null);
         if (visibleSince !== null) {
             visibleMs += performance.now() - visibleSince;
             visibleSince = document.visibilityState === 'visible' ? performance.now() : null;
@@ -98,6 +133,7 @@ const Analytics = (() => {
 
     function start() {
         sendView();
+        watchMarkers();
 
         document.addEventListener('click', event => {
             const target = event.target instanceof Element ? event.target : null;

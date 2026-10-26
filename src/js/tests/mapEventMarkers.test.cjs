@@ -11,12 +11,13 @@ function harness({ reducedMotion = true } = {}) {
     let nextTimer = 0;
     const animationFrames = new Map();
     let now = 0, nextFrame = 0;
-    let data, theme = 'light', projectX = 500;
+    let data, theme = 'light', projectX = 500, renderedMarkers = [];
     const rect = { left: 0, top: 0, right: 1000, bottom: 700 };
     const source = { setData: value => { data = value; dataUpdates.push(value); } };
     const map = {
         on: (name, fn) => handlers.set(name, [...(handlers.get(name) || []), fn]), isStyleLoaded: () => true, getSource: () => source, addSource() {},
         off: (name, fn) => handlers.set(name, (handlers.get(name) || []).filter(other => other !== fn)),
+        queryRenderedFeatures: () => renderedMarkers,
         addLayer: layer => layers.set(layer.id, layer), getLayer: id => layers.get(id),
         setPaintProperty() {}, getCanvas: () => ({ getBoundingClientRect: () => rect }),
         getBounds: () => ({ contains: () => true }), project: () => ({ x: projectX, y: 350 }),
@@ -61,6 +62,7 @@ function harness({ reducedMotion = true } = {}) {
     return { manager, images, requests, hoverRequests, layouts, layers, filters, filterCalls, featureStates, dataUpdates, key, locations, data: () => data,
         setTheme: value => { theme = value; },
         setProjectX: value => { projectX = value; },
+        setRenderedMarkers: value => { renderedMarkers = value; },
         fire: (name, event) => (handlers.get(name) || []).forEach(fn => fn(event)),
         runTimers: () => { const pending = [...timers.values()]; timers.clear(); pending.forEach(fn => fn()); },
         animationFrames,
@@ -346,4 +348,18 @@ test('a tile that throws while applying feature state is contained and healed wi
     assert.equal(h.dataUpdates.at(-1), h.data(), 'the heal reloads the current marker data');
     h.fire('sourcedata', { sourceId: 'markers', tile: new Tile() });
     assert.doesNotThrow(() => new Tile().setFeatureState({}), 'the shared prototype is guarded once');
+});
+test('time to markers fires once, on the first frame that draws marker symbols', () => {
+    const h = harness();
+    h.render([{ id: 1, name: 'Painting', icon_id: 'paint' }]);
+    let calls = 0;
+    h.manager.onFirstMarkersRendered(() => { calls++; });
+    h.runTimers();
+    assert.equal(calls, 0, 'data handed to MapLibre is not yet markers on screen');
+    h.fire('render'); h.fire('render');
+    h.setRenderedMarkers([{ id: 0 }]);
+    h.runTimers();
+    assert.equal(calls, 1, 'the trailing check after the last frame sees the drawn markers');
+    h.fire('render'); h.runTimers();
+    assert.equal(calls, 1, 'reported once');
 });
