@@ -401,6 +401,29 @@
     text-decoration: none;
 }
 
+/* Share sits beside the external link and matches it */
+.popup-share-link {
+    display: inline-block;
+    padding: 0 5px;
+    margin: 0;
+    border: none;
+    background: none;
+    color: var(--accent-color);
+    font: inherit;
+    line-height: inherit;
+    cursor: pointer;
+}
+
+.popup-share-link svg {
+    width: 1.1em;
+    height: 1.1em;
+    vertical-align: -0.15em;
+}
+
+.popup-share-link:hover {
+    color: var(--accent-hover);
+}
+
 /* Hide MapLibre popup close button - user can click outside to close */
 .maplibregl-popup-close-button {
     display: none !important;

@@ -33,7 +33,7 @@ const MAX_SECONDS_PER_BEACON = 1800;
 const ACTIONS = [
     'event_link', 'outbound', 'popup_open', 'list_toggle', 'list_event_open', 'tag_click', 'search',
     'filter_topic', 'filter_venue', 'filter_format', 'filter_area', 'date_change', 'theme_change',
-    'share', 'feedback_open', 'engaged_10s', 'engaged_60s', 'engaged_5m',
+    'share', 'event_share', 'feedback_open', 'engaged_10s', 'engaged_60s', 'engaged_5m',
 ];
 const PLATFORMS = ['web', 'pwa', 'ios-app', 'android-app'];
 // Time-to-markers buckets: [upper bound in ms, label].

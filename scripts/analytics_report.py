@@ -60,6 +60,7 @@ ACTIONS = {
     'date_change': 'Date range changes',
     'tag_click': 'Tag clicks',
     'share': 'Share-view clicks',
+    'event_share': 'Event share clicks',
     'feedback_open': 'Feedback form opened',
     'theme_change': 'Theme changes',
     'outbound': 'Other outbound links',

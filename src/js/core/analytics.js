@@ -17,7 +17,7 @@ const Analytics = (() => {
     const MILESTONES = [[10, 'engaged_10s'], [60, 'engaged_60s'], [300, 'engaged_5m']];
     const MAX_SECONDS_PER_BEACON = 1800;
     // URL parameters that only a shared view link carries (see URLParams).
-    const SHARED_VIEW_PARAMS = ['lat', 'lng', 'zoom', 'start', 'end', 'tags', 'formats', 'neighborhoods'];
+    const SHARED_VIEW_PARAMS = ['lat', 'lng', 'zoom', 'start', 'end', 'tags', 'formats', 'neighborhoods', 'event'];
 
     let counts = {};
     let firsts = new Set();
@@ -117,6 +117,7 @@ const Analytics = (() => {
     const CLICKS = [
         ['a.popup-external-link', 'event_link'],
         ['#share-view-btn', 'share'],
+        ['.popup-share-link', 'event_share'],
         ['#feedback-btn', 'feedback_open'],
         ['#sheet-handle, .sheet-drag-area', 'list_toggle'],
         ['#results-container .popup-event-card', 'list_event_open'],

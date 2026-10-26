@@ -24,8 +24,14 @@ const URLParams = (() => {
         TAG_PATTERN: /^[a-zA-Z0-9\s\-_&:]+$/,  // Alphanumeric, spaces, hyphens, underscores, ampersands, colons (organizer:<id> pseudo-tags)
 
         // Input length limits (prevent DoS)
-        MAX_PARAM_LENGTH: 1000
+        MAX_PARAM_LENGTH: 1000,
+
+        // Event ids are backend row ids
+        EVENT_ID_PATTERN: /^[\w-]{1,64}$/
     };
+
+    // Zoom an event link opens at, close enough to pick out the venue
+    const EVENT_LINK_ZOOM = 16;
 
     /**
      * Parse URL parameters and return an object with the values
@@ -36,6 +42,7 @@ const URLParams = (() => {
      * - start: start date (YYYY-MM-DD format)
      * - end: end date (YYYY-MM-DD format)
      * - tags: comma-separated list of tags to pre-select
+     * - event: id of an event whose popup opens once it is loaded
      */
     function parse() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -87,6 +94,12 @@ const URLParams = (() => {
                 if (!Array.isArray(values) || !values.every(v => typeof v === 'string')) throw new Error('Invalid neighborhoods');
                 params.neighborhoods = values;
             } catch { warnings.push('Invalid neighborhood selection, ignoring'); }
+        }
+
+        const event = urlParams.get('event');
+        if (event !== null) {
+            if (VALIDATION.EVENT_ID_PATTERN.test(event)) params.event = event;
+            else warnings.push('Invalid event id, ignoring');
         }
 
         // Log warnings if any validation issues occurred
@@ -274,10 +287,21 @@ const URLParams = (() => {
         return `${baseUrl}?${urlParams.toString()}`;
     }
 
+    /**
+     * Generate a link that centers the map on an event's venue and opens it
+     * @param {Object} event - Event with id, lat and lng
+     * @returns {string} The shareable URL
+     */
+    function generateEventUrl(event) {
+        const url = generateShareUrl({ lat: event.lat, lng: event.lng, zoom: EVENT_LINK_ZOOM });
+        return `${url}&event=${encodeURIComponent(event.id)}`;
+    }
+
     return {
         parse,
         parseDate,
         formatDate,
-        generateShareUrl
+        generateShareUrl,
+        generateEventUrl
     };
 })();

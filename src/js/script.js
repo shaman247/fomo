@@ -188,6 +188,23 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         /**
+         * Open the popup of the event a shared link names (?event=), once its
+         * chunk has loaded. Runs after Phase 1 and again after Phase 2.
+         * @memberof App
+         * @returns {boolean} Whether the event was found and opened
+         * @private
+         */
+        _openUrlEvent() {
+            const id = this.state.urlParams?.event;
+            const event = id && this.state.eventsById[id];
+            const ll = event && Utils.parseLocationKey(event.locationKey);
+            if (!ll) return false;
+            delete this.state.urlParams.event;
+            MarkerController.flyToLocationAndOpenPopup(ll.lat, ll.lng, event.id);
+            return true;
+        },
+
+        /**
          * Load and process initial data
          * @memberof App
          * @async
@@ -748,6 +765,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         this.filterAndDisplayEvents();
                     },
                 });
+                this._openUrlEvent();
             } catch (error) {
                 console.error("Failed to initialize app with initial data:", error);
 
@@ -789,6 +807,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // --- Phase 2: Asynchronously Load Full Data ---
             await this._loadFullData(urlParams);
+            if (urlParams.event && !this._openUrlEvent()) {
+                ToastNotifier.showToast('That event is no longer listed', 'info', 4000);
+            }
             FomoQueries.init(this);
 
             // --- Offline/refresh wiring (post-critical-path) ---
@@ -2042,7 +2063,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         /**
-         * Generate a shareable URL with current map state and copy to clipboard
+         * Generate a shareable URL with current map state and share or copy it
          */
         shareCurrentView() {
             try {
@@ -2078,14 +2099,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Generate the shareable URL using URLParams module
                 const shareUrl = FomoQueries.shareUrl() || URLParams.generateShareUrl(params);
 
-                // Copy to clipboard
-                navigator.clipboard.writeText(shareUrl).then(() => {
-                    ToastNotifier.showToast('Link copied to clipboard!', 'success', 3000);
-                }).catch(err => {
-                    console.error('Failed to copy to clipboard:', err);
-                    // Fallback: show the URL in a toast for manual copying
-                    ToastNotifier.showToast('Could not copy automatically. URL: ' + shareUrl, 'info', 5000);
-                });
+                // Share sheet on phones, clipboard elsewhere
+                ShareLink.share({ url: shareUrl, title: document.title });
 
             } catch (error) {
                 console.error('Error generating share URL:', error);
