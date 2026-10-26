@@ -1,0 +1,6 @@
+# Crawlers are welcome on the public map, its data files and the public
+# exports, including search and AI crawlers. The JSON API and the admin pages
+# are not content.
+User-agent: *
+Disallow: /api/
+Disallow: /admin/

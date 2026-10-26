@@ -16,6 +16,8 @@ frontend:
   site_name: "Fomo NYC"          # <title>, logo alt, search placeholder, menu
   domain: "fomo.nyc"             # "Search fomo.nyc", "About fomo.nyc"
   emoji: "🗽"                     # menu / feedback decoration
+  description: "A free, community-built map of upcoming events in the New York City area."  # <meta> description + link previews
+  share_image: "images/share-card.png"  # link-preview image (og:image), 1200x630 PNG under src/; regenerate with scripts/generate_share_card.py
   timezone: "America/New_York"   # utils.js: "today" + event-time parsing
   sw_enabled: true               # offline service worker (false emits a self-unregistering sw.js)
   native_app_ua: "FomoApp"       # UA marker the iOS/Android WebViews append ("FomoApp/1.0"); beacons report them as app platforms

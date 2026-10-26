@@ -14,7 +14,7 @@ paths:
 `build.js` reads `config/<FOMO_CITY>.yaml` (`process.env.FOMO_CITY || 'nyc'`, parsed with the `yaml` devDep) and injects its `frontend:` block at build time:
 
 - **Runtime JS** — a `;window.__CITY__ = {map, timezone};` prelude is **prepended** to the concatenated bundle (before flatpickr) so the global exists before any IIFE evaluates. `src/js/script.js` (`App.config` map fields) and `src/js/core/utils.js` (timezone) read it.
-- **Branding** — `applyBranding()` replaces `{{SITE_NAME}}`, `{{DOMAIN}}`, `{{EMOJI}}`, `{{WELCOME_MODAL}}` tokens in `src/index.html` (runs last; the build **fails** on any leftover `{{TOKEN}}`). `src/about.html` is copied as-is (not tokenized).
+- **Branding** — `applyBranding()` replaces `{{SITE_NAME}}`, `{{DOMAIN}}`, `{{EMOJI}}`, `{{WELCOME_MODAL}}`, `{{DESCRIPTION}}` and `{{SHARE_IMAGE}}` tokens in `src/index.html`. The last two feed the `<meta>` description and the Open Graph/Twitter link-preview tags, are HTML-escaped, and come from `frontend.description` and `frontend.share_image`, a 1200×630 PNG under `src/` regenerated from the live map by `scripts/generate_share_card.py`. `src/robots.txt` is copied as-is (crawlers are allowed everywhere except `/api/` and `/admin/`) (runs last; the build **fails** on any leftover `{{TOKEN}}`). `src/about.html` is copied as-is (not tokenized).
 - Dev watch includes `config/<FOMO_CITY>.yaml`, so config edits rebuild.
 
 ## JS Build

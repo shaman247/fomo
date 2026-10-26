@@ -173,12 +173,16 @@ function emitServiceWorker({ htmlSource, frontend, jsBundleName, cssBundleName, 
 }
 
 // Replace {{TOKEN}} branding placeholders, then fail the build on any leftover token.
+// DESCRIPTION and SHARE_IMAGE land in <meta> attributes (link previews), so they are escaped.
 function applyBranding(html, fe) {
+    const attr = value => String(value ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
     const tokens = {
         '{{SITE_NAME}}': fe.site_name,
         '{{DOMAIN}}': fe.domain,
         '{{EMOJI}}': fe.emoji,
         '{{WELCOME_MODAL}}': fe.welcome_modal,
+        '{{DESCRIPTION}}': attr(fe.description),
+        '{{SHARE_IMAGE}}': attr(fe.share_image),
     };
     for (const [token, value] of Object.entries(tokens)) {
         html = html.split(token).join(value);
@@ -346,9 +350,10 @@ async function build(isDev) {
 
     fs.writeFileSync(path.join(DIST, 'index.html'), html);
 
-    // Copy about.html, privacy.html, and .htaccess
+    // Copy about.html, privacy.html, robots.txt and .htaccess
     fs.copyFileSync(path.join(SRC, 'about.html'), path.join(DIST, 'about.html'));
     fs.copyFileSync(path.join(SRC, 'privacy.html'), path.join(DIST, 'privacy.html'));
+    fs.copyFileSync(path.join(SRC, 'robots.txt'), path.join(DIST, 'robots.txt'));
     fs.copyFileSync(path.join(SRC, '.htaccess'), path.join(DIST, '.htaccess'));
     if (isDev) {
         // Dev bundles use STABLE filenames (app.js/app.css), so the 1-year

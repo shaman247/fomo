@@ -6,6 +6,20 @@
     <title>{{SITE_NAME}}</title>
     <link rel="icon" href="images/torch.svg" type="image/svg+xml">
 
+    <!-- Link previews (Messages, Slack, Discord, X, Facebook). Without these a
+         preview has to load and run the whole app just to find a title. -->
+    <meta name="description" content="{{DESCRIPTION}}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{SITE_NAME}}">
+    <meta property="og:title" content="{{SITE_NAME}}">
+    <meta property="og:description" content="{{DESCRIPTION}}">
+    <meta property="og:url" content="https://{{DOMAIN}}/">
+    <meta property="og:image" content="https://{{DOMAIN}}/{{SHARE_IMAGE}}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="{{SITE_NAME}}: {{DESCRIPTION}}">
+    <meta name="twitter:card" content="summary_large_image">
+
     <!-- Android System WebView glyph fix. Our map styles ship no `glyphs` URL,
          so MapLibre renders every label locally via its TinySDF fallback, whose
          canvas is an OffscreenCanvas whenever one is defined. On Android WebView,

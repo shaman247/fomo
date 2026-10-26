@@ -127,6 +127,7 @@ scripts/*
 !scripts/frontend_smoke.py
 !scripts/client_errors.py
 !scripts/analytics_report.py
+!scripts/generate_share_card.py
 !scripts/build_similarity.py
 !scripts/geocode.php
 # /run-pipeline pipeline + cleanup scripts
@@ -158,6 +159,7 @@ database/backups/
 # Screenshots and images
 screenshots/
 *.png
+!src/images/share-card.png
 !mobile/android/play-store-icon.png
 !mobile/ios/fomo/fomo/Assets.xcassets/AppIcon.appiconset/*.png
 *.jpeg
