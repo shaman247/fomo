@@ -168,6 +168,16 @@ class TestEarlyClosingHoursNoticesAreSpared(unittest.TestCase):
             'Drag Story Hour: Celebrating Community (Registration Closed)', ''))
         self.assertFalse(_is_closure_notice('Storytime Chess (Registration Closed)', ''))
 
+    def test_a_block_closed_for_a_block_party_survives(self):
+        """w5069 SAPO permits 973126 / 970950 — the street is closed FOR the event."""
+        body = ('A community block party (outdoor street festival) on EAST 34 STREET '
+                'in Brooklyn, permitted by the NYC Street Activity Permit Office. '
+                'The street is closed to traffic for the event.')
+        self.assertFalse(is_obvious_non_event('Halloween Block Closed', body))
+        self.assertFalse(is_obvious_non_event(
+            'Halloween Block Closure for Trick or Treating', body))
+        self.assertFalse(_is_closure_notice('5th annual block closing', ''))
+
 
 class TestAcceptedMisses(unittest.TestCase):
     """Junk that stays unfiltered on purpose. Missing junk is the safe direction.

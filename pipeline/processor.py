@@ -2803,7 +2803,11 @@ _PROGRAM_DEADLINE_VETO_RE = re.compile(
 # facility being shut: an early-closing hours change ("Early Closure: 2 PM
 # Saturday, January 31" — the venue is open, just for fewer hours) and a real
 # event whose SIGN-UP has closed ("Drag Story Hour … (Registration Closed)").
-# Both would otherwise fire on a blank description.
+# Both would otherwise fire on a blank description. A third family is a street
+# BLOCK closed for a block party ("Halloween Block Closed", "Halloween Block
+# Closure for Trick or Treating", w5069 2026-10-26, whose body says the street
+# "is closed to traffic for the event"). Measured 2026-10-26 over all 272,583
+# events: every name with `block clos(ed|ure|ing)` is a w5069 block party.
 #
 # Known accepted misses (fail-safe, not bugs): "Closed For Private Event"
 # (38318, 60244) whose bodies say "unavailable"/"not open"; "Mid-Winter Recess
@@ -2828,6 +2832,7 @@ _CLOSURE_NOTICE_NAME_RE = re.compile(
     r'|^\s*closing\s*[:\u2013\u2014-]\s*\S', re.IGNORECASE)
 _CLOSURE_NOTICE_NAME_VETO_RE = re.compile(
     r'\bearly\s+clos(?:ure|ing|ed|es)\b|\bclos(?:ing|ed|es)\s+early\b'
+    r'|\bblock\s+clos(?:ed|ure|ing)\b'
     r'|\b(?:registration|application|applications|submission|submissions|'
     r'entries|entry|rsvps?|ticket|tickets|voting|nominations?)\s+'
     r'clos(?:ed|es|ure|ing)\b',
