@@ -17,8 +17,8 @@ Per case it fails on:
   America/New_York-device reference run
 - (reference case) the client ErrorReporter not beaconing a deliberate error
 
-Matrix: every DPR at desktop + New York; every timezone at DPR 1; one mobile
-(375x812, isMobile/hasTouch) case.
+Matrix: every DPR at desktop + New York; every timezone at DPR 1; two mobile
+(isMobile/hasTouch) cases: 375x812 at DPR 2 and an iPhone-sized 393x852 at DPR 3.
 
 Usage:
     ./venv/bin/python scripts/frontend_smoke.py               # test dist/
@@ -44,6 +44,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 DESKTOP = {'width': 1200, 'height': 800}
 MOBILE = {'width': 375, 'height': 812}
+IPHONE = {'width': 393, 'height': 852}
 REFERENCE_TZ = 'America/New_York'
 
 
@@ -56,6 +57,9 @@ def build_cases():
         cases.append({'name': f'tz-{label}', 'dpr': 1, 'tz': tz, 'viewport': DESKTOP,
                       'mobile': False, 'tz_probe': True, 'reporter_probe': False})
     cases.append({'name': 'mobile', 'dpr': 2, 'tz': REFERENCE_TZ, 'viewport': MOBILE,
+                  'mobile': True, 'tz_probe': False, 'reporter_probe': False})
+    # DPR 3 iPhones are ~60% of real views (analytics, Oct 2026).
+    cases.append({'name': 'iphone', 'dpr': 3, 'tz': REFERENCE_TZ, 'viewport': IPHONE,
                   'mobile': True, 'tz_probe': False, 'reporter_probe': False})
     return cases
 
