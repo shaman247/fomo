@@ -21,6 +21,7 @@ import hashlib
 import os
 from pathlib import Path
 import tempfile
+from collections import Counter
 from contextlib import asynccontextmanager
 import re
 import urllib.parse
@@ -622,13 +623,28 @@ _OPEN_RUN_TAGS = frozenset({
 })
 
 
-def _is_open_ended_run(row_dict):
-    """True when the row's own tags mark it as a gallery/museum run.
+def _is_open_ended_run(row_dict, slot=None, dated_slots=1):
+    """True when a past, start-only slot is a gallery/museum run still on view.
 
-    Reads both `hashtags` (raw extractor output, still present at the
-    filter_by_date call site — process_tags pops it later) and `tags`
-    (post-processing), and tolerates either a list or a comma-separated string.
+    All three must hold:
+    - the row's own tags mark it as a run. Reads both `hashtags` (raw extractor
+      output, still present at the filter_by_date call site — process_tags pops
+      it later) and `tags` (post-processing), and tolerates either a list or a
+      comma-separated string;
+    - the slot (`slot`, default the row itself) has no clock. A timed start-only
+      slot is one attendable session — an opening reception, an open-house
+      day — not a run;
+    - it is the event's only dated slot (`dated_slots`). "Opened May 28" is one
+      date; an event that enumerates several is a schedule of sessions, and its
+      past ones are over. Giving each its own horizon stacked them into
+      overlapping months-long spans (e297825 Verdant Earth: six May–June
+      gallery days, each stretched to crawl date + 60 on two crawls → twelve
+      rows ending Dec 19 and Dec 23, 2026-10-26).
     """
+    slot = row_dict if slot is None else slot
+    if dated_slots > 1 or (slot.get('start_time') or '').strip() \
+            or (slot.get('end_time') or '').strip():
+        return False
     for field in ('hashtags', 'tags'):
         raw = row_dict.get(field)
         if not raw:
@@ -667,8 +683,11 @@ def _is_source_listing_metadata(row_dict, effective_url, source_url):
             and site_profiles.is_listing_url(effective_url, source_url))
 
 
-def filter_by_date(row_dict, current_date, future_limit_date):
+def filter_by_date(row_dict, current_date, future_limit_date, dated_slots=1):
     """Filters a row based on its start and end dates.
+
+    `dated_slots` is how many dated rows the row's event extracted with; only a
+    sole slot can be an open-ended run (`_is_open_ended_run`).
 
     Returns (True, None) if the row passes, or (False, reason) if rejected.
     Reason is one of: 'start_too_future', 'end_in_past', 'duration_too_long', 'placeholder_span',
@@ -725,7 +744,7 @@ def filter_by_date(row_dict, current_date, future_limit_date):
             # No explicit end_date: grace period on start_date
             duration_days = 0
             if start_date < current_date - timedelta(days=PAST_START_GRACE_DAYS):
-                if not _is_open_ended_run(row_dict):
+                if not _is_open_ended_run(row_dict, dated_slots=dated_slots):
                     return False, 'end_in_past'
                 # Open-ended run: real opening date, no closing date. Give it a
                 # bounded horizon anchored on TODAY, so every crawl slides it
@@ -9074,6 +9093,14 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
     location_refs = {}
     rejection_counts = {}
 
+    # Rows are one per extracted occurrence; siblings share the event's raw
+    # name/url/location. Counted before the loop sanitizes names in place.
+    def _event_key(row):
+        return (row.get('name') or '', row.get('url') or '', row.get('location') or '')
+    dated_per_event = Counter(_event_key(r) for r in parsed_rows
+                              if r.get('start_date') or r.get('end_date'))
+    dated_slots = [dated_per_event[_event_key(r)] for r in parsed_rows]
+
     for row_index, row_dict in enumerate(parsed_rows):
         # Sanitize fields
         for field in ['name', 'description', 'location', 'sublocation']:
@@ -9146,7 +9173,8 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
             continue
 
         if not row_dict.get('missing_date'):
-            ok, reason = filter_by_date(row_dict, current_date, future_limit_date)
+            ok, reason = filter_by_date(row_dict, current_date, future_limit_date,
+                                        dated_slots=dated_slots[row_index])
             if not ok:
                 if reason in ('end_in_past', 'start_too_future', 'duration_too_long',
                               'placeholder_span'):
@@ -9578,6 +9606,8 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
             # logged as an `end_in_past` rejection either way.
             surviving = []
             synthesized = []
+            dated_slots = sum(1 for o in data['occurrences']
+                              if o.get('start_date') or o.get('end_date'))
             for occ in data['occurrences']:
                 synthesized_kind = None
                 start_date = occ.get('start_date')
@@ -9625,7 +9655,7 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
                     past = parsed_end < today
                 else:
                     past = parsed_start < (today - timedelta(days=PAST_START_GRACE_DAYS))
-                    if past and _is_open_ended_run(data):
+                    if past and _is_open_ended_run(data, occ, dated_slots):
                         # Mirror filter_by_date: an open-ended run keeps a
                         # bounded, crawl-refreshed horizon instead of dying.
                         past = False

@@ -2652,6 +2652,42 @@ class TestOpenEndedRunNoCloseDate(unittest.TestCase):
         self.assertTrue(ok, reason)
         self.assertEqual(row['end_date'], '2026-10-27')
 
+    def test_timed_start_only_slot_is_a_session_not_a_run(self):
+        # An opening reception / open day has a clock; it is over, not on view.
+        for extra in ({'start_time': '3pm'}, {'end_time': '5pm'},
+                      {'start_time': '3pm', 'end_time': '5pm'}):
+            ok, reason, row = self._filter(
+                '2026-05-28', None, hashtags=['Exhibition'], **extra)
+            self.assertFalse(ok)
+            self.assertEqual(reason, 'end_in_past')
+            self.assertIsNone(row['end_date'])
+
+    def test_one_of_several_dated_slots_is_not_a_run(self):
+        # e297825 Verdant Earth: six enumerated gallery days, each of which got
+        # its own horizon and stacked into overlapping months-long spans.
+        row = {'name': 'Verdant Earth', 'start_date': '2026-05-30',
+               'end_date': None, 'hashtags': ['Exhibition']}
+        ok, reason = filter_by_date(row, self.TODAY, self.FUTURE_LIMIT, dated_slots=6)
+        self.assertFalse(ok)
+        self.assertEqual(reason, 'end_in_past')
+        self.assertIsNone(row['end_date'])
+
+    def test_detail_crawl_enumerated_past_sessions_get_no_horizon(self):
+        cursor = _QueuedCursor([(0,), (77, 62)])
+        apply_crawled_details(
+            cursor, _NoopConnection(), 456,
+            {'description': 'A group show.', 'hashtags': ['Exhibition'], 'emoji': '',
+             'occurrences': [
+                 {'start_date': '2026-05-30', 'start_time': '2pm', 'end_time': '9pm'},
+                 {'start_date': '2026-05-31', 'start_time': '12pm', 'end_time': '6pm'},
+                 {'start_date': '2026-06-04'},
+             ]},
+            TestOpenEndedRunDates._TAG_CONTEXT,
+        )
+        self.assertEqual(
+            [p for sql, p in cursor.statements
+             if sql.startswith("INSERT INTO crawl_event_occurrences")], [])
+
     def test_through_date_path_is_unaffected(self):
         # TestOpenEndedRunDates' shape must keep behaving exactly as before.
         ok, reason, row = self._filter(None, '2026-09-22')
