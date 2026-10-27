@@ -15,7 +15,8 @@ from datetime import date, timedelta
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from exporter import (dedupe_past_occurrences, dedupe_public_occurrences,
-                      should_export_public_dataset, write_ndjson)
+                      drop_start_only_twins, should_export_public_dataset,
+                      write_ndjson)
 
 
 WINDOW = (date(2026, 8, 14), date(2026, 11, 12))
@@ -86,6 +87,45 @@ class TestDedupePublicOccurrences(unittest.TestCase):
         out = dedupe_public_occurrences([(date(2026, 8, 20), '7pm', None, None)], *WINDOW)
         self.assertIsNone(out[0]['end_date'])
         self.assertIsNone(out[0]['end_time'])
+
+    def test_start_only_twin_of_ended_row_dropped(self):
+        # PERREO GARDEN 2026-10-27: the Posh feed's start-only instance beside
+        # the stored 10pm → 3am row.
+        rows = [
+            (date(2026, 10, 31), '10pm', date(2026, 11, 1), '3am'),
+            (date(2026, 10, 31), '10pm', None, None),
+        ]
+        out = dedupe_public_occurrences(rows, *WINDOW)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0]['end_time'], '3am')
+
+
+class TestDropStartOnlyTwins(unittest.TestCase):
+    def test_export_lists(self):
+        occ = [['2026-10-31', '10pm', '2026-11-01', '3am'],
+               ['2026-10-31', '10pm', None, ''],
+               ['2026-11-07', '10pm', None, '']]
+        self.assertEqual(drop_start_only_twins(occ),
+                         [['2026-10-31', '10pm', '2026-11-01', '3am'],
+                          ['2026-11-07', '10pm', None, '']])
+
+    def test_end_time_only_counts_as_end(self):
+        occ = [['2026-10-31', '7pm', None, '9pm'], ['2026-10-31', '7pm', None, None]]
+        self.assertEqual(drop_start_only_twins(occ), [['2026-10-31', '7pm', None, '9pm']])
+
+    def test_other_start_time_kept(self):
+        occ = [['2026-10-31', '10pm', None, '4am'], ['2026-10-31', '6pm', None, '']]
+        self.assertEqual(drop_start_only_twins(occ), occ)
+
+    def test_untimed_row_beside_run_kept(self):
+        occ = [['2026-10-31', None, '2026-11-30', None, {'end': 'open_run'}],
+               ['2026-10-31', None, None, None]]
+        self.assertEqual(drop_start_only_twins(occ), occ)
+
+    def test_two_start_only_rows_both_kept(self):
+        # Exact duplicates are a separate rule; nothing here has an end.
+        occ = [['2026-10-31', '10pm', None, ''], ['2026-10-31', '10pm', None, '']]
+        self.assertEqual(drop_start_only_twins(occ), occ)
 
 
 class TestDedupePastOccurrences(unittest.TestCase):

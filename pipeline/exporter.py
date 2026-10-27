@@ -234,6 +234,26 @@ def order_event_urls(urls, current_date):
     return [winner] + [u for i, u in enumerate(urls) if i != winner_index]
 
 
+def drop_start_only_twins(occurrences):
+    """Drop a start-only occurrence when another row has the same start date and
+    time plus an end.
+
+    The merge only adds dates, so a source that prints just the start (the Posh
+    group feed's recurring instances, 2026-10-27) leaves `Oct 31 10pm` beside
+    the `Oct 31 10pm → Nov 1 3am` row another crawl stored, and the popup lists
+    the date twice. Untimed rows are left alone: a date-only row beside a
+    multi-day run starting that day is a different listing, not a twin.
+
+    occurrences: sequences starting (start_date, start_time, end_date, end_time),
+    either the export lists or the public dataset's tuples. Order is kept.
+    """
+    ended = {(o[0], o[1]) for o in occurrences if o[1] and (o[2] or o[3])}
+    if not ended:
+        return occurrences
+    return [o for o in occurrences
+            if o[2] or o[3] or not o[1] or (o[0], o[1]) not in ended]
+
+
 def _occurrence_dates(occurrences):
     """Yield (start_date, end_date) for each occurrence in an exported event.
 
@@ -489,6 +509,7 @@ def export_events(cursor):
                              and endpoint_precision.get((event_id, str(occ[0]), str(occ[2]))))
                 if precision:
                     occurrences[-1].append(precision)
+        occurrences = drop_start_only_twins(occurrences)
 
         if not occurrences:
             continue
@@ -942,8 +963,10 @@ def _filter_dedupe_occurrences(rows, keep):
     rows: (start_date, start_time, end_date, end_time) tuples (dates as date
     objects, times as canonical strings or None).
 
-    Two collapse rules:
+    Three collapse rules:
     - exact duplicates (same four fields) are merged;
+    - a start-only row with a same-start twin that has an end is dropped
+      (drop_start_only_twins);
     - a multi-day span fully contained in another span with the same times is
       dropped (legacy artifact: exhibitions accumulate overlapping span rows,
       e.g. 06-01→07-05 alongside 06-04→07-05).
@@ -961,6 +984,7 @@ def _filter_dedupe_occurrences(rows, keep):
             continue
         seen.add(key)
         in_window.append((sd, st or None, ed, et or None))
+    in_window = drop_start_only_twins(in_window)
 
     # Containment collapse among multi-day spans sharing start/end times.
     spans = [(sd, st, ed, et) for (sd, st, ed, et) in in_window if ed and ed > sd]
