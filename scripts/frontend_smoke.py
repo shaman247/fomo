@@ -17,8 +17,10 @@ Per case it fails on:
   America/New_York-device reference run
 - (reference case) the client ErrorReporter not beaconing a deliberate error
 
-Matrix: every DPR at desktop + New York; every timezone at DPR 1; two mobile
-(isMobile/hasTouch) cases: 375x812 at DPR 2 and an iPhone-sized 393x852 at DPR 3.
+Matrix: the device pixel ratios real views use (1, 2, 3) plus 1.25, the
+fractional ratio whose sprite slot isn't whole pixels; New York plus one
+timezone on each side of it; the iPhone case is the only mobile one. Every
+case runs at once, so the run takes about as long as its slowest case.
 
 Usage:
     ./venv/bin/python scripts/frontend_smoke.py               # test dist/
@@ -43,25 +45,24 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 DESKTOP = {'width': 1200, 'height': 800}
-MOBILE = {'width': 375, 'height': 812}
 IPHONE = {'width': 393, 'height': 852}
 REFERENCE_TZ = 'America/New_York'
 
 
 def build_cases():
-    cases = []
-    for dpr in (0.9, 1, 1.1, 1.25, 1.5, 1.75, 2):
-        cases.append({'name': f'dpr-{dpr:g}', 'dpr': dpr, 'tz': REFERENCE_TZ, 'viewport': DESKTOP,
-                      'mobile': False, 'tz_probe': dpr == 1, 'reporter_probe': dpr == 1})
-    for tz, label in (('America/Los_Angeles', 'la'), ('Europe/London', 'london')):
-        cases.append({'name': f'tz-{label}', 'dpr': 1, 'tz': tz, 'viewport': DESKTOP,
-                      'mobile': False, 'tz_probe': True, 'reporter_probe': False})
-    cases.append({'name': 'mobile', 'dpr': 2, 'tz': REFERENCE_TZ, 'viewport': MOBILE,
-                  'mobile': True, 'tz_probe': False, 'reporter_probe': False})
-    # DPR 3 iPhones are ~60% of real views (analytics, Oct 2026).
-    cases.append({'name': 'iphone', 'dpr': 3, 'tz': REFERENCE_TZ, 'viewport': IPHONE,
-                  'mobile': True, 'tz_probe': False, 'reporter_probe': False})
-    return cases
+    # Real views, Oct 2026: DPR 3 ~60% (iPhones), 2 ~18%, 1 ~9%. Integer ratios share
+    # one sprite path; 1.25 is the fractional one that broke it (78 px x 1.25 = 97.5).
+    # tz-london also carries DPR 2: its sprite check covers the Retina desktop.
+    def case(name, dpr, tz=REFERENCE_TZ, viewport=DESKTOP, mobile=False, probes=False):
+        return {'name': name, 'dpr': dpr, 'tz': tz, 'viewport': viewport, 'mobile': mobile,
+                'tz_probe': probes or tz != REFERENCE_TZ, 'reporter_probe': probes}
+    return [
+        case('dpr-1', 1, probes=True),  # the New York reference for the timezone cases
+        case('dpr-1.25', 1.25),
+        case('iphone', 3, viewport=IPHONE, mobile=True),
+        case('tz-la', 1, tz='America/Los_Angeles'),
+        case('tz-london', 2, tz='Europe/London'),
+    ]
 
 
 # Captures the MapLibre map: the app keeps it inside a closure in production
@@ -147,7 +148,7 @@ def short(text, limit=150):
     return text if len(text) <= limit else text[:limit - 1] + '…'
 
 
-async def run_case(browser, base_url, case, timeout, reference=None):
+async def run_case(browser, base_url, case, timeout):
     result = {'case': case, 'errors': {}, 'sprites': None, 'failures': [], 'reporter': '-',
               'tz': '-', 'list': None, 'times': None}
     beacons = []
@@ -201,7 +202,7 @@ async def run_case(browser, base_url, case, timeout, reference=None):
                 f"({status['blank']} blank, {status['missing']} missing)")
 
         if case['tz_probe'] and not result['failures']:
-            await probe_times(page, result, reference)
+            await probe_times(page, result)
 
         if case['reporter_probe']:
             await page.evaluate(f"setTimeout(() => {{ throw new Error('{REPORTER_PROBE_MESSAGE}'); }})")
@@ -238,8 +239,8 @@ async def run_case(browser, base_url, case, timeout, reference=None):
     return result
 
 
-async def probe_times(page, result, reference):
-    """Record the default list and one popup's event times; compare to the NY run."""
+async def probe_times(page, result):
+    """Record the default list and the event times in the first listed event's popup."""
     # DOM clicks: the first-visit welcome modal covers the page for real pointer input.
     await page.evaluate("() => document.querySelector('#sheet-handle')?.click()")
     try:
@@ -248,12 +249,8 @@ async def probe_times(page, result, reference):
         result['failures'].append('tz: event list never rendered')
         return
     result['list'] = await page.evaluate(LIST_NAMES_JS)
-    target = (reference or {}).get('times_target') or result['list'][0]
-    result['times_target'] = target
-    await page.evaluate("""target => {
-        const cards = [...document.querySelectorAll('#results-container .popup-event-card')];
-        (cards.find(card => card.getAttribute('aria-label') === 'Open ' + target) || cards[0]).click();
-    }""", target)
+    # Every case opens its own first event; when the lists match, that's the same event.
+    await page.evaluate("() => document.querySelector('#results-container .popup-event-card').click()")
     try:
         await page.wait_for_selector('.maplibre-popup-content .popup-event-card-datetime', state='attached', timeout=8000)
     except Exception:
@@ -261,15 +258,21 @@ async def probe_times(page, result, reference):
         return
     await asyncio.sleep(0.5)
     result['times'] = dict(await page.evaluate(POPUP_TIMES_JS))
-    if reference is None:
-        result['tz'] = 'ref'
+
+
+def compare_times(result, reference):
+    """Fail a timezone case whose list or event times differ from the New York run."""
+    if result['times'] is None:
+        return  # probe_times already recorded why (or the map never loaded)
+    if not reference or reference['times'] is None:
+        result['failures'].append('tz: the New York reference run recorded no times')
         return
     diffs = []
     if reference.get('list') and result['list'] != reference['list']:
         diffs.append('default list differs from the New York device')
     common = set(result['times']) & set(reference.get('times') or {})
     if not common:
-        diffs.append(f'no common event to compare times (target {target!r})')
+        diffs.append(f"no common event to compare times (first listed {result['list'][0]!r})")
     for name in sorted(common):
         if result['times'][name] != reference['times'][name]:
             diffs.append(f"{name!r}: {result['times'][name]!r} vs NY device {reference['times'][name]!r}")
@@ -315,21 +318,25 @@ async def main_async(args):
         browser = await pw.chromium.launch(headless=not args.headed)
         limit = asyncio.Semaphore(args.concurrency)
 
-        async def limited(case, reference=None):
+        async def limited(case):
             async with limit:
-                return await run_case(browser, base_url, case, args.timeout, reference)
+                return await run_case(browser, base_url, case, args.timeout)
 
-        # The timezone cases compare against the New York reference run, so it goes first.
+        # The timezone cases compare against the New York reference run afterwards,
+        # so every case runs at once; --only a timezone case brings the reference along.
         is_ref = lambda c: c['tz_probe'] and c['tz'] == REFERENCE_TZ
-        first = [c for c in cases if not (c['tz_probe'] and not is_ref(c))]
-        results = await asyncio.gather(*(limited(c) for c in first))
-        reference = next((r for r in results if is_ref(r['case'])), None)
-        later = [c for c in cases if c['tz_probe'] and not is_ref(c)]
-        if later and reference is None:
-            reference = await limited(next(c for c in build_cases() if is_ref(c)))
-        results += await asyncio.gather(*(limited(c, reference) for c in later))
+        if any(c['tz_probe'] for c in cases) and not any(is_ref(c) for c in cases):
+            cases.append(next(c for c in build_cases() if is_ref(c)))
+        results = await asyncio.gather(*(limited(c) for c in cases))
         await browser.close()
     server.shutdown()
+
+    reference = next((r for r in results if is_ref(r['case'])), None)
+    if reference and reference['times'] is not None:
+        reference['tz'] = 'ref'
+    for r in results:
+        if r['case']['tz_probe'] and not is_ref(r['case']):
+            compare_times(r, reference)
 
     order = {c['name']: i for i, c in enumerate(build_cases())}
     results.sort(key=lambda r: order[r['case']['name']])
@@ -342,9 +349,10 @@ async def main_async(args):
 def main():
     parser = argparse.ArgumentParser(description='Browser smoke matrix over DPRs, timezones and a mobile viewport')
     parser.add_argument('--dist', type=Path, default=PROJECT_ROOT / 'dist', help='Built site to serve (default dist/)')
-    parser.add_argument('--only', help='Comma-separated case names (e.g. dpr-1.25,tz-london,mobile)')
+    parser.add_argument('--only', help='Comma-separated case names (e.g. dpr-1.25,tz-london,iphone)')
     parser.add_argument('--timeout', type=float, default=25, help='Seconds per case for the map and sprites (default 25)')
-    parser.add_argument('--concurrency', type=int, default=4, help='Browser contexts at once (default 4)')
+    parser.add_argument('--concurrency', type=int, default=len(build_cases()),
+                        help='Browser contexts at once (default: every case)')
     parser.add_argument('--headed', action='store_true', help='Show the browser')
     args = parser.parse_args()
 
