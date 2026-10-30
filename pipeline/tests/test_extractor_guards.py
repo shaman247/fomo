@@ -2122,6 +2122,12 @@ class TrackingBeaconFilterTests(unittest.TestCase):
         'https://secure.adnxs.com/getuid?https%3A%2F%2Fcs-server',
         'https://csync.loopme.me/?gdpr=0&pubid=11362',
         'https://rtb.adentifi.com/CookieSyncOpenX',
+        # Ad-exchange event pixels from The Cobra Club's Songkick page, 2026-10-30.
+        'https://st.pubmatic.com/track?operId=7&p=161683&s=948304',
+        'https://evt.minutemedia-prebid.com/x?a=err&ad_unit_code=adUnit_Sekindo',
+        'https://pagead2.googlesyndication.com/pagead/gen_204?id=notify&exchange=pubmatic',
+        'https://bh.contextweb.com/bh/rtset?pid=562539&ev=671b8391',
+        'https://idpix.media6degrees.com/orbserv/hbpix?pixId=856286&pcv=125',
     ]
     FLYERS = [
         'https://images.squarespace-cdn.com/content/v1/5f02/906f/weekly_9.20.26.jpg?format=1500w',

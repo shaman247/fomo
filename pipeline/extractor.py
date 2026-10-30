@@ -545,6 +545,13 @@ _BEACON_QUERY_RE = re.compile(
     r'[?&](?:gdpr|gdpr_consent|redir|redirect|redirect_url|redirectUri|rur|ru|cr)=',
     re.IGNORECASE)
 _BEACON_HOST_TOKENS = {'sync', 'usersync', 'csync', 'ssbsync', 'match', 'cm', 'pixel', 'beacon'}
+# Ad-exchange hosts never serve a flyer, whatever the path looks like. Their
+# event/impression pixels (/track, /x?a=err, /gen_204, /rtset, /hbpix) slipped
+# past the shape tests above on The Cobra Club's Songkick page, 2026-10-30, and
+# a pixel that answers non-200 fails the whole vision packet closed.
+_AD_HOST_TOKENS = ('pubmatic.', 'minutemedia-prebid.', 'googlesyndication.', 'doubleclick.',
+                   'contextweb.', 'media6degrees.', 'adnxs.', 'openx.net', 'rubiconproject.',
+                   'casalemedia.', 'criteo.', 'adsrvr.', '3lift.', 'lijit.', 'primis.tech')
 
 
 def is_tracking_beacon_url(url):
@@ -554,8 +561,10 @@ def is_tracking_beacon_url(url):
     path, _, query = url.partition('?')
     if query and _BEACON_QUERY_RE.search('?' + query):
         return True
-    host = urlparse(url).hostname or ''
-    if _BEACON_HOST_TOKENS & set(re.split(r'[.-]', host.lower())):
+    host = (urlparse(url).hostname or '').lower()
+    if _BEACON_HOST_TOKENS & set(re.split(r'[.-]', host)):
+        return True
+    if any(token in host for token in _AD_HOST_TOKENS):
         return True
     return bool(_BEACON_PATH_RE.search(path) or _BEACON_PHP_RE.search(path))
 
