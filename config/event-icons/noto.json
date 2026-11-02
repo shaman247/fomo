@@ -2463,6 +2463,16 @@
       "sha256": "e94b115d08c80ba087e397c9c1f08abd6d4d5fed56309b8e2f19488feb1d6fca"
     },
     {
+      "id": "noto-1f358",
+      "emoji": "🍘",
+      "label": "RICE CRACKER",
+      "source": "noto/emoji_u1f358.svg",
+      "provider": "noto",
+      "upstream_path": "svg/emoji_u1f358.svg",
+      "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
+      "sha256": "db0193306f3a0ec557ee39e0c50cccb4cf33ac260b1a6410aa6ecc549cedd086"
+    },
+    {
       "id": "noto-1f359",
       "emoji": "🍙",
       "label": "RICE BALL",
@@ -15551,6 +15561,16 @@
       "upstream_path": "svg/emoji_u1fad9.svg",
       "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
       "sha256": "d058547dfa79bf0028ba92bec9a8e228a9d1e72de68be48dbf41a32020f36cde"
+    },
+    {
+      "id": "noto-1fada",
+      "emoji": "🫚",
+      "label": "GINGER ROOT",
+      "source": "noto/emoji_u1fada.svg",
+      "provider": "noto",
+      "upstream_path": "svg/emoji_u1fada.svg",
+      "upstream_revision": "8998f5dd683424a73e2314a8c1f1e359c19e8742",
+      "sha256": "3c5f39a34aae9927ecda5b0f130c6cd7a0d2e2f0ee6d5fa722a47cb944ba39aa"
     },
     {
       "id": "noto-1fadf",
