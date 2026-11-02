@@ -162,6 +162,30 @@ class EligibilityFamilyTests(unittest.TestCase):
         self.assertIn('Family', self.tags(['AllAges', 'Family'], name='Open skate', extra=['Family']))
         self.assertIn('Family', self.tags(['Family', 'Film'], name='Corpse Bride'))  # no eligibility tag
 
+    def merged(self, tags, texts=(('Open skate', ''),), website_family=False):
+        """merger.drop_eligibility_only_family over a stubbed event + sources."""
+        import merger
+        cursor = MagicMock()
+        cursor.fetchone.return_value = (website_family,)
+        cursor.fetchall.return_value = list(texts)
+        return merger.drop_eligibility_only_family(cursor, 1, tags, self.ancestors), cursor
+
+    def test_merged_vote_drops_family_joined_across_sources(self):
+        # 2026-10-28: a new crawl's AllAges joined to the Family held by
+        # pre-guard crawl history; no single source carried both.
+        tags, _ = self.merged(['Family', 'All Ages', 'Age', 'Sewing'],
+                              texts=[('Sew Pajama Pants', 'Learn to sew.'), (None, None)])
+        self.assertEqual(tags, ['All Ages', 'Age', 'Sewing'])
+
+    def test_merged_vote_keeps_family_with_evidence(self):
+        for kwargs in ({'texts': [('Skate', ''), ('Skate', 'Bring the whole family')]},
+                       {'website_family': True}):
+            self.assertIn('Family', self.merged(['Family', 'All Ages'], **kwargs)[0])
+        self.assertIn('Family', self.merged(['Family', 'All Ages', 'Kids'])[0])
+        tags, cursor = self.merged(['Family', 'Film'])  # no eligibility tag: no query
+        self.assertEqual(tags, ['Family', 'Film'])
+        cursor.execute.assert_not_called()
+
 
 class FakeTagCursor:
     """Just enough SQL for upsert_event_tags / sync_event_format_tags."""

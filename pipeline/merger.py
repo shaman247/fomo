@@ -28,6 +28,7 @@ import reviewed_event_identity
 import reviewed_source_aliases
 import canonical_url_identity
 import site_profiles
+import tag_facets as tf
 from location_containment import LocationContainment
 from event_name_guards import class_show_identity_mismatch
 from remaining_name_identity import (remaining_name_identity_mismatch,
@@ -4807,6 +4808,46 @@ def compute_voted_tags(cursor, event_id, current_crawl_tags, curated_tag_set,
     return final_tags
 
 
+def drop_eligibility_only_family(cursor, event_id, tags, ancestor_map):
+    """Apply process_tags' eligibility-only Family guard to an event's merged tags.
+
+    process_tags only sees one source's hashtags. After the 2026-10-21 prompt
+    fix new crawls say AllAges where older ones said Family, and the vote
+    joins the new AllAges to the Family the pre-guard history still carries
+    (Family-only-via-eligibility 23 -> 75 by 10-28, 42 of them never paired
+    in one source). Family is dropped when it stands only beside an
+    eligibility tag, no linked website has a Family tag, and neither the event
+    nor any linked source names kids or families as the audience.
+    """
+    names = set(tags)
+    if not tf.eligibility_only_family(names):
+        return tags
+    intent = [t for t in tags
+              if tf.FAMILY_TAG in ancestor_map.get(db.normalize_tag_key(t), ())]
+    cursor.execute("""
+        SELECT EXISTS(SELECT 1 FROM website_tags wt
+                      WHERE wt.tag = %s
+                        AND (wt.website_id = (SELECT website_id FROM events WHERE id = %s)
+                             OR wt.website_id IN (
+                                 SELECT cr.website_id FROM event_sources es
+                                 JOIN crawl_events ce ON ce.id = es.crawl_event_id
+                                 JOIN crawl_results cr ON cr.id = ce.crawl_result_id
+                                 WHERE es.event_id = %s)))
+    """, (tf.FAMILY_TAG, event_id, event_id))
+    if cursor.fetchone()[0]:
+        return tags
+    cursor.execute("""
+        SELECT name, description FROM events WHERE id = %s
+        UNION ALL
+        SELECT ce.name, ce.description FROM event_sources es
+        JOIN crawl_events ce ON ce.id = es.crawl_event_id WHERE es.event_id = %s
+    """, (event_id, event_id))
+    text = ' '.join(f'{name or ""} {description or ""}' for name, description in cursor.fetchall())
+    if not tf.eligibility_only_family(names, intent, text):
+        return tags
+    return [t for t in tags if t != tf.FAMILY_TAG]
+
+
 def _index_existing_event(indexes, event_id, name, location_id, lat, lng,
                           location_name, website_id, suppressed=False):
     """Register one event in the four dedup lookup indexes.
@@ -6918,6 +6959,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                     curated_tag_set, ancestor_map, root_tags,
                     current_described=current_described,
                 )
+                voted_tags = drop_eligibility_only_family(
+                    cursor, matched_event_id, voted_tags, ancestor_map)
                 db.upsert_event_tags(cursor, matched_event_id, voted_tags, replace=True)
 
             # Link crawl_event to existing event
