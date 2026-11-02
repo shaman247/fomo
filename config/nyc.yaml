@@ -4345,6 +4345,35 @@ venue_taxonomy:
       remove: []
       source: https://partiful.com/e/1mDkkQytByQ3idCOFr6s
       reason: Reviewed 2026-10-21; the only listing (Cura Collective Fall Artisan Fair on Partiful) gives the bare address and "Floor 2" with no venue name, and no tenant or rental listing for 199 N 8th St could be found, so it stays a reviewed Other building fallback.
+    - location_id: 12287
+      expected_name: Blender Workspace
+      add:
+      - Event Hall
+      - Coworking
+      remove: []
+      source: https://liquidspace.com/us/ny/new-york/blender-workspace/blender-event-space
+      reason: Reviewed 2026-10-28; full 8th floor of 135 Madison Ave run as a coworking space and a bookable corporate meeting and event venue (LiquidSpace lists its auditorium, café event suite, The Bar and The Study as rentable event spaces with an in-house events team). Dedicated rental event use, so Event Hall, plus Coworking for the workspace.
+    - location_id: 12316
+      expected_name: KonnectGolf
+      add:
+      - Fitness & Recreation
+      remove: []
+      source: https://www.skratch.golf/news/golf-culture/sim-seeking-konnectgolf-midtown-nyc-indoor-golf-simulators-episode-5
+      reason: Reviewed 2026-10-28; private indoor golf club with simulator hitting bays and instruction on the 2nd floor of 590 Fifth Ave (Skratch, Golf.com). An activity venue like Indoor Skydiving, so Fitness & Recreation; the occasional comedy night or corporate booking does not make it a rental hall or comedy club.
+    - location_id: 12372
+      expected_name: 52-16 34th St, Long Island City
+      add:
+      - attraction
+      remove: []
+      source: https://www.instagram.com/lime_eventsnyc/
+      reason: Reviewed 2026-10-28; the only listing (Lime Events' City of Terror Halloween party on Instagram) gives the bare street address with no venue name or floor, and no tenant or rental listing for 52-16 34th St could be found (neighbouring 52-24 is a one-story warehouse), so it stays a reviewed Other building fallback.
+    - location_id: 12380
+      expected_name: Zirka Place
+      add:
+      - attraction
+      remove: []
+      source: https://partiful.com/e/ktxUIO54ZBg1ZqVufOOd
+      reason: Reviewed 2026-10-28; the only listing (Halloween Masquerade on Partiful) names "Zirka Place, 32 W 28th St, FL 2" with no description of the space, and no rental listing, website or business of that name could be found, so it stays a reviewed Other fallback rather than Event Hall (same as The Place 229).
     descriptions:
     - location_id: 2041
       expected_name: Cloud City
@@ -4522,6 +4551,8 @@ venue_taxonomy:
           284979 ("The New York Philosophy Club - LES", https://luma.com/1x1uxdw2) — same "Reign" label, no floor, and still no
           verifiable business of that name at 167 E Broadway; retained. Rechecked 2026-10-21 for new active event 298522
           (Reading Club on Confucius's Analects, https://luma.com/g4nnckfw) — same "Reign" label and bare address, no
+          floor; retained. Rechecked 2026-10-28 for new active events 306770 (https://luma.com/jivp4rhe) and 306772
+          (https://luma.com/nai4ml94), New York Philosophy Club sessions — same unlabelled "Reign" and bare address, no
           floor; retained.
       - location_id: 8353
         expected_name: 224 Buffalo Ave
@@ -4596,3 +4627,16 @@ venue_taxonomy:
         expected_name: 199 N 8th St
         reason: Reviewed 2026-10-21; the only listing (Cura Collective Fall Artisan Fair on Partiful) gives the bare
           address and "Floor 2" with no venue name, and no tenant or rental listing could be found.
+      - location_id: 12372
+        expected_name: 52-16 34th St, Long Island City
+        reason: Reviewed 2026-10-28; the only listing (Lime Events' Halloween party on Instagram) gives the bare street
+          address, and no tenant, floor or ongoing venue use could be found.
+      - location_id: 12380
+        expected_name: Zirka Place
+        reason: Reviewed 2026-10-28; a named but undocumented second-floor space at 32 W 28th St (Partiful lists only the
+          name, address and floor); its ongoing venue use is not established well enough for a narrower category.
+      - location_id: 12313
+        expected_name: 13th Hour Haunted House
+        reason: Reviewed 2026-10-28; a seasonal haunted attraction with escape rooms at 105 W Dewey Ave, Wharton NJ
+          (https://www.thescarefactor.com/13th-hour-haunted-house-review-2018). A rare venue type with no suitable
+          existing category, so Other is the precise classification.
