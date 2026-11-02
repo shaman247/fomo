@@ -2118,6 +2118,142 @@ def _match_by_url_identity_relaxed(name, url, website_id, location_id, crawl_eve
     return hits.pop() if len(hits) == 1 else None
 
 
+# BL72 (a), 2026-11-02: a record id the publisher's own system minted for ONE
+# event, so the same key at two of the publisher's venues is the record moving,
+# never two programs that happen to share a slug: `?id=370337` (MCPL BookIt),
+# `?eid=1228`, `/event/17531322` (LibCal/LibNet), `/node/843069`,
+# `/events/34018-frank-lacy-quartet`, `/event/soccer-shots-25560`
+# (LibraryCalendar), a `#showing-N` fragment. Years and date stamps
+# (`/2026/`, `-20260908`) are not ids; a slug or date path
+# (nycgovparks `/events/2026/09/03/<slug>`, NYPL programs) carries none.
+_URL_RECORD_ID_RE = re.compile(
+    r'[?&][a-z_]*id=(\d{3,})(?=&|$)'
+    r'|/(\d{4,})(?=[/?#-]|$)'
+    r'|[a-z]-(\d{4,})(?=[/?#]|$)'
+    r'|#showing-(\d+)$',
+    re.IGNORECASE)
+_URL_DATE_STAMP_RE = re.compile(
+    r'(?:19|20)\d{2}(?:(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])(?:\d{2}){0,3})?')
+
+
+def url_key_has_record_id(url_key):
+    """True when a normalized URL key carries a publisher record id (BL72 (a))."""
+    for match in _URL_RECORD_ID_RE.finditer(url_key or ''):
+        digits = next(g for g in match.groups() if g)
+        if match.group(4) or not _URL_DATE_STAMP_RE.fullmatch(digits):
+            return True
+    return False
+
+
+def _match_url_venue_move(name, url, website_id, location_id, crawl_event_dates,
+                          existing_by_url, url_name_counts, listing_url_keys,
+                          location_coords, linked_location_ids, containment, *,
+                          capture_names=frozenset(), capture_key_venues=None,
+                          event_url_keys=None, dismissed_neighbors=None,
+                          incoming_is_fallback=False, is_archived=None, has_source_at=None):
+    """The URL tier for a publisher that moved its own event to another of its venues.
+
+    BL72 (a). Middle Country PL w6058 is linked to two buildings 4 km apart
+    (Centereach 12082, Selden 12083). A program first published at Centereach
+    came back under Selden with the same BookIt `event?id=`; the URL tiers are
+    bounded by URL_IDENTITY_MAX_KM, so the merger created a Selden twin and
+    archived the original as "upcoming" (2026-10-23 and the 11-02 run: 7 pairs,
+    294274..294292 -> 300608..300616). Called only after the strict and relaxed
+    URL tiers found nothing; it waives the distance bound, and nothing else,
+    when ALL of these hold:
+
+    - the event's `website_id` is the source's website (the index is keyed by
+      it) and the URL is event-specific (`_url_key_is_event_specific`) and
+      carries a publisher record id (`url_key_has_record_id`);
+    - the event's venue and the incoming venue are both the website's OWN
+      linked venues (`linked_location_ids`), distinct places (not a campus and
+      a hall inside it), further apart than URL_IDENTITY_MAX_KM, and
+      `should_repin_location` moves the pin to the incoming one. The incoming
+      venue is a named building, not the organizer fallback a venue-less
+      listing ("Online", the publisher's own name) is pinned to;
+    - the names are equal under `normalize_name_for_dedup`, or a retitle that
+      passes `retitle_names_compatible` on a URL carrying only the old name,
+      whose old title the capture no longer prints;
+    - the two share a date;
+    - the record is at ONE venue: every event holding the key sits at the
+      one old venue, and the incoming capture lists the key at no other venue
+      (`capture_key_venues`: url key -> venues, for the incoming capture).
+      Queens Library mints one `/event/<id>` for a program run at several
+      branches (`002424-0826` at Lefferts, East Flushing and Glen Oaks in one
+      capture); that is a shared program page, not a move;
+    - the whole event moves: every other record-id URL the event holds
+      (`event_url_keys`) is listed by the incoming capture at the incoming
+      venue only. MCPL "Nighttime Animals" 294278 holds id=380553 (Nov 18,
+      moved to Selden) and id=380554 (Nov 20, still at Centereach); moving it
+      would carry the Centereach session to Selden;
+    - the event is not archived and no dismissed-pair partner of it holds the
+      key (`dismissed_neighbors`); the caller adds the dismissed-home and
+      same-capture vetoes;
+    - it is the record's first move: the event holds no source from this
+      website at the incoming venue (`has_source_at(event, website, venue)`).
+      A publisher whose two feeds disagree about the venue would otherwise
+      flip the pin on every merge; a move back creates a twin, as before.
+
+    A visible candidate wins over a suppressed one; anything but exactly one
+    candidate declines. Returns (event id, old location id) or None.
+    """
+    if (not url or website_id is None or location_id is None or not crawl_event_dates
+            or incoming_is_fallback or location_id not in (linked_location_ids or ())):
+        return None
+    url_key = normalize_url_for_identity(url)
+    if (not _url_key_is_event_specific(website_id, url_key, listing_url_keys, url_name_counts)
+            or not url_key_has_record_id(url_key)):
+        return None
+    norm_name = normalize_name_for_dedup(name)
+    capture_key_venues = capture_key_venues or {}
+    if not norm_name or set(capture_key_venues.get(url_key, ())) - {location_id}:
+        return None
+    index_key = (website_id, url_key)
+    holders = existing_by_url.get(index_key, [])
+    holder_venues = {h.get('location_id') for h in holders} - {None}
+    if len(holder_venues) != 1 or location_id in holder_venues:
+        return None
+    holder_ids = {h['id'] for h in holders}
+    names_at_url = url_name_counts.get(index_key, 0)
+    hits = []
+    for existing in holders:
+        old_loc = existing.get('location_id')
+        if (old_loc is None or old_loc == location_id or old_loc not in linked_location_ids
+                or (dismissed_neighbors or {}).get(existing['id'], set()) & holder_ids):
+            continue
+        if (_locations_within(location_id, old_loc, location_coords)
+                or same_place(old_loc, location_id, containment)
+                or not should_repin_location(old_loc, location_id, linked_location_ids,
+                                             containment)):
+            continue
+        old_name = existing['name']
+        if normalize_name_for_dedup(old_name) != norm_name and (
+                names_at_url != 1
+                or normalize_name_for_dedup(old_name) in capture_names
+                or not retitle_names_compatible(name, old_name)):
+            continue
+        if (_screening_versions_differ(name, old_name)
+                or _numbered_levels_differ(name, old_name)):
+            continue
+        if not (crawl_event_dates & {d for d, _t in existing['slots']}):
+            continue
+        if is_archived is not None and is_archived(existing['id']):
+            continue
+        other_keys = {k for k in (event_url_keys or {}).get(existing['id'], ())
+                      if k != url_key and url_key_has_record_id(k)
+                      and _url_key_is_event_specific(website_id, k, listing_url_keys,
+                                                     url_name_counts)}
+        if any(set(capture_key_venues.get(k, ())) != {location_id} for k in other_keys):
+            continue
+        if has_source_at is not None and has_source_at(existing['id'], website_id, location_id):
+            continue
+        hits.append(existing)
+    pool = [h for h in hits if not h.get('suppressed')] or hits
+    if len(pool) != 1:
+        return None
+    return pool[0]['id'], pool[0]['location_id']
+
+
 def report_dead_keepers(cursor, landings, listing_url_keys, url_key_name_counts):
     """Log `DEAD-KEEPER` for sources this merge put on a keeper-less hidden row.
 
@@ -5772,6 +5908,23 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     cursor.execute("SELECT id, name FROM websites")
     website_names = {row[0]: row[1] for row in cursor.fetchall()}
     url_relaxed_matches = 0
+    url_venue_moves = 0
+
+    # Read per call (this merge may un-archive a row or link a source); only a
+    # BL72 venue-move candidate that passed every in-memory test asks.
+    def _event_is_archived(event_id):
+        cursor.execute("SELECT archived FROM events WHERE id = %s", (event_id,))
+        row = cursor.fetchone()
+        return bool(row and row[0])
+
+    def _event_has_source_at(event_id, source_website_id, source_location_id):
+        cursor.execute(
+            "SELECT 1 FROM event_sources es "
+            "JOIN crawl_events ce ON ce.id = es.crawl_event_id "
+            "JOIN crawl_results cr ON cr.id = ce.crawl_result_id "
+            "WHERE es.event_id = %s AND cr.website_id = %s AND ce.location_id = %s LIMIT 1",
+            (event_id, source_website_id, source_location_id))
+        return cursor.fetchone() is not None
 
     # Build lookups of existing events for deduplication:
     # 1. By location_id for events with matched locations
@@ -5985,6 +6138,15 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 capture_claims.setdefault((result_id, linked_event), []).append(
                     (sibling_id, sibling_name, key))
 
+    # Venues each pending capture lists an event URL at, read by the BL72
+    # venue-move tier: a URL one capture lists at two venues is a shared
+    # program page, never a record that moved.
+    capture_url_venues = {}  # crawl_result_id -> {url_key: {location_id}}
+    for row in new_crawl_events:
+        if row[12] is not None and row[7] is not None and row[8]:
+            capture_url_venues.setdefault(row[12], {}).setdefault(
+                normalize_url_for_identity(row[8]), set()).add(row[7])
+
     # ── Occurrences and tags for every pending crawl_event, prefetched in
     # chunked IN(...) queries instead of two round trips per crawl_event.
     pending_ce_ids = [row[0] for row in new_crawl_events]
@@ -6111,6 +6273,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             location_id, location_name, website_location_ids.get(website_id, ()),
             website_names.get(website_id))
         url_relaxed_match = False
+        url_venue_move = None  # (event, old location, new location, url key), BL72 (a)
         # Inputs to `_sibling_listing_veto` (see its block comment).
         ce_url_key = normalize_url_for_identity(url) if url else ''
         crawl_result_roster = crawl_result_rosters.get(crawl_result_id, ())
@@ -6579,6 +6742,28 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                     matched_event_id = relaxed_id
                     url_relaxed_match = True
                     url_relaxed_matches += 1
+            # The publisher moved its own event to another of its linked
+            # venues under the same record id (BL72 (a)); the re-pin below
+            # follows the source.
+            if matched_event_id is None:
+                moved = _match_url_venue_move(
+                    name, url, website_id, location_id, crawl_event_dates,
+                    existing_events_by_url, url_key_name_counts, listing_url_keys,
+                    location_coords, website_location_ids.get(website_id, ()),
+                    location_containment,
+                    capture_names={entry[2] for entry in
+                                   capture_listings.get(crawl_result_id, ())},
+                    capture_key_venues=capture_url_venues.get(crawl_result_id),
+                    event_url_keys=merge_event_url_keys,
+                    dismissed_neighbors=dismissed_neighbors,
+                    incoming_is_fallback=incoming_is_fallback,
+                    is_archived=_event_is_archived,
+                    has_source_at=_event_has_source_at,
+                )
+                if moved is not None and not (_dismissed_home(moved[0])
+                                              or _same_capture(moved[0])):
+                    matched_event_id = moved[0]
+                    url_venue_move = (moved[0], moved[1], location_id, ce_url_key)
             if matched_event_id is not None and location_id is not None:
                 cursor.execute("SELECT location_id FROM events WHERE id = %s", (matched_event_id,))
                 _m = cursor.fetchone()
@@ -6949,6 +7134,19 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 ):
                     cursor.execute("UPDATE events SET location_id = %s WHERE id = %s", (location_id, matched_event_id))
                     effective_location_id = location_id
+                    if (url_venue_move and url_venue_move[0] == matched_event_id
+                            and url_venue_move[1] == current_location_id):
+                        url_venue_moves += 1
+                        print(f"  URL-VENUE-MOVE e{matched_event_id} l{current_location_id}"
+                              f"→l{location_id} (w{website_id}, {url_venue_move[3]})")
+                        # Later sources of this merge see the event at its new venue.
+                        for entry in existing_events_by_url.get((website_id, url_venue_move[3]), ()):
+                            if entry['id'] == matched_event_id:
+                                entry['location_id'] = location_id
+                    else:
+                        url_venue_move = None
+                else:
+                    url_venue_move = None
 
             # Update location_name/sublocation if currently missing or placeholder
             cursor.execute(
@@ -6959,6 +7157,17 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             current_loc = result[0] if result else None
             if result and result[1] is not None:
                 effective_location_id = result[1]
+            # A BL72 move carries its label along: a label that is exactly the
+            # old venue's canonical name described the old venue, whoever
+            # wrote it, so it follows the pin. Any other label is left to the
+            # stale-label rule below (BL72 (b) is still open).
+            if (url_venue_move and current_loc and effective_location_id == url_venue_move[2]
+                    and location_names_by_id.get(effective_location_id)
+                    and _norm_location_label(current_loc)
+                        == _norm_location_label(location_names_by_id.get(url_venue_move[1]))):
+                current_loc = location_names_by_id[effective_location_id]
+                cursor.execute("UPDATE events SET location_name = %s WHERE id = %s",
+                               (current_loc[:255], matched_event_id))
             if (reviewed_unmapped_schedule is None and location_name
                     and location_name not in ('Not specified', '')):
                 if not current_loc or current_loc in ('Not specified', ''):
@@ -7250,6 +7459,9 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     if url_relaxed_matches:
         print(f"  URL identity (relaxed): {url_relaxed_matches} source(s) matched by URL "
               "despite an organizer-fallback venue, a missing time or a retitle")
+    if url_venue_moves:
+        print(f"  URL venue move: {url_venue_moves} event(s) followed their publisher's "
+              "record id to another of its linked venues (BL72)")
     if single_occasion_report['events']:
         print(f"  Single-occasion guard: dropped "
               f"{single_occasion_report['spans_dropped']} parent span(s), "
