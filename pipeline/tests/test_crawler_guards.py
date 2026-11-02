@@ -228,6 +228,20 @@ class TestBotChallengeDetection(unittest.TestCase):
     def test_blocked_page_is_detected(self):
         self.assertTrue(_is_bot_challenge("Sorry, you have been blocked\nRay ID: abc\n"))
 
+    def test_hcaptcha_unblock_wall_is_detected(self):
+        # w485 Brooklyn Army Terminal, 2026-10-28 (trimmed; language list cut).
+        body = (
+            "https://brooklynarmyterminal.com/events\n"
+            "![Captcha Page](https://brooklynarmyterminal.com/7f7c01e221604f25/"
+            "captcha-public/images/ss_captcha.png)\n"
+            "# We apologize for the inconvenience...\n"
+            "...but your activity and behavior on this site made us think that you are a bot.\n"
+            "**Please solve this CAPTCHA to request unblock to the website**\n"
+            "I am human\n" + "Afrikaans\nAlbanian\nAmharic\n" * 40
+        )
+        self.assertGreater(len(body), MIN_CRAWL_CONTENT_SIZE)
+        self.assertTrue(_is_bot_challenge(body))
+
 
 class TestLegitimateContentNotFlagged(unittest.TestCase):
     """Real pages — especially small ones — must never be flagged."""

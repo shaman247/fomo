@@ -58,6 +58,13 @@ BOT_CHALLENGE_MARKERS = (
     'this site is exceeding recaptcha enterprise free quota',
     'select all images with',
     'slide right to secure your access',
+    # hCaptcha "unblock request" wall (captcha-public/images/ss_captcha.png):
+    # "...your activity and behavior on this site made us think that you are a
+    # bot". w485 Brooklyn Army Terminal stored it as a 2,626-byte `processed`
+    # 0-event crawl on 2026-10-24 and 2026-10-28. The image tile is stripped
+    # before matching, so key on the body sentence. 0 hits in 39.8K crawls
+    # over 120 days other than those two.
+    'made us think that you are a bot',
 )
 
 # Cloudflare's 5xx interstitials are the same class of problem: the origin (or
