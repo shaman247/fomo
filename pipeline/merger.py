@@ -4108,6 +4108,125 @@ def _drop_covered_season_envelopes(cursor, event_id, crawl_event_id, existing_ro
             [r for r in new_occurrences if occurrence(r) not in covered])
 
 
+# BL23 R2 follow-up (2026-11-02): the SAME publisher's run span over dated
+# performances it (or a reviewer reading its pages) already enumerated. The
+# Tank w94 lists each show as "Oct 15 – Nov 8" on its calendar while the event
+# holds the dated performances; every crawl re-added the span, so the show sat
+# on the map on dark nights (run1102: 15 events cleaned by hand). The ruling is
+# decisions.md "Point occurrences plus a bracketing span = redundant envelope at
+# ANY length", so there is no minimum span length here.
+PUBLISHER_ENVELOPE_MIN_DAYS = SEASON_ENVELOPE_MIN_SESSIONS
+# R2's edge tolerance, capped at a quarter of the span's visible part (floor 3
+# days, so dark nights at either end still pass): on a 5-day run a 14-day
+# tolerance would let three preview dates erase the rest of the run.
+PUBLISHER_ENVELOPE_MIN_EDGE_DAYS = 3
+
+
+def _publisher_envelope_edge(first_visible, last_visible):
+    visible = max(0, (last_visible - first_visible).days)
+    return timedelta(days=min(SEASON_ENVELOPE_EDGE_DAYS,
+                              max(PUBLISHER_ENVELOPE_MIN_EDGE_DAYS, visible // 4)))
+
+
+def _drop_tiled_publisher_envelopes(cursor, event_id, crawl_event_id, existing_rows,
+                                    new_occurrences):
+    """Drop a publisher's untimed run span its own dated performances tile.
+
+    The same-publisher sibling of `_drop_covered_season_envelopes` (BL23). On
+    a scheduled-attendance event (SEASON_ENVELOPE_TYPES; exhibitions, festivals
+    and other browsable runs are never touched) an untimed multi-day span is
+    refused (incoming) or deleted (stored) when:
+
+    - a source carries it (a span with no provenance is kept) and none of its
+      sources marks it all-day (`occurrence_provenance` sidecar);
+    - the event holds timed single-day occurrences on at least
+      PUBLISHER_ENVELOPE_MIN_DAYS distinct days inside it, each either
+      supported by a source from a website that carries the span or carried by
+      no source at all (written by a detail reviewer or by hand from the
+      publisher's pages). A day only another publisher supports does not count:
+      that is R2's case;
+    - those days reach both ends of the span's visible part (today to the
+      horizon) within `_publisher_envelope_edge`.
+
+    Every action is printed as `PUBLISHER-ENVELOPE`. Crawl evidence is
+    untouched. Returns the filtered (existing_rows, new_occurrences).
+    """
+    def is_span(o):
+        return bool(o[0] and o[2] and o[2] > o[0] and not o[1] and not o[3])
+
+    merged = [occurrence(r) for r in list(existing_rows) + list(new_occurrences)]
+    spans = {o for o in merged if is_span(o)}
+    held = {(o[0], o[1]) for o in merged if o[0] and o[1] and o[2] in (None, o[0])}
+    if not spans or len({d for d, _t in held}) < PUBLISHER_ENVELOPE_MIN_DAYS:
+        return existing_rows, new_occurrences
+    cursor.execute('SELECT event_type FROM events WHERE id = %s', (event_id,))
+    row = cursor.fetchone()
+    if not row or row[0] not in SEASON_ENVELOPE_TYPES:
+        return existing_rows, new_occurrences
+    cursor.execute(
+        "SELECT ce.id, cr.website_id, co.start_date, co.start_time, co.end_date, co.end_time "
+        "FROM crawl_events ce JOIN crawl_results cr ON cr.id = ce.crawl_result_id "
+        "JOIN crawl_event_occurrences co ON co.crawl_event_id = ce.id "
+        "WHERE ce.id = %s OR ce.id IN "
+        "    (SELECT crawl_event_id FROM event_sources WHERE event_id = %s)",
+        (crawl_event_id, event_id))
+    span_owners, span_sources, slot_sites = {}, {}, {}
+    for ce_id, website_id, *occ in cursor.fetchall():
+        o = occurrence(occ)
+        if is_span(o):
+            span_owners.setdefault(o, set()).add(website_id)
+            span_sources.setdefault(o, set()).add(ce_id)
+        elif o[0] and o[1] and o[2] in (None, o[0]):
+            slot_sites.setdefault((o[0], o[1]), set()).add(website_id)
+    today, horizon = get_active_date_window()
+    covered = {}
+    for span in spans:
+        owners = span_owners.get(span)
+        if not owners:
+            continue
+        days, unsourced = set(), set()
+        for d, t in held:
+            if not span[0] <= d <= span[2]:
+                continue
+            sites = slot_sites.get((d, t))
+            if not sites:
+                days.add(d)
+                unsourced.add(d)
+            elif sites & owners:
+                days.add(d)
+        first, last = max(span[0], today), min(span[2], horizon)
+        edge = _publisher_envelope_edge(first, last)
+        if (len(days) >= PUBLISHER_ENVELOPE_MIN_DAYS
+                and min(days) <= first + edge and max(days) >= last - edge):
+            covered[span] = (len(days), len(days - unsourced), sorted(owners))
+    if covered:
+        ce_ids = sorted(set().union(*(span_sources[s] for s in covered)))
+        cursor.execute("SELECT raw_data FROM crawl_events WHERE id IN (%s)"
+                       % ','.join(['%s'] * len(ce_ids)), tuple(ce_ids))
+        all_day = set()
+        for (raw,) in cursor.fetchall():
+            all_day |= occurrence_provenance.entry_slots(
+                occurrence_provenance.sidecar_from_raw(raw), True)
+        covered = {s: v for s, v in covered.items() if (str(s[0]), str(s[2])) not in all_day}
+    if not covered:
+        return existing_rows, new_occurrences
+    stored = {occurrence(r) for r in existing_rows}
+    for span, (n_days, n_sourced, owners) in sorted(covered.items()):
+        if span in stored:
+            cursor.execute(
+                "DELETE FROM event_occurrences WHERE event_id = %s AND start_date = %s "
+                "AND end_date = %s AND COALESCE(start_time, '') = '' "
+                "AND COALESCE(end_time, '') = ''", (event_id, span[0], span[2]))
+            action = 'removed'
+        else:
+            action = 'refused'
+        print(f"    PUBLISHER-ENVELOPE {action} e{event_id} {span[0]}..{span[2]} "
+              f"(from w{','.join(map(str, owners))}): {n_days} dated day(s) tile it "
+              f"({n_sourced} from the same website, {n_days - n_sourced} unsourced)")
+    return ([r for r in existing_rows if occurrence(r) not in covered],
+            [r for r in new_occurrences if occurrence(r) not in covered])
+
+
 def _merge_occurrences_into_event(cursor, event_id, new_occurrences, *, crawl_event_id=None):
     """Insert new occurrences into event_occurrences, deduping by (sd, st, ed).
 
@@ -4150,6 +4269,8 @@ def _merge_occurrences_into_event(cursor, event_id, new_occurrences, *, crawl_ev
     if crawl_event_id is not None:
         existing_count = len(existing_rows)
         existing_rows, new_occurrences = _drop_covered_season_envelopes(
+            cursor, event_id, crawl_event_id, existing_rows, new_occurrences)
+        existing_rows, new_occurrences = _drop_tiled_publisher_envelopes(
             cursor, event_id, crawl_event_id, existing_rows, new_occurrences)
         overnight_changed = overnight_changed or len(existing_rows) != existing_count
     # (sd, start_time, ed) -> end_time. Legacy data may have multiple rows per key
