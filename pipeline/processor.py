@@ -879,6 +879,16 @@ _NON_EVENT_NAME_PATTERNS = [
     r'designers?|makers?|chefs?|models?|actors?|painters?|muralists?|curators?|'
     r'abstracts?|pitches|hosts?)\b',
     r'\bsubmissions?\s+(period|deadline|window|open|guidelines)\b',
+    # "Submit <work> for ..." intake notices and "Submit by <date> | <show>" entry
+    # deadlines: e312894 "Submit Art and Photography for Lenoir Nature Center's
+    # Exhibit" (w4718, 2026-11-03) said "Submit" rather than "open call" and
+    # reached classification. Corpus-checked 2026-11-03 over all 73 titles holding
+    # "submit"/"drop-off": 4 matches (312894 + three hand-suppressed
+    # "Submit by <date> |" listings), 0 false positives. Start-anchored, so
+    # "I Cannot Submit to Injustices" and "last day to submit ballots" survive.
+    r'^\s*submit\s+(?:your\s+)?(?:[\w\'&-]+\s+){0,3}?(?:art|artworks?|photos?|photographs?|'
+    r'photography|works?|poems?|poetry|writing|films?|entries|stories|pieces?|designs?)\b',
+    r'^\s*submit\s+by\s+\w+',
     r'^\s*submissions?\s*:',
     r'\b(now\s+)?accepting\s+(submissions|applications|entries|proposals)\b',
     r'^\s*grants?\s*:',

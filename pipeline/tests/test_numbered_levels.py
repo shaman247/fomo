@@ -65,6 +65,24 @@ class NumberedLevelTests(unittest.TestCase):
             self.assertIsNone(merger._match_by_url_identity(
                 RIGHT, url, 7, 10, slots, index, {key: 1}, set(), {}))
 
+    def test_spelled_out_levels_are_identity(self):
+        # BL82 (2026-11-03): Magnet's "Level One" class show fused into "Level Two" 298219.
+        for left, right in [('Musical Improv Level One Class Show', 'Musical Improv Level Two Class Show'),
+                            ('Improv Level Three', 'Improv Level 4'),
+                            ('Improv level twelve', 'Improv Level XI')]:
+            with self.subTest(left=left, right=right):
+                self.assertTrue(merger._numbered_levels_differ(left, right))
+                self.assertFalse(merger.are_names_similar(left, right))
+        self.assertEqual(merger._explicit_numbered_level('Improv Level One'), 1)
+        self.assertFalse(merger._numbered_levels_differ('Improv Level Two', 'Improv Level 2'))
+
+    def test_spelled_out_combined_and_open_levels_stay_ambiguous(self):
+        for label in ['Level One & Two', 'Level One and Two', 'Level One to Three',
+                      'Level One / 2', 'Level One & Level Two', 'Level One and up',
+                      'Levels One–Three', 'Level Oneness', 'Level Onesie']:
+            with self.subTest(label=label):
+                self.assertIsNone(merger._explicit_numbered_level('Swing ' + label))
+
     def test_duplicate_classifier_does_not_auto_suppress_distinct_levels(self):
         from scripts.find_duplicate_events import classify_pairs
         pair = (1, 2, LEFT, RIGHT, 10, 'Studio', 7, 7)

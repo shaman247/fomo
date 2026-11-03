@@ -982,15 +982,19 @@ def _explicit_numbered_level(name):
     Bare numbers, grades, floors, plural levels and open-ended levels are outside
     this rule. A missing label never establishes a conflicting skill level.
     Roman levels count too: MCPL's "English Class: Basic - Level II" vs
-    "... Level I" (BL62, 2026-10-23).
+    "... Level I" (BL62, 2026-10-23). So do spelled-out levels one..twelve:
+    Magnet's "Musical Improv Level One Class Show" fused into "Level Two" (BL82).
     """
-    matches = list(re.finditer(r'\blevel\s*(\d{1,2}|[ivx]{1,5})(?!\w|\.\d)', name or '', re.I))
+    words = '|'.join(_SPELLED_NUMBERS)
+    matches = list(re.finditer(r'\blevel\s*(\d{1,2}|[ivx]{1,5}|' + words + r')(?!\w|\.\d)',
+                               name or '', re.I))
     if len(matches) != 1 or re.search(r'\blevels\b', name or '', re.I):
         return None
     match = matches[0]
     tail = name[match.end():]
     if re.match(r'\s*[\[(]?\s*(?:\+|(?:[/&,–—-]|\b(?:and|or|to|through)\b)\s*'
-                r'(?:(?:level\s*)?(?:\d|[ivxlcdm]+\b)|up\b|above\b|higher\b))', tail, re.I):
+                r'(?:(?:level\s*)?(?:\d|[ivxlcdm]+\b|(?:' + words + r')\b)|up\b|above\b|higher\b))',
+                tail, re.I):
         return None
     if match[1].isdigit():
         return int(match[1])
