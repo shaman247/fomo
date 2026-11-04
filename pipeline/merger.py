@@ -2736,6 +2736,49 @@ def _dismissed_home_veto(candidate_id, partners, group_sources, url_key, norm_na
     return tuple(homes)
 
 
+# BL25/BL85 (2026-11-04). The source identity above is NAME-bound, so it cannot
+# see a dismissed partner that owns a listing under ANOTHER title. Pratt w536
+# lists the 11/17 online GCPE session twice: "Grad Center for Planning and the
+# Environment Virtual Information Session" (`…virtual-information-session-2/`)
+# and "GCPE Graduate Admissions Information Session" (`…-session/`, Online).
+# The user un-merged the virtual 278442 from the in-person 277086 on 10-18 and
+# the `…-session/` page stayed on 278442, but every merge since sent the
+# online listing to 277086: the venue tier finds the hidden dedupe loser 278408
+# (exact name), whose 10-05 merge redirect (or URL twin) points at 277086, and
+# the name identity found no "GCPE Graduate Admissions…" source on 278442. The
+# 6pm slot and the URL were stripped by hand on 10-24, 11-01 and 11-04.
+#
+# The repair's own record of which listing belongs where is the partner's
+# EVENT URL. So when a source would reach an event only through a HIDDEN row's
+# dedupe decision (its URL twin, or its merge-redirect survivor: decisions that
+# can predate the dismissal), that event is skipped when the crawl_event's
+# permalink is event-specific on its website, a visible dismissed partner holds
+# it as an event URL, and the event does not. The source then goes to that
+# partner when the dismissed-pair handoff accepts it, and otherwise stays on the
+# hidden row. The name tiers' own matches are NOT judged this way: over 30 days
+# of real crawls that also vetoed Meetup and per-date pages a partner held by
+# misattribution and created twins (2026-11-04 replay, v1). A candidate holding the permalink
+# itself (contested, or a page two events legitimately share) is never
+# skipped, and a listing/umbrella URL never counts (`_url_key_is_event_specific`:
+# at most URL_IDENTITY_MAX_DISTINCT_NAMES names behind it), which is what made
+# the source-URL-only identity misfire on festival umbrella pages (United Solo
+# w195).
+def _dismissed_url_owner_veto(candidate_id, partners, url_key, website_id, event_url_keys,
+                              hidden_ids, listing_url_keys, url_key_name_counts):
+    """Partners (tuple) owning this crawl_event's permalink that `candidate_id`
+    lacks, or None. `event_url_keys` = {event_id: {normalized URL keys}}."""
+    if not partners or not url_key or website_id is None:
+        return None
+    if not _url_key_is_event_specific(website_id, url_key, listing_url_keys,
+                                      url_key_name_counts):
+        return None
+    if url_key in event_url_keys.get(candidate_id, ()):
+        return None
+    owners = tuple(sorted(p for p in partners
+                          if p not in hidden_ids and url_key in event_url_keys.get(p, ())))
+    return owners or None
+
+
 # BL52 (2026-10-14). The processor groups same-titled rows even when each has
 # its own permalink: that is right for a series listed once per date
 # (/event/family-night-<date>/), but an extraction that gives distinct sessions
@@ -2781,17 +2824,26 @@ def source_url_sessions(raw_data, is_listing_key):
             for occ in occurrences if isinstance(occurrences, list) else ():
                 if isinstance(occ, (list, tuple)) and occ and occ[0]:
                     pairs.append((page, occ[0]))
-    elif isinstance(raw_data.get('session_details'), list):
+    if not pairs and isinstance(raw_data.get('session_details'), list):
+        # An undated session still names a permalink of the fused source
+        # (BL85: Pratt cr 138799 fused the in-person `…-session-2/` record,
+        # whose dates the extraction dropped, with the online `…-session/`
+        # record's 11/17 6pm). It votes for no date, but it counts toward the
+        # "fused from two or more permalinks" test and can be withheld.
         for variant in raw_data['session_details']:
             for session in (variant.get('sessions') or []) if isinstance(variant, dict) else ():
-                if isinstance(session, dict) and session.get('start_date'):
-                    pairs.append((session.get('url'), session['start_date']))
+                if isinstance(session, dict) and session.get('url'):
+                    pairs.append((session.get('url'), session.get('start_date') or None))
     sessions = {}
     for page, start in pairs:
         key = normalize_url_for_identity(page) if isinstance(page, str) else ''
         if key and not is_listing_key(key):
-            sessions.setdefault(key, set()).add(str(start))
-    return sessions if len(sessions) >= 2 else {}
+            dates = sessions.setdefault(key, set())
+            if start:
+                dates.add(str(start))
+    if len(sessions) < 2 or not any(sessions.values()):
+        return {}
+    return sessions
 
 
 def route_dismissed_sessions(target_id, url_dates, owners, owner_dates):
@@ -6364,6 +6416,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         identity_url_key = (ce_url_key if ce_url_key and website_id is not None
                             and (website_id, ce_url_key) not in listing_url_keys else '')
         dismissed_home_verdicts = {}  # candidate id -> veto verdict (or None)
+        url_owner_homes = set()  # homes named by _dismissed_url_owner (hidden-row handoffs)
 
         def _dismissed_home(existing_id):
             """Veto verdict for attaching this crawl_event to `existing_id`."""
@@ -6397,6 +6450,23 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                     print(f"  Dismissed-pair veto: source {ce_id} ({name}) skips "
                           f"{existing_id}; its listing belongs to {list(verdict)}")
             dismissed_home_verdicts[existing_id] = verdict
+            return verdict
+
+        def _dismissed_url_owner(existing_id):
+            """URL-owner verdict (see _dismissed_url_owner_veto) for a target the
+            source would reach only through a HIDDEN row's dedupe decision (its
+            URL twin or merge-redirect survivor). Those decisions can predate a
+            later dismissal; the name tiers' own matches are not judged by it
+            (measured 2026-11-04: in the name tiers it also vetoed Meetup /
+            per-date pages a partner held by misattribution, creating twins)."""
+            verdict = _dismissed_url_owner_veto(
+                existing_id, dismissed_neighbors.get(existing_id), identity_url_key,
+                website_id, merge_event_url_keys, suppressed_event_ids,
+                listing_url_keys, url_key_name_counts)
+            if verdict:
+                url_owner_homes.update(verdict)
+                print(f"  Dismissed-pair URL veto: source {ce_id} ({name}) skips "
+                      f"{existing_id}; its page belongs to {list(verdict)}")
             return verdict
 
         same_capture_verdicts = {}  # candidate id -> conflicting sibling name (or None)
@@ -6779,6 +6849,10 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         # cross-location guard, and it never rewrites the visible row's venue
         # below: that venue is the one the dedupe decision kept.
         suppressed_handoff = False
+        # A hidden-row handoff target (URL twin or redirect survivor) that a
+        # dismissed pair vetoes: the source then goes to the verdict's home,
+        # not to the hidden loser (see the dismissed-pair home handoff below).
+        vetoed_hidden_homes = ()
         if (matched_event_id is not None and not dateless
                 and matched_event_id != reviewed_match_id
                 and matched_event_id in suppressed_event_ids):
@@ -6788,6 +6862,10 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 crawl_result_roster, url_twin_dismissed_pairs,
                 url_twin_redirect_survivors, url_twin_reviewed_owners,
             )
+            if twin_id is not None:
+                vetoed_hidden_homes = _dismissed_home(twin_id) or _dismissed_url_owner(twin_id) or ()
+                if vetoed_hidden_homes:
+                    twin_id = None
             if twin_id is not None and not _same_capture(twin_id):
                 print(f"  Suppressed twin {matched_event_id} -> visible URL twin "
                       f"{twin_id}: source {ce_id} ({name})")
@@ -6829,8 +6907,14 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 website_id=website_id, name=name, location_bridges=redirect_bridges)
             if (survivor_id is not None
                     and not _program_veto({'id': survivor_id,
+                                           'name': _receiving_event_name(survivor_id)})):
+                vetoed = _dismissed_home(survivor_id) or _dismissed_url_owner(survivor_id)
+                if vetoed:
+                    vetoed_hidden_homes = vetoed
+                    survivor_id = None
+            if (survivor_id is not None
+                    and not _program_veto({'id': survivor_id,
                                            'name': _receiving_event_name(survivor_id)})
-                    and not _dismissed_home(survivor_id)
                     and not _same_capture(survivor_id)):
                 print(f"  Redirected duplicate {matched_event_id} -> survivor {survivor_id}: "
                       f"source {ce_id} ({name})")
@@ -6860,9 +6944,16 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         # incoming venue and not a merge-redirect duplicate; the matched path
         # below un-archives it and adds the new dates.
         dismissed_home_handoff = False
-        if matched_event_id is None and not dateless:
-            homes = {h for verdict in dismissed_home_verdicts.values()
-                     if verdict for h in verdict}
+        # A source left on a hidden dedupe loser because the loser's twin /
+        # survivor is dismissed against this listing's home goes to that home
+        # (only that verdict counts; the hidden row keeps it otherwise).
+        hidden_vetoed = (bool(vetoed_hidden_homes)
+                         and matched_event_id in suppressed_event_ids
+                         and not suppressed_handoff and not redirect_handoff)
+        if (matched_event_id is None or hidden_vetoed) and not dateless:
+            homes = ({h for verdict in dismissed_home_verdicts.values()
+                      if verdict for h in verdict} if matched_event_id is None
+                     else set(vetoed_hidden_homes))
             if len(homes) == 1:
                 home_id = homes.pop()
                 if home_id in event_ids_with_future:
@@ -6870,10 +6961,15 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                                and _dates_overlap(home_id))
                 else:
                     home_ok = _dormant_dismissed_home_ok(cursor, home_id, location_id)
+                # A home that holds this listing's own permalink (the URL-owner
+                # rule) is not re-judged by the name identity: a same-titled
+                # sibling listing of the partner at the same venue (the
+                # in-person GCPE session on its own page) would read as this
+                # listing's home and veto the page's owner.
                 if (home_ok
                         and not _program_veto({'id': home_id,
                                                'name': _receiving_event_name(home_id)})
-                        and not _dismissed_home(home_id)
+                        and (home_id in url_owner_homes or not _dismissed_home(home_id))
                         and not _same_capture(home_id)):
                     print(f"  Dismissed-pair handoff: source {ce_id} ({name}) -> {home_id}")
                     matched_event_id = home_id
@@ -6952,9 +7048,14 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                                        (matched_event_id,))
                         _m = cursor.fetchone()
                         current_loc_id = _m[0] if _m else None
+                # A page whose every session went elsewhere is a partner's
+                # page; an undated one is when a partner holds it and the
+                # final home does not.
                 withheld_url_keys = {
                     key for key, dates in url_dates.items()
-                    if all(moved.get(d) not in (None, matched_event_id) for d in dates)}
+                    if (all(moved.get(d) not in (None, matched_event_id) for d in dates)
+                        if dates else
+                        (owners.get(key) and matched_event_id not in owners[key]))}
                 valid_occurrences = kept
             for home_id, home_occurrences in session_homes.items():
                 home_occurrences = _apply_single_occasion_guard(
