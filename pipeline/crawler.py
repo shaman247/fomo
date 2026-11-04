@@ -281,6 +281,76 @@ def _is_soft_404(content):
     return any(marker in lowered for marker in SOFT_404_MARKERS)
 
 
+# --- Paginated listing rows that run past the end of a shrunk listing (BL75) --
+#
+# Some sites are crawled as fixed rows `/events/`, `/events/page/2/` ...
+# `/page/6/`. When the listing shrinks, the trailing rows 404 and the whole
+# crawl used to be stored failed ("Incomplete crawl: fetched 5 of 6 URLs"), so
+# nothing merged: Live at the Barbershop w6044, 2026-10-25. A clear not-found on
+# such a row is the end of the listing, not a failed fetch - but only when an
+# earlier page of the same listing fetched, the page right before it fetched
+# (or itself ended the listing), and no LATER page of that listing fetched.
+# Everything else (timeouts, 5xx, challenges, 404 on a non-pagination URL)
+# still fails the crawl as incomplete (BL01/BL29).
+_PAGINATION_PATH_RE = re.compile(r'^(.*?)/page/(\d+)/?$', re.IGNORECASE)
+_PAGINATION_QUERY_KEYS = ('page', 'paged')
+END_OF_LISTING_STATUSES = (404, 410)
+
+
+def _listing_page(url):
+    """(listing key, page number, has pagination segment) for a URL, or None.
+
+    A URL without a pagination segment is its listing's page 1.
+    """
+    try:
+        parts = urllib.parse.urlsplit(url)
+    except ValueError:
+        return None
+    path = parts.path or '/'
+    number = None
+    match = _PAGINATION_PATH_RE.match(path)
+    if match:
+        path, number = match.group(1), int(match.group(2))
+    query = []
+    for key, value in urllib.parse.parse_qsl(parts.query, keep_blank_values=True):
+        if number is None and key.lower() in _PAGINATION_QUERY_KEYS and value.isdigit():
+            number = int(value)
+            continue
+        query.append((key, value))
+    listing = ((parts.hostname or '').lower(), path.rstrip('/') or '/', tuple(sorted(query)))
+    return listing, (number if number is not None else 1), number is not None
+
+
+def _end_of_listing_urls(urls, succeeded, not_found):
+    """The not-found URLs that are the end of a shrunk paginated listing.
+
+    `urls` is every URL of the crawl, `succeeded` the ones that fetched, and
+    `not_found` the ones that came back as a clear HTTP 404/410 or soft 404.
+    """
+    listings = {}
+    for url in urls:
+        position = _listing_page(url)
+        if position:
+            listings.setdefault(position[0], {}).setdefault(position[1], []).append(url)
+    candidates = []
+    for url in set(not_found):
+        position = _listing_page(url)
+        if position and position[2] and position[1] >= 2:
+            candidates.append((position[1], url, position[0]))
+    accepted = set()
+    for number, url, listing in sorted(candidates):
+        pages = listings.get(listing, {})
+        earlier = {n: rows for n, rows in pages.items() if n < number}
+        if not any(row in succeeded for rows in earlier.values() for row in rows):
+            continue
+        if any(row in succeeded for n, rows in pages.items() if n > number for row in rows):
+            continue  # a later page exists, so this one is a broken page, not the end
+        previous = earlier[max(earlier)]
+        if all(row in succeeded or row in accepted for row in previous):
+            accepted.add(url)
+    return accepted
+
+
 # --- js_code that knows its own capture is incomplete -------------------------
 #
 # A pager js_code loads page 1 normally, then fetches later pages in-page (sync
@@ -896,6 +966,12 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
         # Hosts this website has already spent its one probe fetch on.
         circuit_skipped_urls = []
         probed_hosts = set()
+        # Every resolved URL of this crawl, the ones that fetched, and the ones
+        # that came back as a clear not-found (HTTP 404/410 or soft 404). Used
+        # to tell a paginated listing that shrank from a failed page (BL75).
+        crawl_url_list = []
+        succeeded_url_set = set()
+        not_found_urls = []
 
         async def crawl_urls():
             """Inner function to crawl all URLs, can be wrapped with timeout."""
@@ -908,6 +984,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                 else:
                     url = resolve_url_templates(url_data)
                     url_js_code = None
+                crawl_url_list.append(url)
 
                 # Mixed websites may combine an API calendar with ordinary
                 # browser pages. Honor the custom path per URL as well as the
@@ -921,6 +998,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                         raise ValueError(f'{custom.display_label} returned no capture for {url}')
                     combined_markdown += url + '\n' + content + '\n\n'
                     succeeded_urls += 1
+                    succeeded_url_set.add(url)
                     print(f'    - {custom.display_label}: {count} records from {url}')
                     continue
 
@@ -958,6 +1036,8 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                 url_succeeded = False
                 failed_pages = 0
                 http_failed = False
+                # HTTP error codes this URL's results carried, one per result.
+                error_statuses = []
                 url_error = None
                 attempted_urls += 1
 
@@ -972,6 +1052,8 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                         continue
                     status = _http_error_status(result)
                     http_failed = http_failed or bool(status)
+                    if status:
+                        error_statuses.append(status)
                     if result and result.success and not status:
                         url_succeeded = True
                     else:
@@ -1045,6 +1127,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                             _record_host_success(url)
                             print(f"    - Probe cleared: {host} circuit closed")
                             succeeded_urls += 1
+                            succeeded_url_set.add(url)
                             combined_markdown += url + "\n" + recovered
                             continue
                         _record_host_block(url)
@@ -1071,13 +1154,19 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
                     # healthy 0-event crawl and let the merger archive on it.
                     print(f"    - Soft 404 ({len(url_content)} chars) - page no longer exists, discarding")
                     soft_404_urls.append(url)
+                    if all(code in END_OF_LISTING_STATUSES for code in error_statuses):
+                        not_found_urls.append(url)
                     continue
                 if has_custom_urls and not url_content.strip():
                     raise ValueError(f'Empty browser capture in mixed calendar: {url}')
                 if url_succeeded:
                     succeeded_urls += 1
+                    succeeded_url_set.add(url)
                 elif url_error:
                     last_url_error = url_error
+                    if (page_count and len(error_statuses) == page_count
+                            and all(code in END_OF_LISTING_STATUSES for code in error_statuses)):
+                        not_found_urls.append(url)
                 if url_succeeded and url_content:
                     combined_markdown += url + "\n" + url_content
 
@@ -1113,6 +1202,7 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
             if recovered:
                 combined_markdown += challenged_url + "\n" + recovered
                 succeeded_urls += 1
+                succeeded_url_set.add(challenged_url)
                 incomplete_reasons.pop(challenged_url, None)
             else:
                 unresolved_challenges += 1
@@ -1186,13 +1276,22 @@ async def crawl_website(crawler, website, cursor, connection, crawl_run_id):
             db.update_website_last_crawled(cursor, connection, website['id'])
             return None
 
-        if succeeded_urls != len(urls):
+        # A trailing pagination row that 404s after its earlier pages fetched
+        # is the end of a listing that shrank, not a missing page (BL75).
+        end_of_listing = _end_of_listing_urls(crawl_url_list, succeeded_url_set, not_found_urls)
+        for skipped in sorted(end_of_listing):
+            print(f"    - End of listing: {skipped} is not found after its earlier "
+                  f"pages fetched - skipped, not counted as a failure")
+        if succeeded_urls + len(end_of_listing) != len(urls):
             db.update_crawl_result_failed(
                 cursor, connection, crawl_result_id,
                 f'Incomplete crawl: fetched {succeeded_urls} of {len(urls)} URLs; '
-                f'{len(urls) - succeeded_urls} failed or skipped '
+                f'{len(urls) - succeeded_urls - len(end_of_listing)} failed or skipped '
                 f'({len(circuit_skipped_urls)} circuit-skipped, '
-                f'{unresolved_challenges} unresolved challenges)'
+                f'{unresolved_challenges} unresolved challenges'
+                + (f', {len(end_of_listing)} past the end of a paginated listing'
+                   if end_of_listing else '')
+                + ')'
                 + (f'; {incomplete_note}' if incomplete_note else ''))
             db.update_website_last_crawled(cursor, connection, website['id'])
             return None
