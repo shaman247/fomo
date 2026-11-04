@@ -4252,12 +4252,106 @@ def _delivery_only_location(location):
     return not re.sub(r'[\W_]+', '', _DELIVERY_FILLER_RE.sub(' ', location.lower()))
 
 
-def group_event_occurrences(rows, source_url=None, location_refs=None):
+def _url_stem(url):
+    """A URL with its digits removed: the shape a per-date series keeps.
+
+    The Boat Yard's /event/family-night-<date>/ pages and nyc.gov's
+    ?permalinkName=<x>&id=<n> rows share one stem; LES Ecology Center's
+    /calendar/upper-west-side-amsterdam-avenue/ and
+    /calendar/flushing-queens-botanical-garden/ do not.
+    """
+    try:
+        parts = urllib.parse.urlsplit(url or '')
+    except ValueError:
+        return url
+    path = re.sub(r'[-_/.]+', '/', re.sub(r'\d+', '', parts.path.lower())).strip('/')
+    query = tuple(sorted((k.lower(), re.sub(r'\d+', '', v.lower()))
+                         for k, v in urllib.parse.parse_qsl(parts.query)))
+    host = (parts.netloc or '').lower()
+    return (host[4:] if host.startswith('www.') else host, path, query)
+
+
+_RECORD_ID_RE = re.compile(r'(?<!\d)\d{5,}(?!\d)')
+
+
+def _same_series_url(a, b):
+    """Two event URLs of one series or one record: the same digit-free stem, or
+    a shared 5+ digit record id (nyc.gov lists one record both as
+    /events/farm-stand/1294736/1 and ?permalinkName=farm-stand&id=1294736)."""
+    if _url_stem(a) == _url_stem(b):
+        return True
+    return bool(set(_RECORD_ID_RE.findall(a or '')) & set(_RECORD_ID_RE.findall(b or '')))
+
+
+def _text_streets(text):
+    """Every street a location string names, compass prefix dropped: house
+    numbers, intersections, bare streets and "<main> between <A> & <B>" blocks."""
+    names = set()
+    for chunk in [text or ''] + (text or '').split(','):
+        names |= _address_street_names(chunk)
+        block = _extract_street_block(chunk.strip()) if chunk.strip() else None
+        if block:
+            names.add(block[0])
+            names.update(block[1])
+    return {re.sub(r'^(?:n|s|e|w)\s+', '', n) for n in names if n}
+
+
+def _street_site_mismatch(unresolved_texts, resolved_texts):
+    """BL75: a street/intersection string that names none of the resolved
+    venue's streets is another SITE, not a door of the venue.
+
+    DSNY w594 titles every LES Ecology Center site "Community Recycling", so
+    per-site separation rests on the venue. "Amsterdam Avenue & W. 109th
+    Street" (Upper West Side, unresolved) is street-shaped, which
+    `_venue_shaped_mismatch` exempts as "the venue's own address written
+    differently, or a door of it", so every resolved site (Queens Botanical
+    Garden, Maria Hernandez Park, ...) grouped into it: cr 137157 stored 13
+    sites as one location-less crawl_event.
+
+    `unresolved_texts`: the unresolved row's location (which must be
+    street-shaped) and sublocation. `resolved_texts`: the resolved venue's
+    address plus its rows' own location/sublocation strings (a park's address
+    is often a plus code, but its row says "Knickerbocker Avenue & Suydam
+    Street"). With no street known on either side this stays False.
+    """
+    texts = [t for t in unresolved_texts or () if t]
+    if not texts or not _mentions_street(_normalize_location_name(texts[0])):
+        return False
+    own = set().union(*(_text_streets(t) for t in texts))
+    venue = set().union(*(_text_streets(t) for t in resolved_texts or () if t))
+    return bool(own and venue and not (own & venue))
+
+
+_ADDRESS_INDEX_CACHE = {}
+
+
+def location_addresses_for(locations_map, location_ids):
+    """{location_id: address} for the ids, read from `build_locations_map`'s
+    primary-name tier (indexed once per map)."""
+    if not locations_map or not location_ids:
+        return {}
+    key = id(locations_map)
+    index = _ADDRESS_INDEX_CACHE.get(key)
+    if index is None or index[0] is not locations_map:
+        by_id = {}
+        for rec in (locations_map.get('names') or {}).values():
+            for item in (rec if isinstance(rec, list) else [rec]):
+                if isinstance(item, dict) and item.get('id') is not None:
+                    by_id.setdefault(item['id'], item.get('address'))
+        _ADDRESS_INDEX_CACHE.clear()
+        index = _ADDRESS_INDEX_CACHE[key] = (locations_map, by_id)
+    return {lid: index[1].get(lid) for lid in location_ids if index[1].get(lid)}
+
+
+def group_event_occurrences(rows, source_url=None, location_refs=None,
+                            location_addresses=None):
     """Groups event rows by name and consolidates their occurrences.
 
     `location_refs`: {location_id -> [reference strings]} (the resolved venue's
     name, address, aliases) so a MIXED id-vs-name pair can ask whether the bare
     string is a room of that venue or a rival venue (`_venue_shaped_mismatch`).
+    `location_addresses`: {location_id -> street address} for the BL75
+    street-site test (`_street_site_mismatch`).
     """
     rows = list(rows)
 
@@ -4302,6 +4396,24 @@ def group_event_occurrences(rows, source_url=None, location_refs=None):
         if a[0] == 'id':
             return _venue_shaped_mismatch(b[1], refs_for(a, a_text), judge_comma_head=True)
         return _venue_shaped_mismatch(a[1], refs_for(b, b_text), judge_comma_head=True)
+
+    def street_site_split(row_loc, existing_key, row_text, row_sub):
+        """MIXED pair whose unresolved side is a street-named site that is
+        not the resolved venue (`_street_site_mismatch`)."""
+        members = grouped_rows.get(existing_key, ())
+        if row_loc[0] == 'id':
+            unresolved = [loc_name(members[0]) if members else '',
+                          (members[0].get('sublocation') or '') if members else '']
+            resolved_id, resolved_rows = row_loc[1], [{'location': row_text,
+                                                       'sublocation': row_sub}]
+        else:
+            unresolved = [row_text, row_sub]
+            resolved_rows = [r for r in members if r.get('location_id')]
+            resolved_id = resolved_rows[0].get('location_id') if resolved_rows else None
+        resolved = [(location_addresses or {}).get(resolved_id)]
+        for r in resolved_rows:
+            resolved += [r.get('location') or '', r.get('sublocation') or '']
+        return _street_site_mismatch(unresolved, resolved)
 
     def refs_for(key, loc_text):
         refs = [loc_text] if loc_text else []
@@ -4395,12 +4507,20 @@ def group_event_occurrences(rows, source_url=None, location_refs=None):
 
     def find_matching_group_key(event_name, row_loc, row_url, grouped_events,
                                 normalized_group_keys, group_event_urls,
-                                row_name_loc='', row_profile=None):
+                                row_name_loc='', row_profile=None, row_sub=''):
         normalized_event = normalize_name_for_grouping(event_name)
         for existing_key, existing in grouped_events.items():
             existing_loc = loc_key(existing)
             if not locations_compatible(row_loc, existing_loc,
                                         row_name_loc, loc_name(existing)):
+                continue
+            # BL75: the pairwise test above only sees the group's FIRST row.
+            # An unresolved first row let every resolved venue in as a MIXED
+            # pair, so one group gathered rows at several resolved ids (DSNY
+            # cr 137157: 13 sites). Two resolved ids never share a group.
+            if row_loc is not None and row_loc[0] == 'id' and any(
+                    r.get('location_id') and r.get('location_id') != row_loc[1]
+                    for r in grouped_rows.get(existing_key, ())):
                 continue
             normalized_existing = normalized_group_keys[existing_key]
             name_eligible = (event_name == existing_key
@@ -4496,6 +4616,16 @@ def group_event_occurrences(rows, source_url=None, location_refs=None):
                     if (not urls_compatible(row_url, group_event_urls.get(existing_key))
                             and delivery_mode_split(row_name_loc, existing_key)):
                         continue
+                    # BL75: nor a street-named site on its own page (not a
+                    # per-date URL of one series) whose streets are not the
+                    # resolved venue's.
+                    if (row_url and group_event_urls.get(existing_key)
+                            and not urls_compatible(row_url, group_event_urls.get(existing_key))
+                            and not any(_same_series_url(row_url, u)
+                                        for u in group_event_urls[existing_key])
+                            and street_site_split(row_loc, existing_key,
+                                                  row_name_loc, row_sub)):
+                        continue
                     return existing_key
                 # Signal 2: the event URL. Two listings carrying different
                 # event URLs are different events — the same reasoning
@@ -4584,7 +4714,8 @@ def group_event_occurrences(rows, source_url=None, location_refs=None):
         group_key = find_matching_group_key(
             event_name, loc_key(row_dict), row_url, grouped_events,
             normalized_group_keys, group_event_urls, loc_name(row_dict),
-            program_profile(row_dict.get('tags', []), [occurrence]))
+            program_profile(row_dict.get('tags', []), [occurrence]),
+            (row_dict.get('sublocation') or '').strip())
         grouped_rows.setdefault(group_key, []).append(row_dict)
         if row_url:
             group_event_urls.setdefault(group_key, set()).add(row_url)
@@ -9269,8 +9400,9 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
         processed_rows.append(processed_row)
 
     # Group occurrences and create short names
-    events = group_event_occurrences(processed_rows, source_url,
-                                     location_refs=location_refs)
+    events = group_event_occurrences(
+        processed_rows, source_url, location_refs=location_refs,
+        location_addresses=location_addresses_for(locations_map, location_refs))
 
     # Last-resort URL: an event with no URL at all is dropped by the exporter, so
     # a rejected event-specific URL must not be able to turn a real event into an
@@ -9428,6 +9560,87 @@ def process_events(cursor, connection, crawl_result_id, website_name, run_date_s
     return event_count
 
 
+# BL75 (2026-11-04). A detail page can list one record's screenings at several
+# venues while the listing gave each venue its own crawl_event under the same
+# URL. DOC NYC w652 cr 133321: the listing split "Union Town" into ce1603076
+# (SVA Theatre, 11-13) and ce1603122 (IFC Center, 11-15), both on
+# /film/union-town/. Only the description-less IFC row was detail-crawled, and
+# the film page answered "SVA Theatre" plus both screenings, so the IFC row was
+# re-pinned to SVA and given the 11-13 slot (21 of 169 crawl_events that crawl;
+# the merger then hung 14 second-venue slots on first-venue events).
+# `SingleEventExtraction` has one location per page, so it cannot say which
+# screening is where. The same-URL siblings of the same capture can: their
+# venues and slots are theirs, not this row's.
+SHARED_PAGE_SIBLINGS_SQL = (
+    "SELECT c.location_id, c.location_name, s.id, s.location_id, s.location_name, "
+    "o.start_date, o.start_time "
+    "FROM crawl_events c "
+    "JOIN crawl_events s ON s.crawl_result_id = c.crawl_result_id "
+    " AND s.url = c.url AND s.id <> c.id "
+    "LEFT JOIN crawl_event_occurrences o ON o.crawl_event_id = s.id "
+    "WHERE c.id = %s AND c.url IS NOT NULL AND c.url <> ''")
+
+
+def _venue_identity(location_id, location_name):
+    return ('id', location_id) if location_id else (
+        'name', _grouping_norm(location_name or '')) if (location_name or '').strip() else None
+
+
+def shared_page_foreign_siblings(cursor, ce_id):
+    """Same-capture rows sharing this crawl_event's URL at ANOTHER venue.
+
+    Returns {'location_ids': set, 'location_names': set (grouping-normalized),
+    'slots': {(start_date, std start_time)}, 'dates': {start_date}}, or None
+    when there is no such sibling (the common case: one row per URL).
+    """
+    fetchall = getattr(cursor, 'fetchall', None)
+    cursor.execute(SHARED_PAGE_SIBLINGS_SQL, (ce_id,))
+    if not callable(fetchall):
+        return None
+    try:
+        rows = list(cursor.fetchall() or ())
+    except TypeError:
+        return None
+    foreign = None
+    for row in rows:
+        if not isinstance(row, (list, tuple)) or len(row) < 7:
+            continue
+        own_id, own_name, _sid, sib_id, sib_name, start_date, start_time = row[:7]
+        own = _venue_identity(own_id, own_name)
+        sib = _venue_identity(sib_id, sib_name)
+        if own is None or sib is None:
+            continue
+        if own[0] == sib[0]:
+            if own == sib:
+                continue
+        elif _grouping_norm(own_name or '') == _grouping_norm(sib_name or ''):
+            continue  # one side resolved, same venue text: not another venue
+        if foreign is None:
+            foreign = {'location_ids': set(), 'location_names': set(),
+                       'slots': set(), 'dates': set()}
+        if sib_id:
+            foreign['location_ids'].add(sib_id)
+        if (sib_name or '').strip():
+            foreign['location_names'].add(_grouping_norm(sib_name))
+        if start_date:
+            foreign['dates'].add(str(start_date))
+            foreign['slots'].add((str(start_date), _standardize_time(start_time or '')))
+    return foreign
+
+
+def _without_sibling_slots(occurrences, foreign):
+    """Detail occurrences minus the ones a same-URL sibling at another venue lists."""
+    kept = []
+    for occ in occurrences or ():
+        start = str(occ.get('start_date') or '')
+        if start and start in foreign['dates']:
+            clock = _standardize_time(occ.get('start_time') or '')
+            if not clock or (start, clock) in foreign['slots']:
+                continue
+        kept.append(occ)
+    return kept
+
+
 def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
                           locations_map=None, event_name=None):
     """Apply detail-crawl data to a crawl_event row.
@@ -9469,6 +9682,29 @@ def apply_crawled_details(cursor, connection, ce_id, data, tag_context,
     # event blank on the map.
     emoji = data.get('emoji', '')
     first_emoji = normalize_extracted_emoji(emoji) or None
+
+    # BL75: a page shared with same-capture rows at other venues speaks for
+    # them too. Their slots are dropped from the detail answer, and a detail
+    # venue that is one of theirs never replaces this row's own.
+    foreign_siblings = None
+    if data.get('occurrences') or data.get('location') or data.get('sublocation'):
+        foreign_siblings = shared_page_foreign_siblings(cursor, ce_id)
+    if foreign_siblings:
+        kept_occurrences = _without_sibling_slots(data.get('occurrences'), foreign_siblings)
+        dropped = len(data.get('occurrences') or ()) - len(kept_occurrences)
+        data = dict(data, occurrences=kept_occurrences)
+        detail_venue = _grouping_norm(data.get('location') or '')
+        if detail_venue and (detail_venue in foreign_siblings['location_names'] or (
+                locations_map and (get_location_id(
+                    (data.get('location') or '').strip(), (data.get('sublocation') or '').strip(),
+                    '', (data.get('name') or event_name or '').strip(), locations_map,
+                ) or {}).get('id') in foreign_siblings['location_ids'])):
+            data = dict(data, location=None, sublocation=None)
+            print(f"    - Shared detail page for crawl_event {ce_id}: detail venue "
+                  f"belongs to a same-URL sibling row; listing venue kept")
+        if dropped:
+            print(f"    - Shared detail page for crawl_event {ce_id}: dropped {dropped} "
+                  f"slot(s) listed by same-URL sibling rows at other venues")
 
     # Update crawl_events row. The description is optional: extract_single_event
     # omits it when the page yielded only a placeholder, and the stored one
