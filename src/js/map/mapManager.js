@@ -60,6 +60,15 @@ const MapManager = (() => {
     // border), registered under the base image ID plus this suffix.
     const HOVER_SUFFIX = '-hover';
 
+    // MapLibre sets `map.style` to null when the WebGL context is lost (iOS
+    // Safari drops it in background tabs) and deletes it on remove(); 5.x then
+    // threw from getLayer() in our resize listener (BL79), and 6.x still throws
+    // from hasImage/updateImage/setFeatureState. Every style call that a map
+    // event, timer, frame or decode can reach checks this first.
+    function _styleReady(map) {
+        return !!(map && map.style);
+    }
+
     // ========================================
     // INITIALIZATION
     // ========================================
@@ -108,7 +117,7 @@ const MapManager = (() => {
      */
     function _ensureLayers() {
         const map = state.mapInstance;
-        if (!map || !map.isStyleLoaded()) return;
+        if (!_styleReady(map) || !map.isStyleLoaded()) return;
         if (map.getSource('markers')) return; // Already set up
 
         state.layersAdded = false;
@@ -235,7 +244,7 @@ const MapManager = (() => {
 
     function _syncDotTheme() {
         const map = state.mapInstance;
-        if (!map?.getLayer('marker-dots')) return;
+        if (!_styleReady(map) || !map.getLayer('marker-dots')) return;
         const dark = Utils.getCurrentTheme() === 'dark';
         if (dark && !map.getLayer('marker-dot-density')) {
             map.addLayer(DotDensityLayer.create(() => ({ places: state.rankedPlaces, promoted: state.promotedPlaces })), 'marker-symbols');
@@ -246,7 +255,7 @@ const MapManager = (() => {
 
     function refreshPromotedMarkers() {
         const map = state.mapInstance;
-        if (!map?.getLayer('marker-symbols')) return;
+        if (!_styleReady(map) || !map.getLayer('marker-symbols')) return;
         const canvas = map.getCanvas();
         const rect = canvas.getBoundingClientRect();
         // The canvas extends beyond the window for map tilt/overscan. Budget
@@ -488,7 +497,7 @@ const MapManager = (() => {
     function _addIconImage(imageId) {
         const map = state.mapInstance;
         const descriptor = state.iconDescriptors.get(imageId);
-        if (!descriptor || state.loadedIcons.has(imageId) || state.pendingIcons.has(imageId)) return;
+        if (!descriptor || !_styleReady(map) || state.loadedIcons.has(imageId) || state.pendingIcons.has(imageId)) return;
         const epoch = state.iconEpoch;
         const theme = Utils.getCurrentTheme();
         const hover = imageId.endsWith(HOVER_SUFFIX);
@@ -500,7 +509,11 @@ const MapManager = (() => {
             { width: size, height: size, data: new Uint8Array(size * size * 4) }, { pixelRatio });
         state.pendingIcons.add(imageId);
         IconManager.prepare(descriptor, theme, hover ? 'hover' : true, descriptor.formatCategory).then(result => {
-            if (state.iconEpoch !== epoch || !map.hasImage(imageId)) return;
+            if (state.iconEpoch !== epoch) return;
+            // The style went away mid-decode: leave the icon unloaded so the
+            // next promotion decodes it again.
+            if (!_styleReady(map)) { state.pendingIcons.delete(imageId); return; }
+            if (!map.hasImage(imageId)) return;
             if (result.pixels.width === size) _fadeInIconImage(imageId, result.pixels);
             else {
                 // The DPR changed mid-decode (window moved to another display).
@@ -563,8 +576,16 @@ const MapManager = (() => {
     function _animateIconFades(now) {
         state.iconFadeFrame = null;
         const map = state.mapInstance;
+        if (!_styleReady(map)) {
+            // Nothing can take the frames. Forget the fading icons as loaded so
+            // the next promotion after the style returns decodes and fades them.
+            for (const imageId of state.iconFades.keys()) state.loadedIcons.delete(imageId);
+            state.iconFades.clear();
+            _resetMarkerFades();
+            return;
+        }
         for (const [imageId, fade] of state.iconFades) {
-            if (!map?.hasImage(imageId)) {
+            if (!map.hasImage(imageId)) {
                 state.iconFades.delete(imageId);
                 continue;
             }
@@ -624,7 +645,7 @@ const MapManager = (() => {
         state.loadedIcons.clear();
         state.iconTheme = Utils.getCurrentTheme();
         _clearHoverLabelEvent();
-        map.listImages().filter(id => id.startsWith('icon-')).forEach(id => map.removeImage(id));
+        if (_styleReady(map)) map.listImages().filter(id => id.startsWith('icon-')).forEach(id => map.removeImage(id));
         refreshPromotedMarkers();
     }
 
@@ -746,7 +767,7 @@ const MapManager = (() => {
         const geojson = { type: 'FeatureCollection', features };
         state.sourceDataCache = geojson;
 
-        const source = map.getSource('markers');
+        const source = _styleReady(map) && map.getSource('markers');
         if (source) {
             source.setData(geojson);
         }
@@ -819,7 +840,7 @@ const MapManager = (() => {
      */
     function _updateHoverFilter() {
         const map = state.mapInstance;
-        if (!map || !map.getLayer('marker-symbols-hover')) return;
+        if (!_styleReady(map) || !map.getLayer('marker-symbols-hover')) return;
 
         const keys = new Set();
         if (state.hoveredFeatureId !== null) {
@@ -858,7 +879,7 @@ const MapManager = (() => {
      */
     function _setHoverLabelEvent(locationKey, labelEvent) {
         const map = state.mapInstance;
-        if (!map || !map.getLayer('marker-symbols-hover')) return;
+        if (!_styleReady(map) || !map.getLayer('marker-symbols-hover')) return;
         const iconFid = state.locationKeyToFeatureId.get(locationKey);
         const icon = (iconFid !== undefined && state.sourceDataCache)
             ? state.sourceDataCache.features[iconFid]
@@ -893,7 +914,7 @@ const MapManager = (() => {
     /** Restore the hover layer's default event icon and label. */
     function _clearHoverLabelEvent() {
         const map = state.mapInstance;
-        if (!map || state.hoverLabelEventSig === null || !map.getLayer('marker-symbols-hover')) return;
+        if (!_styleReady(map) || state.hoverLabelEventSig === null || !map.getLayer('marker-symbols-hover')) return;
         state.hoverLabelEventSig = null;
         state.hoverIconImageId = null;
         map.setLayoutProperty('marker-symbols-hover', 'text-field', _getTextFieldExpression());
@@ -910,7 +931,7 @@ const MapManager = (() => {
     // Keep logical active state in the caller; the restore path reapplies it later.
     function _setMarkerFeatureState(id, value) {
         const map = state.mapInstance;
-        if (map && map.getSource('markers')) {
+        if (_styleReady(map) && map.getSource('markers')) {
             map.setFeatureState({ source: 'markers', id }, value);
             const key = state.featureIdToLocationKey.get(id);
             for (const labelId of state.locationKeyToLabelFeatureIds.get(key) || []) {
@@ -953,7 +974,8 @@ const MapManager = (() => {
         if (state.featureStateHealTimer !== null) return;
         state.featureStateHealTimer = setTimeout(() => {
             state.featureStateHealTimer = null;
-            const source = state.mapInstance && state.mapInstance.getSource('markers');
+            const map = state.mapInstance;
+            const source = _styleReady(map) && map.getSource('markers');
             if (source && state.sourceDataCache) source.setData(state.sourceDataCache);
         }, 0);
     }
@@ -1202,7 +1224,7 @@ const MapManager = (() => {
     /** Refreshes marker colors and labels after the map style changes. */
     function applyThemeToLayers() {
         const map = state.mapInstance;
-        if (!map || !map.getLayer('marker-symbols')) return;
+        if (!_styleReady(map) || !map.getLayer('marker-symbols')) return;
 
         const font = _getMarkerTextFont();
         _syncIconEpoch();
@@ -1278,7 +1300,7 @@ const MapManager = (() => {
         let timer = null;
         const check = () => {
             timer = null;
-            if (!map.getLayer('marker-symbols') || !map.queryRenderedFeatures({ layers: ['marker-symbols'] }).length) return;
+            if (!_styleReady(map) || !map.getLayer('marker-symbols') || !map.queryRenderedFeatures({ layers: ['marker-symbols'] }).length) return;
             map.off('render', onRender);
             callback();
         };

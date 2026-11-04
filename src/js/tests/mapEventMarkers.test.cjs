@@ -26,8 +26,19 @@ function harness({ reducedMotion = true } = {}) {
         removeImage: id => images.delete(id),
         setFeatureState: ({ id }, value) => featureStates.set(id, { ...featureStates.get(id), ...value }),
         setFilter: (id, value) => { filters.set(id, value); filterCalls.push(id); },
-        setLayoutProperty: (id, key, value) => layouts.set(key, value)
+        setLayoutProperty: (id, key, value) => layouts.set(key, value),
+        style: {}
     };
+    // Like MapLibre 5.x, every style call dereferences map.style, which context
+    // loss sets to null; a call made then throws as it did on iOS (BL79).
+    for (const name of ['getLayer', 'getSource', 'addSource', 'addLayer', 'setPaintProperty', 'setLayoutProperty',
+        'setFilter', 'setFeatureState', 'queryRenderedFeatures', 'hasImage', 'listImages', 'addImage', 'updateImage', 'removeImage']) {
+        const call = map[name];
+        map[name] = (...args) => {
+            if (!map.style) throw new TypeError(`null is not an object (evaluating 'this.style.${name}')`);
+            return call(...args);
+        };
+    }
     const context = vm.createContext({
         window: { devicePixelRatio: 1, matchMedia: () => ({ matches: reducedMotion }) }, innerWidth: 1000, innerHeight: 700,
         performance: { now: () => now },
@@ -63,6 +74,7 @@ function harness({ reducedMotion = true } = {}) {
         setTheme: value => { theme = value; },
         setProjectX: value => { projectX = value; },
         setRenderedMarkers: value => { renderedMarkers = value; },
+        setStyle: present => { map.style = present ? {} : null; },
         fire: (name, event) => (handlers.get(name) || []).forEach(fn => fn(event)),
         runTimers: () => { const pending = [...timers.values()]; timers.clear(); pending.forEach(fn => fn()); },
         animationFrames,
@@ -362,4 +374,31 @@ test('time to markers fires once, on the first frame that draws marker symbols',
     assert.equal(calls, 1, 'the trailing check after the last frame sees the drawn markers');
     h.fire('render'); h.runTimers();
     assert.equal(calls, 1, 'reported once');
+});
+test('a lost style makes resize, settle, idle, frame and decode callbacks no-ops until it returns', async () => {
+    const h = harness({ reducedMotion: false });
+    h.render([{ id: 1, name: 'Painting', icon_id: 'paint' }, { id: 2, name: 'Jazz night', icon_id: 'jazz', score: 10 }]);
+    const pixels = () => ({ width: 78, height: 78, data: new Uint8Array(78 * 78 * 4).fill(255) });
+    h.requests[0].done({ pixels: pixels(), accent: '#123456' });
+    await Promise.resolve();
+    h.advance(75); // the artwork fade is mid-flight when the context goes
+    h.setStyle(false);
+    const lateDecode = h.hoverRequests[0];
+    assert.doesNotThrow(() => {
+        h.fire('resize'); h.fire('idle'); h.fire('move'); h.fire('moveend'); h.runTimers();
+        h.advance(75);
+        h.manager.refreshPromotedMarkers(); h.manager.applyThemeToLayers(); h.manager.reloadIconImages();
+        h.manager.highlightLocationByKey(h.key, { labelEvent: { name: 'Jazz night', icon_id: 'jazz' } });
+        h.manager.clearHoverHighlight(); h.manager.clearActiveState();
+        h.render([{ id: 1, name: 'Painting', icon_id: 'paint' }]);
+        h.manager.onFirstMarkersRendered(() => {}); h.fire('render'); h.runTimers();
+    });
+    lateDecode.done({ pixels: pixels(), accent: '#123456' });
+    await Promise.resolve(); await Promise.resolve();
+    assert.equal(h.animationFrames.size, 0, 'no frame loop runs without a style');
+    // Context restored: the next resize promotes and decodes the artwork again.
+    h.setStyle(true);
+    const requests = h.requests.length;
+    h.fire('resize');
+    assert.ok(h.requests.length > requests, 'resize promotes again and decodes the interrupted artwork');
 });
