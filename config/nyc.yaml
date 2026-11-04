@@ -4374,6 +4374,28 @@ venue_taxonomy:
       remove: []
       source: https://partiful.com/e/ktxUIO54ZBg1ZqVufOOd
       reason: Reviewed 2026-10-28; the only listing (Halloween Masquerade on Partiful) names "Zirka Place, 32 W 28th St, FL 2" with no description of the space, and no rental listing, website or business of that name could be found, so it stays a reviewed Other fallback rather than Event Hall (same as The Place 229).
+    - location_id: 12447
+      expected_name: 327 West 36th Street
+      add:
+      - Event Hall
+      remove: []
+      source: https://www.eventective.com/new-york-ny/327-w-36th-street-801662.html
+      reason: Reviewed 2026-11-04; the 6th-floor former factory floor of this Garment District loft building is listed on Eventective as a bookable event space (about 4,000 sq ft, capacity 175, priced per event, pitched for pop-ups, shoots, screenings and workshops), and the Mindful Matter Market Luma listing (luma.com/tpc2seqr) uses the same 6th floor. Dedicated rental event use, so Event Hall.
+    - location_id: 12501
+      expected_name: SoHo Project Space
+      add:
+      - Art Gallery
+      remove: []
+      source: https://www.atly.com/location/SoHoProjectSpace
+      reason: Reviewed 2026-11-04; basement gallery at 127 Prince St Unit B (the former Leslie-Lohman Prince Street Project Space, per Time Out) listed as an art gallery, hosting rotating exhibitions and brand pop-ups such as the tthew launch (Partiful). Art Gallery; occasional pop-up hire does not make it an Event Hall.
+    - location_id: 5058
+      expected_name: ErF World
+      add:
+      - Art Studio
+      remove:
+      - attraction
+      source: https://commercialobserver.com/2025/09/art-studio-erf-world-94-bogart-street-in-brooklyn/
+      reason: Reviewed 2026-11-04; ErF World leased 94 Bogart St (corner of Bogart and Ingraham) as "a community for artists that offers studio space, workshops and showcases" (Commercial Observer), the 40+ artist studio collective in its description. Art Studio. The Other membership came only from the merged 1 Ingraham Street fallback (12448), whose BLIND parties use a room in this building.
     descriptions:
     - location_id: 2041
       expected_name: Cloud City
@@ -4581,7 +4603,9 @@ venue_taxonomy:
       - location_id: 3148
         expected_name: 47 Thames St
         reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
-          well enough for a narrower category.
+          well enough for a narrower category. Rechecked 2026-11-04 for active event 309675 (Dear Crisis birthday
+          gathering, https://luma.com/dear-zhk5) — Luma hides the address until registration and the stored source gives
+          only "47 Thames St, Brooklyn" with no venue name or floor; retained.
       - location_id: 3261
         expected_name: 597 Grand St
         reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
@@ -4595,7 +4619,9 @@ venue_taxonomy:
         reason: Reviewed stored events and available sources; the specific tenant or ongoing venue use is not established
           well enough for a narrower category. Rechecked 2026-10-07 for active events 272926 and 272945 — the
           localwineevents listings name only a "Private Event Loft" with no floor, and the building holds several
-          separate rental lofts (e.g. Sixth Floor Loft, Home Studios), so the tenant is still unknown.
+          separate rental lofts (e.g. Sixth Floor Loft, Home Studios), so the tenant is still unknown. Rechecked
+          2026-11-04 for active event 309396 (Yalla Fest 2026, Partiful) — the listing names only "ETGMT" and the bare
+          address with no floor, and no venue of that name at 873 Broadway could be found; retained.
       - location_id: 2709
         expected_name: Grand Prospect Hall
         reason: Demolished historical venue with no active events; do not label it as an operating rental hall.
@@ -4626,7 +4652,10 @@ venue_taxonomy:
       - location_id: 12172
         expected_name: 199 N 8th St
         reason: Reviewed 2026-10-21; the only listing (Cura Collective Fall Artisan Fair on Partiful) gives the bare
-          address and "Floor 2" with no venue name, and no tenant or rental listing could be found.
+          address and "Floor 2" with no venue name, and no tenant or rental listing could be found. Rechecked 2026-11-04
+          for active event 311115 (After Hours Club art + meditation workshops, sweatpals.com) — SweatPals names only
+          "Bon Studio, North 8th Street, Brooklyn" with no street number, and no business of that name on N 8th St could
+          be found, so the building fallback is retained.
       - location_id: 12372
         expected_name: 52-16 34th St, Long Island City
         reason: Reviewed 2026-10-28; the only listing (Lime Events' Halloween party on Instagram) gives the bare street
