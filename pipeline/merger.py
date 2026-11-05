@@ -3577,6 +3577,323 @@ def _same_capture_conflict(name, url_key, website_id, head, siblings,
     return None
 
 
+# ── Series-subtitle members (BL88) ────────────────────────────────────────────
+# A library calendar titles each screening of a recurring slot "<series> -
+# <film>" at its own permalink, beside a bare "<series>" card for the slots
+# whose film is not announced yet (Sachem w6013 "EVENING MOVIE (In Person) -
+# Frankenstein" next to "Evening Movie (in Person)", 2026-11-05). Every name
+# tier fuses them: the bare name is a substring of the titled one, the dash is
+# not a subtitle colon (`_bare_name_vs_distinct_subtitle`), the titled card
+# opens with the series (the "fuller title" escape of `_is_containment_match`
+# and `same_capture_names_related`), and `_sibling_listing_veto`'s shared-slot
+# corroboration passed because the series row still held the date from the
+# capture before the film was announced. Three films sat on the series row
+# (split by hand into 314917/314918/314919) and 250819 "AFTERNOON MOVIE (In
+# Person) - Carolina Caroline" held the afternoon series plus four other films.
+#
+# The evidence is the capture itself: the same publisher, in the same pass,
+# lists another member of the series (the bare series or another "<series> -
+# <title>") at a different event-specific permalink, and does not give that
+# member this card's slot. Shared slots there mean one occurrence printed
+# twice ("Fatherland" / "FATHERLAND – Q&A with …" on the same showtime), which
+# stays one event. The series must carry two significant words, and a subtitle
+# that is a lineup ("ft: …", a bare performer list), a status mark or only a
+# date/number is not a member title ("Nice Try ft: …" is the same show).
+_SERIES_DASH_RE = re.compile(r'\s+[-–—]\s+')
+
+
+def series_subtitle_parts(name):
+    """(series, subtitle) of "<series> - <subtitle>" / "<series>: <subtitle>", else None.
+
+    Splits at the first top-level spaced dash or subtitle colon
+    (`_split_on_subtitle_colon`: never a clock or "ft:" colon). Only a
+    member-title shape counts; see the block comment above.
+    """
+    name = _strip_status_marks(name or '')
+    cut = None
+    depth = 0
+    pos = 0
+    while pos < len(name):
+        if depth == 0:
+            m = _SERIES_DASH_RE.match(name, pos)
+            if m:
+                cut = (pos, m.end())
+                break
+        depth = max(0, depth + _BRACKET_DEPTH.get(name[pos], 0))
+        pos += 1
+    colon = _split_on_subtitle_colon(name)
+    if colon is not None:
+        colon_pos = next((i for i, ch in enumerate(name)
+                          if ch == ':' and name[:i].strip() == colon[0]), None)
+        if colon_pos is not None and (cut is None or colon_pos < cut[0]):
+            cut = (colon_pos, colon_pos + 1)
+    if cut is None:
+        return None
+    series, subtitle = name[:cut[0]].strip(), name[cut[1]:].strip()
+    if not series or not subtitle:
+        return None
+    if len(_ordered_significant_words(series)) < SAME_CAPTURE_MIN_SERIES_WORDS:
+        return None
+    if _session_label_subtitle(subtitle):
+        return None
+    first = re.sub(r'[^a-z/]', '', subtitle.split()[0].lower())
+    if first in _LINEUP_MARKERS or first == 'w/' or _lineup_only_title(subtitle):
+        return None
+    if first in ('a', 'an'):
+        return None  # a tagline ("Studio Social: A Happy Hour Studio Session")
+    if subtitle.rstrip().endswith('+'):
+        return None  # a lineup tail ("KEIN KLUB: Martyn, Kendal +")
+    return series, subtitle
+
+
+# Subtitles that label a session, performance or room of ONE program rather
+# than name a member of a series (2026-11-05 replay: "- Second Set" / "- First
+# Set" at Smalls, "Sensory Day - Afternoon Session", "Other Bodies - Opening
+# Night", "Tilt!: Sensory-Friendly", "Got2Lindy … – GREAT ROOM",
+# "Foundations Course — Wednesday Mornings", "… - Final Show, MC'd by …").
+_SESSION_LABEL_WORDS = frozenset(
+    'morning mornings afternoon afternoons evening evenings night nights day days '
+    'session sessions set sets seating seatings show shows performance performances '
+    'early late first second third final last matinee matinees weekday weekdays '
+    'weekend weekends teen teens adult adults kids family'.split())
+_PERFORMANCE_VARIANT_RE = re.compile(
+    r'\b(?:opening|closing|preview|previews|sensory|relaxed|asl|audio described|captioned'
+    r'|talkback|talk back|ticket|tickets|boletos|sold out|final show|encore)\b')
+_ROOM_WORDS = frozenset(
+    'room hall studio gallery floor stage lounge auditorium ballroom annex lobby '
+    'terrace rooftop gym theater theatre space wing'.split())
+
+
+def _session_label_subtitle(subtitle):
+    """True when `subtitle` is a date, clock, session, performance or room label."""
+    norm = normalize_name_for_dedup(subtitle)
+    if _PERFORMANCE_VARIANT_RE.search(norm):
+        return True
+    words = [w for w in _subtitle_content_words(subtitle) if not re.search(r'\d', w)]
+    words = [w for w in words if w not in _CORE_MONTHS and w not in _CORE_WEEKDAYS
+             and w.rstrip('s') not in _CORE_WEEKDAYS and w not in _SESSION_LABEL_WORDS]
+    if not words:
+        return True
+    ordered = norm.split()
+    return len(ordered) <= 3 and ordered[-1] in _ROOM_WORDS
+
+
+def series_member_relation(name_a, name_b):
+    """The normalized series two titles are members of, or None.
+
+    Either one title is "<other> - <subtitle>" (a titled member beside the
+    bare series), or both are "<series> - <x>" with different subtitles
+    neither of which contains the other (two titled members).
+    """
+    norm_a = normalize_name_for_dedup(name_a or '')
+    norm_b = normalize_name_for_dedup(name_b or '')
+    if not norm_a or not norm_b or norm_a == norm_b:
+        return None
+    parts_a, parts_b = series_subtitle_parts(name_a), series_subtitle_parts(name_b)
+    series_a = normalize_name_for_dedup(parts_a[0]) if parts_a else None
+    series_b = normalize_name_for_dedup(parts_b[0]) if parts_b else None
+    if series_a and series_a == norm_b:
+        return series_a
+    if series_b and series_b == norm_a:
+        return series_b
+    if series_a and series_a == series_b:
+        sub_a = normalize_name_for_dedup(parts_a[1])
+        sub_b = normalize_name_for_dedup(parts_b[1])
+        # Two spellings of one subtitle ("World of Motion" / "World in
+        # Motion", a re-ordered or truncated title) are one member.
+        if (sub_a and sub_b and sub_a not in sub_b and sub_b not in sub_a
+                and not _same_member_title(parts_a[1], parts_b[1])):
+            return series_a
+    return None
+
+
+def _member_title_words(subtitle):
+    """Content words of a member title without date, clock and session labels."""
+    return {w for w in _subtitle_content_words(subtitle)
+            if not re.search(r'\d', w) and w not in _CORE_MONTHS
+            and w not in _CORE_WEEKDAYS and w not in _SESSION_LABEL_WORDS}
+
+
+def _same_member_title(sub_a, sub_b):
+    """Two spellings of one member title: a typo, re-ordered words, a truncated
+    or month-stamped cohort ("Step Stool - DEC" / "Step Stool NOV")."""
+    if are_names_similar(sub_a, sub_b):
+        return True
+    if _name_closeness(normalize_name_for_dedup(sub_a),
+                       normalize_name_for_dedup(sub_b)) >= SAME_CAPTURE_VARIANT_RATIO:
+        return True
+    words_a, words_b = _member_title_words(sub_a), _member_title_words(sub_b)
+    return bool(words_a and words_b and (words_a <= words_b or words_b <= words_a))
+
+
+def _slots_share(slots_a, slots_b):
+    """True when two slot sets share a calendar date.
+
+    Any time counts: a card listed the same day as its sibling at another hour
+    is a second session of one program, not another member ("Drama With Your
+    Mama" 11:45am beside "Drama with your Mama: Broadway Babies" 10:30am,
+    w6058 2026-10-22 / 12-03). Members of a series run on different days.
+    """
+    days = {day for day, _clock in slots_b}
+    return any(day in days for day, _clock in slots_a)
+
+
+def series_member_veto(name, url_key, website_id, crawl_event_id, crawl_event_slots,
+                       candidate_name, listings, sibling_slots,
+                       listing_url_keys, url_key_name_counts, candidate_url_keys=()):
+    """The sibling listing that keeps this titled series member off `candidate_name`.
+
+    `listings` = [(ce_id, name, norm_name, url_key)] of the same capture,
+    `sibling_slots(ce_id)` their (date, time) slots. Returns the first
+    sibling member of the series (see `series_member_relation`) listed at
+    another event-specific permalink, provided no such member shares a slot
+    with this listing; otherwise None. A candidate that already holds this
+    listing's own permalink (`candidate_url_keys`) is the same record
+    retitled ("House of Time" → "House of Time: Circle of Life" at
+    gemsny.org/event/house-of-time-26/) and is never vetoed.
+    """
+    series = series_member_relation(name, candidate_name)
+    if series is None or not crawl_event_slots:
+        return None
+    if url_key and url_key in candidate_url_keys:
+        return None
+    if not _url_key_is_event_specific(website_id, url_key, listing_url_keys,
+                                      url_key_name_counts):
+        return None
+    norm = normalize_name_for_dedup(name)
+    # A row named for the bare series loses a titled member only when the
+    # capture still lists the bare series as its own card: an ensemble's
+    # calendar that titles every concert "<ensemble>: <program>" has no bare
+    # card, and its ensemble-named rows are the members' reviewed home (mmc.band
+    # w2263 → 275775 "Park Avenue Chamber Symphony", decisions.md "PACS").
+    bare_only = normalize_name_for_dedup(candidate_name or '') == series
+    evidence = None
+    for sibling_id, sibling_name, sibling_norm, sibling_key in listings:
+        if sibling_id == crawl_event_id or not sibling_norm or sibling_norm == norm:
+            continue
+        if not sibling_key or sibling_key == url_key:
+            continue
+        if bare_only and sibling_norm != series:
+            continue
+        if sibling_norm != series:
+            parts = series_subtitle_parts(sibling_name)
+            if not parts or normalize_name_for_dedup(parts[0]) != series:
+                continue
+        if not _url_key_is_event_specific(website_id, sibling_key, listing_url_keys,
+                                          url_key_name_counts):
+            continue
+        if _slots_share(crawl_event_slots, sibling_slots(sibling_id)):
+            return None  # one program listed under two titles that day
+        if evidence is None:
+            evidence = sibling_name
+    return evidence
+
+
+def redirect_program_mismatch(name, duplicate_name, survivor_name):
+    """True when a redirect would hand another program to the survivor (BL88).
+
+    A redirect records that a hidden row IS its survivor. When the hidden row
+    carries only an ensemble or series name ("Park Avenue Chamber Symphony",
+    224790 → 306822 "Romeo and Juliet (Family Concert)") and the incoming
+    title adds a program to that name ("Park Avenue Chamber Symphony:
+    Nutcracker"), the program must be the survivor's; otherwise the source is
+    another program of the ensemble and does not follow the redirect.
+    """
+    parts = series_subtitle_parts(name)
+    if not parts or not duplicate_name or not survivor_name:
+        return False
+    if normalize_name_for_dedup(parts[0]) != normalize_name_for_dedup(duplicate_name):
+        return False
+    return not (are_names_similar(parts[1], survivor_name)
+                or are_names_similar(name, survivor_name))
+
+
+# ── Suppressed title holders (BL88) ───────────────────────────────────────────
+# A hidden dedupe loser with no redirect keeps winning its old title, because
+# that title is no visible row's name. Mehanata 156307 "THE Y2K Parrty at the
+# Legendary Mehanata NYC - 18" took every RA/posh card under that title while
+# the party runs as two visible series kept apart by a dismissal (Fridays
+# 210496, Saturdays 276875): one redirect cannot route by weekday, so the
+# 2026-11-05 repair moved 154 sources by date. Those moved sources are the
+# routing record: a visible row at the source's venue that already holds
+# sources under this exact title, and that covers each of the source's dates
+# (the date itself, or its weekday among the row's current dates), takes the
+# source. Exactly one such row routes; a tie on weekdays is broken only by
+# exact dates. A source whose dates need several rows (it spans the split)
+# stays where it landed and is logged as WEEKDAY-SPLIT. A LONE holder takes the
+# source only when it already runs every incoming slot (date or weekday, same
+# clock): the 30-day replay's 116 TITLE-HOLDER lines were dedupe losers beside
+# their visible twin (Greenmarkets, Carnegie, CRUX), except Otto's 7pm "Band
+# Night" beside the 5pm/6pm open mic and BRIC's online class at another hour.
+SUPPRESSED_TITLE_HOLDERS_SQL = (
+    "SELECT es.event_id, ce.name FROM event_sources es "
+    "JOIN crawl_events ce ON ce.id = es.crawl_event_id "
+    "WHERE es.event_id IN ({placeholders})")
+
+
+def _weekday(day):
+    try:
+        return date_type.fromisoformat(day).weekday()
+    except (TypeError, ValueError):
+        return None
+
+
+def _single_holder_covers(incoming_slots, held_slots):
+    """Every incoming (date, clock) is a slot the lone holder already runs.
+
+    Covered = the holder lists that date, or lists that weekday, at the same
+    start time (an unknown time on either side does not disagree). Otto's
+    "Wednesday Band Night" at 7pm is not the 5pm/6pm open mic that also holds
+    the title, so it stays for review.
+    """
+    if not incoming_slots or not held_slots:
+        return False
+    by_day, by_weekday = {}, {}
+    for day, clock in held_slots:
+        by_day.setdefault(day, set()).add(clock or '')
+        by_weekday.setdefault(_weekday(day), set()).add(clock or '')
+    for day, clock in incoming_slots:
+        clocks = by_day.get(day) or by_weekday.get(_weekday(day))
+        if not clocks or not (not clock or '' in clocks or clock in clocks):
+            return False
+    return True
+
+
+def title_holder_route(incoming_dates, holders, holder_dates,
+                       incoming_slots=None, holder_slots=None):
+    """Assign a source's dates to the visible title holders.
+
+    `holders`: candidate event ids (visible, same venue, holding the title);
+    `holder_dates(eid)`: their current date strings. A date goes to the one
+    holder listing that date, else to the one holder whose current dates fall
+    on its weekday. Returns ('route', {holder: {dates}}) when there are at
+    least two holders (the weekday split no single redirect can express) and
+    every date has exactly one, or when the one holder already runs every
+    incoming (date, clock) slot (`holder_slots(eid)`, see
+    _single_holder_covers); ('split', holders) when some date has none or
+    several; ('single', holder) for one holder that does not cover the source,
+    left to review; (None, None) otherwise.
+    """
+    holders = sorted(holders)
+    if not incoming_dates or not holders:
+        return None, None
+    if len(holders) == 1:
+        if (holder_slots is not None and incoming_slots
+                and _single_holder_covers(incoming_slots, holder_slots(holders[0]) or ())):
+            return 'route', {holders[0]: set(incoming_dates)}
+        return 'single', holders[0]
+    days = {eid: set(holder_dates(eid) or ()) for eid in holders}
+    weekdays = {eid: {_weekday(d) for d in days[eid]} - {None} for eid in holders}
+    assigned = {}
+    for day in sorted(incoming_dates):
+        exact = [eid for eid in holders if day in days[eid]]
+        pick = exact if exact else [eid for eid in holders if _weekday(day) in weekdays[eid]]
+        if len(pick) != 1:
+            return 'split', holders
+        assigned.setdefault(pick[0], set()).add(day)
+    return 'route', assigned
+
+
 def _event_has_live_occurrence(cursor, event_id, current_date):
     """True when the event still has a current or future occurrence.
 
@@ -5282,6 +5599,16 @@ def _run_archival_tail(cursor, connection, website_ids, audit_context, empty_con
         if pruned:
             print(f"  Removed {pruned} future date(s) no current crawl supports "
                   f"on {len({r[0] for r in pruned_rows})} event(s)")
+        # Same-day slots the same website has since re-timed (a single listed
+        # time replacing another). See db.prune_superseded_times.
+        retimed, retimed_rows = _retry_on_deadlock(
+            db.prune_superseded_times, cursor, connection, website_ids, temps_built=True,
+            edit_logger=_merge_edit_logger(
+                cursor, connection, audit_context,
+                archival_reason='superseded_source_times'))
+        if retimed:
+            print(f"  Removed {retimed} superseded same-day time(s) "
+                  f"on {len({r[0] for r in retimed_rows})} event(s)")
         for website_id in website_ids:
             archived_count, upcoming_events = _retry_on_deadlock(
                 db.archive_outdated_events, cursor, connection, website_id, temps_built=True,
@@ -6272,6 +6599,40 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 single_occasion_report['events'].add(event_id)
         return kept
 
+    # BL88: slots of a capture's listings, for `series_member_veto` (pending
+    # listings are prefetched; an already-linked sibling is read once).
+    capture_sibling_slot_cache = {}
+
+    def _capture_sibling_slots(sibling_id):
+        if sibling_id not in capture_sibling_slot_cache:
+            rows = occurrences_by_ce.get(sibling_id)
+            if rows is None:
+                cursor.execute("SELECT start_date, start_time FROM crawl_event_occurrences "
+                               "WHERE crawl_event_id = %s", (sibling_id,))
+                rows = cursor.fetchall()
+            capture_sibling_slot_cache[sibling_id] = {
+                (str(r[0]), r[1] or '') for r in rows if r[0]}
+        return capture_sibling_slot_cache[sibling_id]
+
+    series_member_skips = [0]
+    redirect_program_skips = 0
+    title_holder_routes = 0
+    weekday_split_report = []  # (suppressed id, ce id, holder ids)
+    title_holder_names = {}  # event id -> {normalized source names}
+
+    def _title_holder_names(event_ids):
+        missing = [eid for eid in event_ids if eid not in title_holder_names]
+        for eid in missing:
+            title_holder_names[eid] = set()
+        for i in range(0, len(missing), 500):
+            chunk = missing[i:i + 500]
+            cursor.execute(SUPPRESSED_TITLE_HOLDERS_SQL.format(
+                placeholders=','.join(['%s'] * len(chunk))), tuple(chunk))
+            for eid, source_name in cursor.fetchall():
+                if source_name:
+                    title_holder_names[eid].add(normalize_name_for_dedup(source_name))
+        return title_holder_names
+
     for ce_row in new_crawl_events:
         (ce_id, name, short_name, description, emoji, location_name, sublocation,
          location_id, url, website_id, lat, lng, crawl_result_id) = ce_row
@@ -6334,6 +6695,30 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
         ce_url_key = normalize_url_for_identity(url) if url else ''
         crawl_result_roster = crawl_result_rosters.get(crawl_result_id, ())
 
+        series_member_verdicts = {}  # candidate id -> sibling name (or None), BL88
+
+        def _series_member_veto(existing):
+            # BL88 titled series member vs the series / another member (see
+            # series_member_veto).
+            # Visible rows only: a hidden row is either a redirect (left to
+            # its program check, redirect_program_mismatch) or a deliberate
+            # hide whose sources stay hidden.
+            if existing.get('suppressed'):
+                return None
+            if existing['id'] not in series_member_verdicts:
+                sibling = series_member_veto(
+                    name, ce_url_key, website_id, ce_id, crawl_event_slots,
+                    existing['name'], capture_listings.get(crawl_result_id, ()),
+                    _capture_sibling_slots, listing_url_keys, url_key_name_counts,
+                    merge_event_url_keys.get(existing['id'], ()))
+                series_member_verdicts[existing['id']] = sibling
+                if sibling:
+                    series_member_skips[0] += 1
+                    print(f"  Series-subtitle veto: source {ce_id} ({name}) skips "
+                          f"{existing['id']} ({existing['name']}); capture lists "
+                          f"'{sibling}' at its own page")
+            return series_member_verdicts[existing['id']]
+
         def _sibling_veto(existing):
             # A broad festival envelope and a numbered night can have different
             # titles/publishers, so the ordinary suffix/permalink rule misses
@@ -6344,6 +6729,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 if numbered_festival_span_mismatch(
                         name, valid_occurrences, existing['name'], cursor.fetchall()):
                     return True
+            if _series_member_veto(existing):
+                return True
             return _sibling_listing_veto(
                 name, ce_url_key, website_id, crawl_event_slots, ce_id,
                 existing, event_slots.get(existing['id'], set()),
@@ -6905,6 +7292,17 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 lambda a, b: same_place(a, b, location_containment),
                 dateless=dateless, dates_overlap=_dates_overlap,
                 website_id=website_id, name=name, location_bridges=redirect_bridges)
+            if survivor_id is not None and redirect_program_mismatch(
+                    name, _receiving_event_name(matched_event_id),
+                    _receiving_event_name(survivor_id)):
+                # Another program of the hidden row's ensemble/series (BL88):
+                # neither the survivor nor the hidden row is this listing.
+                print(f"  Redirect program veto: source {ce_id} ({name}) does not follow "
+                      f"{matched_event_id} -> {survivor_id} "
+                      f"({_receiving_event_name(survivor_id)})")
+                redirect_program_skips += 1
+                survivor_id = None
+                matched_event_id = None
             if (survivor_id is not None
                     and not _program_veto({'id': survivor_id,
                                            'name': _receiving_event_name(survivor_id)})):
@@ -6927,6 +7325,73 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                                    (matched_event_id,))
                     _m = cursor.fetchone()
                     current_loc_id = _m[0] if _m else None
+
+        # Suppressed title-holder handoff (BL88): a source still on a hidden
+        # row with no redirect goes to the visible row(s) at its venue that
+        # already hold this exact title, chosen by date / weekday (see
+        # title_holder_route). A reviewed match or owner is never moved.
+        title_holder_handoff = False
+        title_holder_sessions = {}  # other holder -> its share of the source's dates
+        if (matched_event_id is not None and not dateless
+                and location_id is not None
+                and matched_event_id in suppressed_event_ids
+                and matched_event_id != reviewed_match_id
+                and matched_event_id not in url_twin_redirect_survivors
+                and matched_event_id not in url_twin_reviewed_owners
+                and not suppressed_handoff and not redirect_handoff):
+            hidden_id = matched_event_id
+            pool = [e['id'] for e in existing_events_by_location_id.get(location_id, ())
+                    if not e.get('suppressed') and e['id'] != hidden_id
+                    and (min(e['id'], hidden_id), max(e['id'], hidden_id))
+                    not in url_twin_dismissed_pairs]
+            if pool:
+                names_by_event = _title_holder_names(pool)
+                holders = [eid for eid in pool if norm_name in names_by_event.get(eid, ())
+                           and not _event_is_archived(eid)]
+                verdict, target = title_holder_route(
+                    crawl_event_dates, holders, lambda eid: event_dates.get(eid, set()),
+                    incoming_slots={(d, _standardize_time(t) or '')
+                                    for d, t in crawl_event_slots},
+                    holder_slots=lambda eid: event_slots.get(eid, set()))
+                if verdict == 'route':
+                    # The holder with most of the dates takes the source; the
+                    # others take their dates (and a source row) below.
+                    main = max(sorted(target), key=lambda eid: len(target[eid]))
+                    # The holders are usually each other's dismissed partners
+                    # (Fri 210496 / Sat 276875, 48819): a verdict naming only
+                    # another holder is the split itself, not a veto.
+                    if any(_program_veto({'id': eid, 'name': _receiving_event_name(eid)})
+                           or set(_dismissed_home(eid) or ()) - set(target)
+                           or _same_capture(eid) for eid in target):
+                        verdict = None
+                if verdict == 'route':
+                    print(f"  Title-holder handoff: suppressed {hidden_id} -> "
+                          + ', '.join(f"{eid} ({len(target[eid])} date(s))"
+                                      for eid in sorted(target))
+                          + f": source {ce_id} ({name})")
+                    for eid in sorted(target):
+                        if eid != main:
+                            title_holder_sessions[eid] = [
+                                o for o in valid_occurrences if str(o[0]) in target[eid]]
+                    valid_occurrences = [o for o in valid_occurrences
+                                         if str(o[0]) not in
+                                         {d for eid in title_holder_sessions
+                                          for d in target[eid]}]
+                    matched_event_id = main
+                    title_holder_handoff = True
+                    title_holder_routes += 1
+                    cursor.execute("SELECT location_id FROM events WHERE id = %s",
+                                   (matched_event_id,))
+                    _m = cursor.fetchone()
+                    current_loc_id = _m[0] if _m else None
+                elif verdict in ('split', 'single'):
+                    holder_ids = target if verdict == 'split' else [target]
+                    weekday_split_report.append((hidden_id, ce_id, holder_ids))
+                    label = 'WEEKDAY-SPLIT' if verdict == 'split' else 'TITLE-HOLDER'
+                    print(f"  {label} e{hidden_id} \"{_receiving_event_name(hidden_id)}\" "
+                          f"(suppressed, no redirect) took ce{ce_id}; visible holder(s) of "
+                          f"this title: {['e%d' % t for t in holder_ids]} "
+                          "(review: redirect or un-suppress)")
 
         # Dismissed-pair home handoff: a veto above found the event that owns
         # this listing (same website + same name + same URL or venue on an
@@ -7083,6 +7548,23 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             if withheld_url_keys and normalize_url_for_identity(url) in withheld_url_keys:
                 url = None  # that permalink is a partner's page, not the winner's
 
+        # BL88: the other weekday series' share of a title-holder handoff.
+        for home_id, home_occurrences in title_holder_sessions.items():
+            overnight_rows = _merge_occurrences_into_event(
+                cursor, home_id, home_occurrences, crawl_event_id=ce_id)
+            if overnight_rows is not None:
+                _refresh_occurrence_indexes(
+                    home_id, overnight_rows, event_dates, event_date_ranges,
+                    event_slots, current_date, future_limit_date)
+            cursor.execute(
+                "INSERT IGNORE INTO event_sources (event_id, crawl_event_id, is_primary) "
+                "VALUES (%s, %s, FALSE)", (home_id, ce_id))
+            capture_claims.setdefault((crawl_result_id, home_id), []).append(
+                (ce_id, name, ce_url_key))
+            program_profile_cache.pop(home_id, None)
+            if home_id in title_holder_names:
+                title_holder_names[home_id].add(norm_name)
+
         if matched_event_id:
             # Merge with existing event
             # Un-archive event if it was previously archived (event found in new crawl).
@@ -7230,7 +7712,7 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
                 current_location_id = current_loc_id
                 if not current_location_id or (
                     not suppressed_handoff and not dismissed_home_handoff and
-                    not redirect_handoff and
+                    not redirect_handoff and not title_holder_handoff and
                     not (url_relaxed_match and incoming_is_fallback) and
                     not (reviewed_bridge and matched_event_id == reviewed_match_id) and
                     should_repin_location(current_location_id, location_id,
@@ -7406,6 +7888,8 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
             merged_count += 1
             capture_claims.setdefault((crawl_result_id, matched_event_id), []).append(
                 (ce_id, name, ce_url_key))
+            if matched_event_id in title_holder_names:
+                title_holder_names[matched_event_id].add(norm_name)
             if (matched_event_id, website_id) in dismissed_home_sources:
                 dismissed_home_sources[(matched_event_id, website_id)].append(
                     (ce_url_key, norm_name, location_id))
@@ -7552,6 +8036,16 @@ def merge_crawl_events(cursor, connection, crawl_run_id=None, website_ids=None):
     if dead_keepers:
         print(f"  Dead-keeper tripwire: {len(dead_keepers)} hidden row(s) without a redirect "
               "took sources an archived visible row shares (review: un-suppress or redirect)")
+    if series_member_skips[0]:
+        print(f"  Series-subtitle veto: {series_member_skips[0]} candidate(s) skipped "
+              "(titled series member vs the series / another member, BL88)")
+    if redirect_program_skips:
+        print(f"  Redirect program veto: {redirect_program_skips} source(s) named another "
+              "program than the redirect survivor (BL88)")
+    if title_holder_routes or weekday_split_report:
+        print(f"  Title-holder handoff: {title_holder_routes} source(s) moved off hidden rows "
+              f"to the visible row(s) holding their title; {len(weekday_split_report)} "
+              "WEEKDAY-SPLIT / TITLE-HOLDER source(s) left on the hidden row for review (BL88)")
     if dismissed_home_skips or dismissed_home_handoffs:
         print(f"  Dismissed-pair veto: {dismissed_home_skips} candidate(s) skipped, "
               f"{dismissed_home_handoffs} source(s) handed to their listing's home")

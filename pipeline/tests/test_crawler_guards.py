@@ -242,6 +242,34 @@ class TestBotChallengeDetection(unittest.TestCase):
         self.assertGreater(len(body), MIN_CRAWL_CONTENT_SIZE)
         self.assertTrue(_is_bot_challenge(body))
 
+    def test_queue_it_safetynet_waiting_room_is_detected(self):
+        # w383 The Shed detail fetch, 2026-11-05 (stored detail source).
+        body = (
+            "You can close this page without losing your place in line.\n"
+            "![The Shed Economy Production SafetyNet](https://assets-us-west-2.queue-it.net/"
+            "theshed/userdata/shedstyle/layout/v05/img/QueueIt.jpg)\n"
+            "#  You are now in line\n"
+            "You're in line because we're currently experiencing heavy traffic to our "
+            "website. Thanks for your patience.\n"
+            "What is this?\n"
+            "Your number in line: 68027   \nIt is your turn   \n"
+            "Your estimated wait time is: less than a minute\n"
+            "Queue ID: 89f3cc51-f1a0-4c77-a1f1-ef1d96a30a16\n** Queue-it Logo **\n"
+        )
+        self.assertTrue(_is_bot_challenge(body))
+
+    def test_queue_it_join_queue_page_is_detected(self):
+        # w331 Carnegie Hall listing crawl, 2026-06-09 (trimmed).
+        body = (
+            "https://www.carnegiehall.org/Events\n"
+            "# Carnegie Hall\n"
+            "You can close this page without losing your place in line.\n"
+            "#  Thank you for joining our queue.\n"
+            "We are currently experiencing a high volume of traffic. Please wait here "
+            "to enter our website. Visitors will gain access in the order they arrive.\n"
+        )
+        self.assertTrue(_is_bot_challenge(body))
+
 
 class TestLegitimateContentNotFlagged(unittest.TestCase):
     """Real pages — especially small ones — must never be flagged."""

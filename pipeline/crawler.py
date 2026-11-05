@@ -65,6 +65,13 @@ BOT_CHALLENGE_MARKERS = (
     # before matching, so key on the body sentence. 0 hits in 39.8K crawls
     # over 120 days other than those two.
     'made us think that you are a bot',
+    # Queue-it waiting rooms ("You can close this page without losing your place
+    # in line" / "# You are now in line" / "Queue ID: ..."). The Shed (w383) served
+    # its SafetyNet queue to a detail fetch on 2026-11-05 and it reached the
+    # enricher; Carnegie Hall (w331) stored one as a `processed` listing crawl on
+    # 2026-06-09. SafetyNet queues release in seconds, so a retry gets the page.
+    'without losing your place in line',
+    'you are now in line',
 )
 
 # Cloudflare's 5xx interstitials are the same class of problem: the origin (or

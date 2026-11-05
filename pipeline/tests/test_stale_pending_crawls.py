@@ -65,6 +65,8 @@ class StalePendingQueryTests(unittest.TestCase):
         self.assertEqual(db.create_crawl_result(cursor, conn, 3, 7, 'venue.md'), 42)
         update = cursor.execute.call_args_list[-1].args[0]
         self.assertIn("status = 'pending', created_at = NOW()", update)
+        # The failed attempt's message must not survive onto the new attempt.
+        self.assertIn("error_message = NULL", update)
 
 
 class ReconcileTests(unittest.TestCase):

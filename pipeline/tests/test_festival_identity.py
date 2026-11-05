@@ -100,7 +100,8 @@ class FestivalMatcherTests(unittest.TestCase):
             ce_url_key='shotgun.live/en/festivals/cityofgods2026', website_id=244,
             crawl_event_slots={(r[0], r[1] or '') for r in incoming}, ce_id=1456594,
             event_slots=slots, crawl_result_roster=[], listing_url_keys=set(),
-            url_key_name_counts={}, merge_event_url_keys={}))
+            url_key_name_counts={}, merge_event_url_keys={},
+            _series_member_veto=lambda existing: None))
         harness = _MatcherHarness(name, schedules, location_id=410, slots=slots)
         original = harness._common_freevars
         harness._common_freevars = lambda: dict(original(), _sibling_veto=veto)

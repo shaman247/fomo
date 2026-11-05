@@ -161,6 +161,7 @@ def run_merge(*, events, ce_occurrences, raw, dismissed=(), event_urls=(), suppr
         database.build_tag_ancestor_map.return_value = ({}, set())
         database.archive_dead_source_events.return_value = (0, [])
         database.prune_superseded_dates.return_value = (0, [])
+        database.prune_superseded_times.return_value = (0, [])
         database.archive_sourceless_events.return_value = (0, [])
         occ_merge = stack.enter_context(patch.object(
             merger, '_merge_occurrences_into_event', return_value=None))

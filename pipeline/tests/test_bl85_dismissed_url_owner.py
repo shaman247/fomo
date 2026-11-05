@@ -127,6 +127,7 @@ def run_merge(*, url=ONLINE_URL, raw=None, event_urls=URLS, dismissed=DISMISSED,
         database.build_tag_ancestor_map.return_value = ({}, set())
         database.archive_dead_source_events.return_value = (0, [])
         database.prune_superseded_dates.return_value = (0, [])
+        database.prune_superseded_times.return_value = (0, [])
         database.archive_sourceless_events.return_value = (0, [])
         database.archive_outdated_events.return_value = (0, [])
         occ_merge = stack.enter_context(patch.object(

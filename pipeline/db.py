@@ -271,8 +271,14 @@ def create_crawl_result(cursor, connection, crawl_run_id, website_id, filename):
         # created_at restarts with the attempt: fail_stale_pending_crawl_results
         # ages 'pending' rows by it, and a same-day retry of a row first created
         # hours earlier must not look abandoned while its fetch is in flight.
+        # The failed attempt's error_message describes the OLD fetch: a retry
+        # that succeeds would otherwise carry it as a 'crawled'/'processed' row
+        # (2026-11-05: HRMM, Fort Tryon and Weeksville kept this morning's
+        # "no capture" / Tribe 403 messages on good content), which the
+        # empty-latest archival pass and triage both read as a failure.
         cursor.execute(
-            "UPDATE crawl_results SET status = 'pending', created_at = NOW() WHERE id = %s",
+            "UPDATE crawl_results SET status = 'pending', created_at = NOW(), "
+            "error_message = NULL WHERE id = %s",
             (row[0],)
         )
         connection.commit()
@@ -2187,7 +2193,7 @@ def prune_superseded_dates(cursor, connection, website_ids, temps_built=False,
     Dates, not times: a listing that prints one start per day ("6:30pm" for
     Merchant's House ghost tours that leave every half hour, 6:30-9pm) would
     otherwise supersede every other real slot. Retimed duplicates on the same
-    day are out of scope here.
+    day are prune_superseded_times' job.
 
     E always keeps the dates its latest bracketing crawl lists, so this never
     empties an event; whole-event disappearance stays archival's job.
@@ -2331,6 +2337,217 @@ def prune_superseded_dates(cursor, connection, website_ids, temps_built=False,
             raise
         return len(doomed), [(event_id, names.get(event_id), day)
                              for _, event_id, day in doomed]
+    finally:
+        if not temps_built:
+            drop_archival_temps(cursor)
+
+
+# Superseded same-day TIMES (see prune_superseded_times). The merge adds a
+# re-timed slot beside the old one: Snug Harbor's Compost Processing Workday
+# read 2pm, then 12:30pm, then 1pm, then 10am for the same Nov 15 session and
+# kept all four. Same grace and fresh-crawl count as superseded dates.
+_CANONICAL_TIME = re.compile(r'(1[0-2]|[1-9])(:[0-5]\d)?(am|pm)')
+
+
+def _time_key(value):
+    """Occurrence start_time -> canonical key ('7pm', '6:30pm'), '' when untimed,
+    None when the string does not parse (the day is then left alone)."""
+    key = standardize_time(value or '')
+    if key == '':
+        return ''
+    return key if _CANONICAL_TIME.fullmatch(key) else None
+
+
+def prune_superseded_times(cursor, connection, website_ids, temps_built=False,
+                           edit_logger=None, dry_run=False):
+    """Delete a future same-day slot whose time the same website has since replaced.
+
+    For a visible event E and a future day D on which E carries single-day
+    occurrences at two or more distinct start times, the slot at time T1 is
+    deleted only when:
+    - E has never been listed with more than one start time on any day: no
+      crawl (any website, any date, past included) gave E two distinct times on
+      one day. Multi-slot events are left alone, because a listing that prints
+      one representative start per day (Merchant's House ghost tours, "every
+      half hour, 6:30 to 9pm", shown as 6:30pm) is not evidence the other
+      slots are gone;
+    - every crawl_event listing E on D at T1 comes from ONE website W in
+      `website_ids`, on its site-crawl surface, and W carries absence evidence.
+      Times with no crawl support (reviewed repairs), second-website or Picnob
+      support are kept;
+    - the newest T1 support is older than SUPERSEDED_DATE_GRACE_DAYS;
+    - W's latest site crawl is finished and lists E on D at exactly one other
+      time T2, and at least SUPERSEDED_DATE_MIN_FRESH_CRAWLS of W's finished
+      site crawls newer than the T1 support (the latest among them) list E on D
+      at T2 and nothing else;
+    - every occurrence row on D is a timed single-day row with a parseable
+      time, and no crawl ever gave E a multi-day row covering D.
+
+    T2 itself is never deleted, so D always keeps the slot the latest crawl
+    lists. `dry_run` reports without deleting (read-only replays).
+    Returns (deleted_count, [(event_id, name, start_date, start_time), ...]).
+    """
+    from datetime import datetime as _datetime, timedelta as _timedelta
+    website_ids = sorted({w for w in (website_ids or ()) if w is not None})
+    if not website_ids:
+        return 0, []
+    if not temps_built:
+        build_archival_temps(cursor)
+    try:
+        surface = _picnob_surface_sql('cr')
+        placeholders = ','.join(['%s'] * len(website_ids))
+        cursor.execute(f"""
+            SELECT cs.website_id, cs.crawl_result_id
+            FROM _ws_crawl_state cs
+            WHERE cs.picnob = 0
+              AND cs.status IN ('processed', 'extracted')
+              AND cs.processed_at IS NOT NULL
+              AND cs.website_id IN ({placeholders})
+              AND cs.website_id NOT IN (SELECT website_id FROM _ws_no_absence_evidence)
+        """, website_ids)
+        state = {w: cr_id for w, cr_id in cursor.fetchall()}
+        if not state:
+            return 0, []
+        latest_ids = sorted(set(state.values()))
+        placeholders = ','.join(['%s'] * len(latest_ids))
+        cursor.execute(f"""
+            SELECT DISTINCT cr.website_id, es.event_id
+            FROM crawl_results cr
+            JOIN crawl_events ce ON ce.crawl_result_id = cr.id
+            JOIN event_sources es ON es.crawl_event_id = ce.id
+            JOIN events e ON e.id = es.event_id
+            WHERE cr.id IN ({placeholders})
+              AND e.archived = FALSE AND COALESCE(e.suppressed, 0) = 0
+        """, latest_ids)
+        listed = {}  # event_id -> websites whose latest site crawl lists it
+        for w, event_id in cursor.fetchall():
+            if w in state:
+                listed.setdefault(event_id, set()).add(w)
+        if not listed:
+            return 0, []
+
+        grace_cutoff = _datetime.now() - _timedelta(days=SUPERSEDED_DATE_GRACE_DAYS)
+        event_ids = sorted(listed)
+        occurrences, sources, names = {}, {}, {}
+        for start in range(0, len(event_ids), 1000):
+            chunk = event_ids[start:start + 1000]
+            ph = ','.join(['%s'] * len(chunk))
+            cursor.execute(f"""
+                SELECT eo.id, eo.event_id, eo.start_date, eo.start_time, eo.end_date, e.name
+                FROM event_occurrences eo
+                JOIN events e ON e.id = eo.event_id
+                WHERE eo.event_id IN ({ph})
+                  AND (eo.start_date >= CURDATE() OR eo.end_date >= CURDATE())
+            """, chunk)
+            for occ_id, event_id, sd, st, ed, name in cursor.fetchall():
+                occurrences.setdefault(event_id, []).append(
+                    (occ_id, _as_date(sd), st, _as_date(ed)))
+                names[event_id] = name
+            cursor.execute(f"""
+                SELECT es.event_id, ce.id, ce.created_at, cr.id, cr.website_id,
+                       {surface}, cr.status, cr.processed_at
+                FROM event_sources es
+                JOIN crawl_events ce ON ce.id = es.crawl_event_id
+                JOIN crawl_results cr ON cr.id = ce.crawl_result_id
+                WHERE es.event_id IN ({ph})
+            """, chunk)
+            for event_id, ce_id, created, cr_id, w, picnob, status, processed in cursor.fetchall():
+                sources.setdefault(event_id, []).append(
+                    (ce_id, _as_datetime(created), cr_id, w, bool(picnob),
+                     status in ('processed', 'extracted') and processed is not None))
+        ce_ids = sorted({s[0] for rows in sources.values() for s in rows})
+        ce_rows = {}  # crawl_event_id -> [(start, start_time, end)]
+        for start in range(0, len(ce_ids), 5000):
+            chunk = ce_ids[start:start + 5000]
+            ph = ','.join(['%s'] * len(chunk))
+            cursor.execute(
+                f"SELECT crawl_event_id, start_date, start_time, end_date "
+                f"FROM crawl_event_occurrences WHERE crawl_event_id IN ({ph})", chunk)
+            for ce_id, sd, st, ed in cursor.fetchall():
+                if sd is not None:
+                    ce_rows.setdefault(ce_id, []).append((_as_date(sd), st, _as_date(ed)))
+
+        doomed = {}  # occurrence id -> (event_id, day, start_time)
+        for event_id, websites in listed.items():
+            rows = sources.get(event_id, [])
+            # (crawl_result, day) -> time keys; spans -> days some crawl covers
+            # with a multi-day row.
+            crawl_day_times, span_rows = {}, []
+            for ce_id, _, cr_id, _, _, _ in rows:
+                for sd, st, ed in ce_rows.get(ce_id, ()):
+                    if ed is not None and ed != sd:
+                        span_rows.append((sd, ed))
+                        continue
+                    crawl_day_times.setdefault((cr_id, sd), set()).add(_time_key(st))
+            if any(len(keys - {''}) > 1 for keys in crawl_day_times.values()):
+                continue  # a multi-slot event: never retire one of its times
+            by_day, occ_spans = {}, []
+            for occ_id, sd, st, ed in occurrences.get(event_id, ()):
+                if ed is not None and ed != sd:
+                    occ_spans.append((sd, ed))
+                else:
+                    by_day.setdefault(sd, []).append((occ_id, _time_key(st), st))
+            for day, slots in by_day.items():
+                keys = {k for _, k, _ in slots}
+                if None in keys or '' in keys or len(keys) < 2:
+                    continue
+                if any(sd <= day <= ed for sd, ed in span_rows + occ_spans):
+                    continue
+                for w in websites:
+                    latest_cr = state[w]
+                    current = crawl_day_times.get((latest_cr, day))
+                    if not current or len(current) != 1:
+                        continue
+                    (t2,) = current
+                    if not t2 or t2 not in keys:
+                        continue
+                    for t1 in keys - {t2}:
+                        support = [s for s in rows
+                                   if t1 in crawl_day_times.get((s[2], day), ())
+                                   and any(sd == day and _time_key(st) == t1
+                                           for sd, st, ed in ce_rows.get(s[0], ())
+                                           if ed is None or ed == sd)]
+                        if not support or any(s[4] or s[3] != w for s in support):
+                            continue
+                        created = [s[1] for s in support if s[1] is not None]
+                        if len(created) != len(support) or max(created) >= grace_cutoff:
+                            continue
+                        newest_support = max(created)
+                        fresh = {s[2] for s in rows
+                                 if s[3] == w and not s[4] and s[5]
+                                 and s[1] is not None and s[1] > newest_support
+                                 and crawl_day_times.get((s[2], day)) == {t2}}
+                        if latest_cr not in fresh or len(fresh) < SUPERSEDED_DATE_MIN_FRESH_CRAWLS:
+                            continue
+                        for occ_id, key, raw in slots:
+                            if key == t1:
+                                doomed[occ_id] = (event_id, day, raw)
+
+        if not doomed:
+            return 0, []
+        report = [(event_id, names.get(event_id), day, raw)
+                  for _, (event_id, day, raw) in sorted(doomed.items())]
+        if dry_run:
+            return len(doomed), report
+        ids = sorted(doomed)
+        try:
+            for start in range(0, len(ids), 1000):
+                chunk = ids[start:start + 1000]
+                ph = ','.join(['%s'] * len(chunk))
+                if edit_logger is not None:
+                    cursor.execute(
+                        f"SELECT id, event_id, start_date, start_time, end_date, end_time "
+                        f"FROM event_occurrences WHERE id IN ({ph})", chunk)
+                    for occ_id, event_id, sd, st, ed, et in cursor.fetchall():
+                        edit_logger.log_delete('event_occurrences', occ_id, {
+                            'event_id': event_id, 'start_date': str(sd), 'start_time': st,
+                            'end_date': str(ed) if ed else None, 'end_time': et})
+                cursor.execute(f"DELETE FROM event_occurrences WHERE id IN ({ph})", chunk)
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
+        return len(doomed), report
     finally:
         if not temps_built:
             drop_archival_temps(cursor)

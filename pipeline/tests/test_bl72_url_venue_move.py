@@ -231,6 +231,7 @@ def run_merge(*, event_website=MCPL, ce_venue=SELDEN, ce_label=NAMES[SELDEN]):
         database.build_tag_ancestor_map.return_value = ({}, set())
         database.archive_dead_source_events.return_value = (0, [])
         database.prune_superseded_dates.return_value = (0, [])
+        database.prune_superseded_times.return_value = (0, [])
         database.archive_sourceless_events.return_value = (0, [])
         for helper in ('_merge_occurrences_into_event', '_merge_grouped_event_urls',
                        'refresh_source_metadata', 'refresh_source_session_details'):

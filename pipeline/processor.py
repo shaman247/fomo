@@ -7884,6 +7884,34 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
             return result
         return make_result(pin, 'tba_area') if (pin := _area_pin(locations_map, tba_hint)) else None
 
+    # Step 0b: a bare brand plus a unique branch address identifies that branch
+    # more precisely than the unqualified primary name of another branch.
+    # Restrict this to members of the same named family: a co-tenant at the
+    # address is not evidence that the explicitly named venue is wrong.
+    #
+    # Runs BEFORE the website-scoped tier (BL87, 2026-11-05). A scoped alias on
+    # a bare chain name ("ShopRite" -> ShopRite of Greenway Plaza for w459
+    # Yonkers PL) is a default for the listings that name no branch; it cannot
+    # speak for a listing whose own street address is a different branch's
+    # (Narcan pop-up at "278 Tuckahoe Rd" -> ShopRite of Tuckahoe Road, 4.3 km
+    # away). The source's address is the stronger identity, and the family gate
+    # keeps an unrelated co-tenant from overriding the curated mapping.
+    family = set(locations_map.get('brand_family', {}).get(normalized_loc, ()))
+    named_family = locations_map.get('names', {}).get(normalized_loc, [])
+    if isinstance(named_family, dict):
+        named_family = [named_family]
+    family.update(info['id'] for info in named_family)
+    if len(normalized_loc) >= 5 and len(family) >= 2 and sublocation_name_raw:
+        for tier_name, parser in (
+                ('addresses', _extract_street_address),
+                ('addresses_loose', _extract_street_address_loose)):
+            address_key = parser(sublocation_name_raw)
+            branch = locations_map.get(tier_name, {}).get(address_key)
+            if (branch is not None and branch is not _AMBIGUOUS_ADDRESS
+                    and branch.get('id') in family
+                    and (result := make_result(branch, 'branch_address'))):
+                return result
+
     # Step 1: Website-scoped alternate names (highest priority, most specific).
     # Uses primary_search_keys, not heuristic variants — user-curated mappings
     # should win, and a per-website override deserves the original input.
@@ -7934,26 +7962,6 @@ def get_location_id(location_name_raw, sublocation_name_raw, source_site_name, e
             cand = get_first(website_tier[feature_key])
             if (_child_of_parent(cand, parent_key)
                     and (result := make_result(cand, 'website_alt_feature', guard='area'))):
-                return result
-
-    # A bare brand plus a unique branch address identifies that branch more
-    # precisely than the unqualified primary name of another branch. Restrict
-    # this to members of the same named family: a co-tenant at the address is
-    # not evidence that the explicitly named venue is wrong.
-    family = set(locations_map.get('brand_family', {}).get(normalized_loc, ()))
-    named_family = locations_map.get('names', {}).get(normalized_loc, [])
-    if isinstance(named_family, dict):
-        named_family = [named_family]
-    family.update(info['id'] for info in named_family)
-    if len(normalized_loc) >= 5 and len(family) >= 2 and sublocation_name_raw:
-        for tier_name, parser in (
-                ('addresses', _extract_street_address),
-                ('addresses_loose', _extract_street_address_loose)):
-            address_key = parser(sublocation_name_raw)
-            branch = locations_map.get(tier_name, {}).get(address_key)
-            if (branch is not None and branch is not _AMBIGUOUS_ADDRESS
-                    and branch.get('id') in family
-                    and (result := make_result(branch, 'branch_address'))):
                 return result
 
     # Step 2: Exact matches in global tiers (names, alternate_names, short_names).

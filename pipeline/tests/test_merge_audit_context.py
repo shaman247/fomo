@@ -47,38 +47,43 @@ class MergeAuditContextTests(unittest.TestCase):
             db.archive_outdated_events.return_value = (0, [])
             db.archive_dead_source_events.return_value = (0, [])
             db.prune_superseded_dates.return_value = (0, [])
+            db.prune_superseded_times.return_value = (0, [])
             db.archive_sourceless_events.return_value = (0, [])
             stack.enter_context(patch.object(merger, '_deduplicate_same_name_events', return_value=0))
             self.assertEqual(merger.merge_crawl_events(
                 cursor, MagicMock(), crawl_run_id=crawl_run_id, website_ids=[101, 202]), (1, 0))
 
-            # 7th: the BL23 R1 umbrella hide step (hide_covered_umbrellas).
-            self.assertEqual(len(loggers), 7)
+            # 8th: the BL23 R1 umbrella hide step (hide_covered_umbrellas).
+            self.assertEqual(len(loggers), 8)
             loggers[0].log_insert.assert_called_once()
             self.assertIs(db.prune_superseded_dates.call_args.kwargs['edit_logger'], loggers[1])
             self.assertEqual(db.prune_superseded_dates.call_args.args[2], [101, 202])
+            self.assertIs(db.prune_superseded_times.call_args.kwargs['edit_logger'], loggers[2])
+            self.assertEqual(db.prune_superseded_times.call_args.args[2], [101, 202])
+            self.assertTrue(db.prune_superseded_times.call_args.kwargs['temps_built'])
             for call, logger, website_id in zip(
-                    db.archive_outdated_events.call_args_list, loggers[2:4], (101, 202)):
+                    db.archive_outdated_events.call_args_list, loggers[3:5], (101, 202)):
                 self.assertIs(call.kwargs['edit_logger'], logger)
                 self.assertEqual(call.args[2], website_id)
                 self.assertTrue(call.kwargs['temps_built'])
             self.assertEqual(db.archive_outdated_events.call_count, 2)
-            self.assertIs(db.archive_dead_source_events.call_args.kwargs['edit_logger'], loggers[4])
+            self.assertIs(db.archive_dead_source_events.call_args.kwargs['edit_logger'], loggers[5])
             sourceless = db.archive_sourceless_events.call_args.kwargs
-            self.assertIs(sourceless['edit_logger'], loggers[5])
+            self.assertIs(sourceless['edit_logger'], loggers[6])
             self.assertEqual(sourceless['website_ids'], [101, 202])
 
         contexts = [json.loads(logger.editor_info) for logger in loggers]
         base = contexts[0]
         self.assertEqual(len(base['merge_id']), 32)
         self.assertEqual(contexts[1], dict(base, archival_reason='superseded_source_dates'))
-        self.assertEqual(contexts[2], dict(base, archival_reason='missing_from_latest_sources',
-                                         trigger_website_id=101))
+        self.assertEqual(contexts[2], dict(base, archival_reason='superseded_source_times'))
         self.assertEqual(contexts[3], dict(base, archival_reason='missing_from_latest_sources',
+                                         trigger_website_id=101))
+        self.assertEqual(contexts[4], dict(base, archival_reason='missing_from_latest_sources',
                                          trigger_website_id=202))
-        self.assertEqual(contexts[4], dict(base, archival_reason='all_sources_disabled'))
-        self.assertEqual(contexts[5], dict(base, archival_reason='no_sources'))
-        self.assertEqual(contexts[6], dict(base, suppression_reason='covered_umbrella'))
+        self.assertEqual(contexts[5], dict(base, archival_reason='all_sources_disabled'))
+        self.assertEqual(contexts[6], dict(base, archival_reason='no_sources'))
+        self.assertEqual(contexts[7], dict(base, suppression_reason='covered_umbrella'))
         for logger in loggers:
             self.assertLessEqual(len(logger.editor_info), 500)
         return base
